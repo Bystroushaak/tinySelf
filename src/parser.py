@@ -8,39 +8,41 @@ from rpython.rlib.parsing.ebnfparse import make_parse_function
 
 
 regexs, rules, transformer = parse_ebnf("""
-IGNORE: " ";
+IGNORE: " |\n";
 
-object: ["("] slots? expressions* [")"];
+root: (expression ["\."])* expression;
 
-expressions: (<send> ["."])* <send> ["."]?;
-stuff: IDENTIFIER | value | object;
+object: ["("] slots? sends* [")"];
+block: ["["] slots? sends* ["]"];
 
-send: receiver? keyword | receiver? message;
-receiver: IDENTIFIER;
+expression: IDENTIFIER | value | object | block | send;
+
+sends: (send ["\."])* send ["\."]?;
+send: (receiver? keyword) | (receiver? message);
+receiver: IDENTIFIER | object | block;
 message: IDENTIFIER;
-keyword: FIRST_KW_IDENTIFIER >stuff< (KEYWORD_IDENTIFIER >stuff<)*;
+keyword: FIRST_KW_IDENTIFIER >expression< (KEYWORD_IDENTIFIER >expression<)*;
 
-slots: ["|"] (IDENTIFIER ["."])* ["|"];
+slots: ["|"] (slot_definition ["\."])* slot_definition? ["\."]? ["|"];
+slot_definition: IDENTIFIER | (FIRST_KW_IDENTIFIER >expression<) | PARAMETER;
 
 value: <string> | <float> | <integer>;
 
-comment: "\#.*\n";
-
 float: integer "\." POSINT;
-
 integer: "\-" POSINT | POSINT;
 
 POSINT: "0|[1-9][0-9]*";
 
-IDENTIFIER: "[a-zA-Z_][a-zA-Z0-9_\*]*";
-FIRST_KW_IDENTIFIER: "[a-z][a-zA-Z0-9_]*:";
+PARAMETER: ":[a-z_][a-zA-Z0-9_\*]*";
+IDENTIFIER: "[a-z_][a-zA-Z0-9_\*]*";
+FIRST_KW_IDENTIFIER: "[a-z_][a-zA-Z0-9_]*:";
 KEYWORD_IDENTIFIER: "[A-Z][a-zA-Z0-9_]*:";
 
 string: SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING;
 SINGLE_QUOTED_STRING: "'[^\\\']*'";
 DOUBLE_QUOTED_STRING: "\\"[^\\\\"]*\\"";
 """)
-# expressions: (stuff ".") | <expressions>*;
+# expressions: (stuff "\.") | <expressions>*;
 
 
 parse = make_parse_function(regexs, rules)
@@ -56,7 +58,14 @@ parse = make_parse_function(regexs, rules)
 # print transformer().transform(parse("IDENTIFIER"))
 # print transformer().transform(parse("_identifier"))
 # print transformer().transform(parse("_Identifier"))
-print transformer().transform(parse("(| asd. bsd. | asd)"))
+
+
+
+# print transformer().transform(parse("(| asd. bsd. | 5.)"))
+# print
+print transformer().transform(parse("(| asd. bsd. | asd.)"))
+print
+print transformer().transform(parse("(| asd: 1. bsd: nil | asd.)"))
 print
 print transformer().transform(parse("(| asd. bsd. | asd. bsd. obj msg.)"))
 print
@@ -67,4 +76,14 @@ print
 print transformer().transform(parse("(| asd. bsd. | self hello: xe Second: xa.)"))
 print
 print transformer().transform(parse("(| asd. bsd. | hello: xe.)"))
+print
+print transformer().transform(parse("[| asd. :bsd. | hello: xe.]"))
+print "\n---\n"
+print transformer().transform(parse("""
+
+a: (| asd. bsd. | hello: xe.).
+
+[| asd. :bsd. | hello: xe.]
+
+"""))
 # print parse("0 + 10 + 999")
