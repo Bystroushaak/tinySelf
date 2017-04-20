@@ -15,6 +15,7 @@ root: (expression ["\."])* expression;
 object: ["("] slots? sends* [")"];
 block: ["["] slots? sends* ["]"];
 
+return: ["^"] expression;
 expression: IDENTIFIER | value | object | block | send;
 
 sends: (send ["\."])* send ["\."]?;
@@ -23,7 +24,7 @@ receiver: IDENTIFIER | object | block;
 message: IDENTIFIER;
 keyword: FIRST_KW_IDENTIFIER >expression< (KEYWORD_IDENTIFIER >expression<)*;
 
-slots: ["|"] (slot_definition ["\."])* slot_definition? ["\."]? ["|"];
+slots: ["|"] (>slot_definition< ["\."])* >slot_definition<? ["\."]? ["|"];
 slot_definition: IDENTIFIER | (FIRST_KW_IDENTIFIER >expression<) | PARAMETER;
 
 value: <string> | <float> | <integer>;
@@ -45,7 +46,12 @@ DOUBLE_QUOTED_STRING: "\\"[^\\\\"]*\\"";
 # expressions: (stuff "\.") | <expressions>*;
 
 
-parse = make_parse_function(regexs, rules)
+_parse = make_parse_function(regexs, rules)
+
+
+def parse(source):
+    return transformer().transform(_parse(source))
+
 # parse = make_parse_function(regexs, rules, eof=True)
 
 # print transformer().transform(parse("0"))
@@ -63,27 +69,32 @@ parse = make_parse_function(regexs, rules)
 
 # print transformer().transform(parse("(| asd. bsd. | 5.)"))
 # print
-print transformer().transform(parse("(| asd. bsd. | asd.)"))
+print parse("(| asd. bsd. | asd.)")
 print
-print transformer().transform(parse("(| asd: 1. bsd: nil | asd.)"))
+print parse("(| asd: 1. bsd: nil | asd.)")
 print
-print transformer().transform(parse("(| asd. bsd. | asd. bsd. obj msg.)"))
+print parse("(| asd. bsd. | asd. bsd. obj msg.)")
 print
-print transformer().transform(parse("(| asd. bsd. | asd. bsd. obj msg.)"))
+print parse("(| asd. bsd. | asd. bsd. obj msg.)")
 print
-print transformer().transform(parse("(| asd. bsd. | self hello: xe.)"))
+print parse("(| asd. bsd. | self hello: xe.)")
 print
-print transformer().transform(parse("(| asd. bsd. | self hello: xe Second: xa.)"))
+print parse("(| asd. bsd. | self hello: xe Second: xa.)")
 print
-print transformer().transform(parse("(| asd. bsd. | hello: xe.)"))
+print parse("(| asd. bsd. | hello: xe.)")
 print
-print transformer().transform(parse("[| asd. :bsd. | hello: xe.]"))
+print parse("[| asd. :bsd | hello: xe.]")
 print "\n---\n"
-print transformer().transform(parse("""
+print parse("""
 
 a: (| asd. bsd. | hello: xe.).
 
 [| asd. :bsd. | hello: xe.]
 
-"""))
-# print parse("0 + 10 + 999")
+""")
+print
+print parse("0")
+
+# print
+# import pdb
+# pdb.set_trace()
