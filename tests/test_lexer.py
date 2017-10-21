@@ -5,64 +5,64 @@
 #
 from rply import Token
 
-from tinySelf import lexer
+from tinySelf.lexer import lexer
 
 
 def test_single_q_string():
-    assert list(lexer.l.lex("'hello'")) == [
+    assert list(lexer.lex("'hello'")) == [
         Token('SINGLE_Q_STRING', "'hello'"),
     ]
 
-    assert list(lexer.l.lex("'hello \\' quote'")) == [
+    assert list(lexer.lex("'hello \\' quote'")) == [
         Token('SINGLE_Q_STRING', "'hello \\' quote'"),
     ]
 
-    assert list(lexer.l.lex("'a \\' b' 'c \\' d'")) == [
+    assert list(lexer.lex("'a \\' b' 'c \\' d'")) == [
         Token('SINGLE_Q_STRING', r"'a \' b'"),
         Token('SINGLE_Q_STRING', r"'c \' d'"),
     ]
 
-    assert list(lexer.l.lex("'hello \n quote'")) == [
+    assert list(lexer.lex("'hello \n quote'")) == [
         Token('SINGLE_Q_STRING', "'hello \n quote'"),
     ]
 
 
 def test_double_q_string():
-    assert list(lexer.l.lex('"hello"')) == [
+    assert list(lexer.lex('"hello"')) == [
         Token('DOUBLE_Q_STRING', '"hello"'),
     ]
 
-    assert list(lexer.l.lex('"hello \\" quote"')) == [
+    assert list(lexer.lex('"hello \\" quote"')) == [
         Token('DOUBLE_Q_STRING', '"hello \\" quote"'),
     ]
 
-    assert list(lexer.l.lex('"a \\" b" "c \\" d"')) == [
+    assert list(lexer.lex('"a \\" b" "c \\" d"')) == [
         Token('DOUBLE_Q_STRING', r'"a \" b"'),
         Token('DOUBLE_Q_STRING', r'"c \" d"'),
     ]
 
-    assert list(lexer.l.lex('"hello \n quote"')) == [
+    assert list(lexer.lex('"hello \n quote"')) == [
         Token('DOUBLE_Q_STRING', '"hello \n quote"'),
     ]
 
 
 def test_identifier():
-    assert list(lexer.l.lex('identifier')) == [
+    assert list(lexer.lex('identifier')) == [
         Token('IDENTIFIER', 'identifier'),
     ]
 
-    assert list(lexer.l.lex('iDentIfier ID2')) == [
+    assert list(lexer.lex('iDentIfier ID2')) == [
         Token('IDENTIFIER', 'iDentIfier'),
         Token('IDENTIFIER', 'ID2'),
     ]
 
 
 def test_argument():
-    assert list(lexer.l.lex(':argument')) == [
+    assert list(lexer.lex(':argument')) == [
         Token('ARGUMENT', ':argument'),
     ]
 
-    assert list(lexer.l.lex('"string" :argument idenTifier')) == [
+    assert list(lexer.lex('"string" :argument idenTifier')) == [
         Token('DOUBLE_Q_STRING', '"string"'),
         Token('ARGUMENT', ':argument'),
         Token('IDENTIFIER', 'idenTifier'),
@@ -70,14 +70,14 @@ def test_argument():
 
 
 def test_kw_identifier():
-    assert list(lexer.l.lex('kwArgument: i')) == [
+    assert list(lexer.lex('kwArgument: i')) == [
         Token('FIRST_KW', 'kwArgument:'),
         Token('IDENTIFIER', 'i'),
     ]
 
 
 def test_kw():
-    assert list(lexer.l.lex('kwArgument: i KeyWord: kw')) == [
+    assert list(lexer.lex('kwArgument: i KeyWord: kw')) == [
         Token('FIRST_KW', 'kwArgument:'),
         Token('IDENTIFIER', 'i'),
         Token('KEYWORD', 'KeyWord:'),
@@ -86,7 +86,7 @@ def test_kw():
 
 
 def test_complex():
-    assert list(lexer.l.lex('(kwArgument: i KeyWord: [id])')) == [
+    assert list(lexer.lex('(kwArgument: i KeyWord: [id])')) == [
         Token('OBJ_START', '('),
         Token('FIRST_KW', 'kwArgument:'),
         Token('IDENTIFIER', 'i'),
@@ -99,11 +99,11 @@ def test_complex():
 
 
 def test_operator():
-    assert list(lexer.l.lex('!')) == [
+    assert list(lexer.lex('!')) == [
         Token('OPERATOR', '!'),
     ]
 
-    assert list(lexer.l.lex('!@$%&*-+=~/?<>,')) == [
+    assert list(lexer.lex('!@$%&*-+=~/?<>,')) == [
         Token('OPERATOR', '!'),
         Token('OPERATOR', '@'),
         Token('OPERATOR', '$'),
@@ -121,7 +121,7 @@ def test_operator():
         Token('OPERATOR', ','),
     ]
 
-    assert list(lexer.l.lex('! @ $ % & * - + = ~ / ? < > ,')) == [
+    assert list(lexer.lex('! @ $ % & * - + = ~ / ? < > ,')) == [
         Token('OPERATOR', '!'),
         Token('OPERATOR', '@'),
         Token('OPERATOR', '$'),
@@ -141,11 +141,11 @@ def test_operator():
 
 
 def test_return():
-    assert list(lexer.l.lex('^')) == [
+    assert list(lexer.lex('^')) == [
         Token('RETURN', '^'),
     ]
 
-    assert list(lexer.l.lex('^xe.')) == [
+    assert list(lexer.lex('^xe.')) == [
         Token('RETURN', '^'),
         Token('IDENTIFIER', 'xe'),
         Token('END_OF_EXPR', '.'),
@@ -153,11 +153,11 @@ def test_return():
 
 
 def test_end_of_expression():
-    assert list(lexer.l.lex('.')) == [
+    assert list(lexer.lex('.')) == [
         Token('END_OF_EXPR', '.'),
     ]
 
-    assert list(lexer.l.lex('obj message.')) == [
+    assert list(lexer.lex('obj message.')) == [
         Token('IDENTIFIER', 'obj'),
         Token('IDENTIFIER', 'message'),
         Token('END_OF_EXPR', '.'),
@@ -165,11 +165,11 @@ def test_end_of_expression():
 
 
 def test_separator():
-    assert list(lexer.l.lex('|')) == [
+    assert list(lexer.lex('|')) == [
         Token('SEPARATOR', '|'),
     ]
 
-    assert list(lexer.l.lex('(|var| obj message.)')) == [
+    assert list(lexer.lex('(|var| obj message.)')) == [
         Token('OBJ_START', '('),
         Token('SEPARATOR', '|'),
         Token('IDENTIFIER', 'var'),
@@ -183,11 +183,11 @@ def test_separator():
 
 
 def test_comment():
-    assert list(lexer.l.lex('#\n')) == [
+    assert list(lexer.lex('#\n')) == [
         Token('COMMENT', '#\n'),
     ]
 
-    assert list(lexer.l.lex('obj message. # comment \n id #')) == [
+    assert list(lexer.lex('obj message. # comment \n id #')) == [
         Token('IDENTIFIER', 'obj'),
         Token('IDENTIFIER', 'message'),
         Token('END_OF_EXPR', '.'),
@@ -198,11 +198,11 @@ def test_comment():
 
 
 def test_cascade():
-    assert list(lexer.l.lex(';')) == [
+    assert list(lexer.lex(';')) == [
         Token('CASCADE', ';'),
     ]
 
-    assert list(lexer.l.lex('obj message; message2.')) == [
+    assert list(lexer.lex('obj message; message2.')) == [
         Token('IDENTIFIER', 'obj'),
         Token('IDENTIFIER', 'message'),
         Token('CASCADE', ';'),

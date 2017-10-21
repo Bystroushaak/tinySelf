@@ -34,4 +34,4 @@ lg.add('CASCADE', r';')
 
 lg.add('COMMENT', r'#.*[\n|$]?')
 
-l = lg.build()
+lexer = lg.build()
