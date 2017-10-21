@@ -166,6 +166,24 @@ def test_end_of_expression():
     ]
 
 
+def test_separator():
+    assert list(lexer.l.lex('|')) == [
+        Token('SEPARATOR', '|'),
+    ]
+
+    assert list(lexer.l.lex('(|var| obj message.)')) == [
+        Token('OPEN_PAREN', '('),
+        Token('SEPARATOR', '|'),
+        Token('IDENTIFIER', 'var'),
+        Token('SEPARATOR', '|'),
+        Token('IDENTIFIER', 'obj'),
+        Token('IDENTIFIER', 'message'),
+        Token('END_OF_EXPR', '.'),
+        Token('CLOSE_PAREN', ')'),
+
+    ]
+
+
 def test_comment():
     assert list(lexer.l.lex('#\n')) == [
         Token('COMMENT', '#\n'),
