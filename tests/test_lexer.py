@@ -8,16 +8,6 @@ from rply import Token
 from tinySelf import lexer
 
 
-def test_simple():
-    assert list(lexer.l.lex('1+1-1')) == [
-        Token('NUMBER', '1'),
-        Token('PLUS', '+'),
-        Token('NUMBER', '1'),
-        Token('MINUS', '-'),
-        Token('NUMBER', '1'),
-    ]
-
-
 def test_single_q_string():
     assert list(lexer.l.lex("'hello'")) == [
         Token('SINGLE_Q_STRING', "'hello'"),
@@ -92,4 +82,87 @@ def test_kw():
         Token('IDENTIFIER', 'i'),
         Token('KEYWORD', 'KeyWord:'),
         Token('IDENTIFIER', 'kw'),
+    ]
+
+
+def test_complex():
+    assert list(lexer.l.lex('(kwArgument: i KeyWord: [id])')) == [
+        Token('OPEN_PAREN', '('),
+        Token('FIRST_KW', 'kwArgument:'),
+        Token('IDENTIFIER', 'i'),
+        Token('KEYWORD', 'KeyWord:'),
+        Token("OPEN_BRACKET", '['),
+        Token('IDENTIFIER', 'id'),
+        Token("CLOSE_BRACKET", ']'),
+        Token('CLOSE_PAREN', ')'),
+    ]
+
+
+def test_operator():
+    assert list(lexer.l.lex('!')) == [
+        Token('OPERATOR', '!'),
+    ]
+
+    assert list(lexer.l.lex('!@#$%&*-+=~/?<>,;')) == [
+        Token('OPERATOR', '!'),
+        Token('OPERATOR', '@'),
+        Token('OPERATOR', '#'),
+        Token('OPERATOR', '$'),
+        Token('OPERATOR', '%'),
+        Token('OPERATOR', '&'),
+        Token('OPERATOR', '*'),
+        Token('OPERATOR', '-'),
+        Token('OPERATOR', '+'),
+        Token('OPERATOR', '='),
+        Token('OPERATOR', '~'),
+        Token('OPERATOR', '/'),
+        Token('OPERATOR', '?'),
+        Token('OPERATOR', '<'),
+        Token('OPERATOR', '>'),
+        Token('OPERATOR', ','),
+        Token('OPERATOR', ';'),
+    ]
+
+    assert list(lexer.l.lex('! @ # $ % & * - + = ~ / ? < > , ;')) == [
+        Token('OPERATOR', '!'),
+        Token('OPERATOR', '@'),
+        Token('OPERATOR', '#'),
+        Token('OPERATOR', '$'),
+        Token('OPERATOR', '%'),
+        Token('OPERATOR', '&'),
+        Token('OPERATOR', '*'),
+        Token('OPERATOR', '-'),
+        Token('OPERATOR', '+'),
+        Token('OPERATOR', '='),
+        Token('OPERATOR', '~'),
+        Token('OPERATOR', '/'),
+        Token('OPERATOR', '?'),
+        Token('OPERATOR', '<'),
+        Token('OPERATOR', '>'),
+        Token('OPERATOR', ','),
+        Token('OPERATOR', ';'),
+    ]
+
+
+def test_return():
+    assert list(lexer.l.lex('^')) == [
+        Token('RETURN', '^'),
+    ]
+
+    assert list(lexer.l.lex('^xe.')) == [
+        Token('RETURN', '^'),
+        Token('IDENTIFIER', 'xe'),
+        Token('END_OF_EXPR', '.'),
+    ]
+
+
+def test_end_of_expression():
+    assert list(lexer.l.lex('.')) == [
+        Token('END_OF_EXPR', '.'),
+    ]
+
+    assert list(lexer.l.lex('obj message.')) == [
+        Token('IDENTIFIER', 'obj'),
+        Token('IDENTIFIER', 'message'),
+        Token('END_OF_EXPR', '.'),
     ]
