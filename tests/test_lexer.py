@@ -87,14 +87,14 @@ def test_kw():
 
 def test_complex():
     assert list(lexer.l.lex('(kwArgument: i KeyWord: [id])')) == [
-        Token('OPEN_PAREN', '('),
+        Token('OBJ_START', '('),
         Token('FIRST_KW', 'kwArgument:'),
         Token('IDENTIFIER', 'i'),
         Token('KEYWORD', 'KeyWord:'),
-        Token("OPEN_BRACKET", '['),
+        Token("BLOCK_START", '['),
         Token('IDENTIFIER', 'id'),
-        Token("CLOSE_BRACKET", ']'),
-        Token('CLOSE_PAREN', ')'),
+        Token("BLOCK_END", ']'),
+        Token('OBJ_END', ')'),
     ]
 
 
@@ -172,14 +172,14 @@ def test_separator():
     ]
 
     assert list(lexer.l.lex('(|var| obj message.)')) == [
-        Token('OPEN_PAREN', '('),
+        Token('OBJ_START', '('),
         Token('SEPARATOR', '|'),
         Token('IDENTIFIER', 'var'),
         Token('SEPARATOR', '|'),
         Token('IDENTIFIER', 'obj'),
         Token('IDENTIFIER', 'message'),
         Token('END_OF_EXPR', '.'),
-        Token('CLOSE_PAREN', ')'),
+        Token('OBJ_END', ')'),
 
     ]
 

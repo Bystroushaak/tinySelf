@@ -11,11 +11,11 @@ lg.ignore(r'\s+')
 
 lg.add('NUMBER', r'\d+')
 
-lg.add('OPEN_PAREN', r'\(')
-lg.add('CLOSE_PAREN', r'\)')
+lg.add('OBJ_START', r'\(')
+lg.add('OBJ_END', r'\)')
 
-lg.add('OPEN_BRACKET', r'\[')
-lg.add('CLOSE_BRACKET', r'\]')
+lg.add('BLOCK_START', r'\[')
+lg.add('BLOCK_END', r'\]')
 
 lg.add('SINGLE_Q_STRING', r"'(?:\\.|[^'\\])*'")
 lg.add('DOUBLE_Q_STRING', r'"(?:\\.|[^"\\])*"')
