@@ -54,3 +54,42 @@ def test_double_q_string():
     assert list(lexer.l.lex('"hello \n quote"')) == [
         Token('DOUBLE_Q_STRING', '"hello \n quote"'),
     ]
+
+
+def test_identifier():
+    assert list(lexer.l.lex('identifier')) == [
+        Token('IDENTIFIER', 'identifier'),
+    ]
+
+    assert list(lexer.l.lex('iDentIfier ID2')) == [
+        Token('IDENTIFIER', 'iDentIfier'),
+        Token('IDENTIFIER', 'ID2'),
+    ]
+
+
+def test_argument():
+    assert list(lexer.l.lex(':argument')) == [
+        Token('ARGUMENT', ':argument'),
+    ]
+
+    assert list(lexer.l.lex('"string" :argument idenTifier')) == [
+        Token('DOUBLE_Q_STRING', '"string"'),
+        Token('ARGUMENT', ':argument'),
+        Token('IDENTIFIER', 'idenTifier'),
+    ]
+
+
+def test_kw_identifier():
+    assert list(lexer.l.lex('kwArgument: i')) == [
+        Token('FIRST_KW', 'kwArgument:'),
+        Token('IDENTIFIER', 'i'),
+    ]
+
+
+def test_kw():
+    assert list(lexer.l.lex('kwArgument: i KeyWord: kw')) == [
+        Token('FIRST_KW', 'kwArgument:'),
+        Token('IDENTIFIER', 'i'),
+        Token('KEYWORD', 'KeyWord:'),
+        Token('IDENTIFIER', 'kw'),
+    ]
