@@ -103,7 +103,7 @@ def test_operator():
         Token('OPERATOR', '!'),
     ]
 
-    assert list(lexer.l.lex('!@$%&*-+=~/?<>,;')) == [
+    assert list(lexer.l.lex('!@$%&*-+=~/?<>,')) == [
         Token('OPERATOR', '!'),
         Token('OPERATOR', '@'),
         Token('OPERATOR', '$'),
@@ -119,10 +119,9 @@ def test_operator():
         Token('OPERATOR', '<'),
         Token('OPERATOR', '>'),
         Token('OPERATOR', ','),
-        Token('OPERATOR', ';'),
     ]
 
-    assert list(lexer.l.lex('! @ $ % & * - + = ~ / ? < > , ;')) == [
+    assert list(lexer.l.lex('! @ $ % & * - + = ~ / ? < > ,')) == [
         Token('OPERATOR', '!'),
         Token('OPERATOR', '@'),
         Token('OPERATOR', '$'),
@@ -138,7 +137,6 @@ def test_operator():
         Token('OPERATOR', '<'),
         Token('OPERATOR', '>'),
         Token('OPERATOR', ','),
-        Token('OPERATOR', ';'),
     ]
 
 
@@ -196,4 +194,18 @@ def test_comment():
         Token('COMMENT', '# comment \n'),
         Token('IDENTIFIER', 'id'),
         Token('COMMENT', '#'),
+    ]
+
+
+def test_cascade():
+    assert list(lexer.l.lex(';')) == [
+        Token('CASCADE', ';'),
+    ]
+
+    assert list(lexer.l.lex('obj message; message2.')) == [
+        Token('IDENTIFIER', 'obj'),
+        Token('IDENTIFIER', 'message'),
+        Token('CASCADE', ';'),
+        Token('IDENTIFIER', 'message2'),
+        Token('END_OF_EXPR', '.'),
     ]

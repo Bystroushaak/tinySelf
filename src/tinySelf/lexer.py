@@ -26,10 +26,11 @@ lg.add('ARGUMENT', r':[a-zA-Z0-9_]*[a-zA-Z0-9_]+')
 lg.add('IDENTIFIER', r'[a-zA-Z0-9_]*[a-zA-Z0-9_]+')
 
 
-lg.add('OPERATOR', r'[!@\$%&\*\-\+=~/?<>,;]')
+lg.add('OPERATOR', r'[!@\$%&\*\-\+=~/?<>,]')
 lg.add('RETURN', r'\^')
 lg.add('END_OF_EXPR', r'\.')
 lg.add('SEPARATOR', r'\|')
+lg.add('CASCADE', r';')
 
 lg.add('COMMENT', r'#.*[\n|$]?')
 
