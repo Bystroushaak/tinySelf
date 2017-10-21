@@ -103,10 +103,9 @@ def test_operator():
         Token('OPERATOR', '!'),
     ]
 
-    assert list(lexer.l.lex('!@#$%&*-+=~/?<>,;')) == [
+    assert list(lexer.l.lex('!@$%&*-+=~/?<>,;')) == [
         Token('OPERATOR', '!'),
         Token('OPERATOR', '@'),
-        Token('OPERATOR', '#'),
         Token('OPERATOR', '$'),
         Token('OPERATOR', '%'),
         Token('OPERATOR', '&'),
@@ -123,10 +122,9 @@ def test_operator():
         Token('OPERATOR', ';'),
     ]
 
-    assert list(lexer.l.lex('! @ # $ % & * - + = ~ / ? < > , ;')) == [
+    assert list(lexer.l.lex('! @ $ % & * - + = ~ / ? < > , ;')) == [
         Token('OPERATOR', '!'),
         Token('OPERATOR', '@'),
-        Token('OPERATOR', '#'),
         Token('OPERATOR', '$'),
         Token('OPERATOR', '%'),
         Token('OPERATOR', '&'),
@@ -165,4 +163,19 @@ def test_end_of_expression():
         Token('IDENTIFIER', 'obj'),
         Token('IDENTIFIER', 'message'),
         Token('END_OF_EXPR', '.'),
+    ]
+
+
+def test_comment():
+    assert list(lexer.l.lex('#\n')) == [
+        Token('COMMENT', '#\n'),
+    ]
+
+    assert list(lexer.l.lex('obj message. # comment \n id #')) == [
+        Token('IDENTIFIER', 'obj'),
+        Token('IDENTIFIER', 'message'),
+        Token('END_OF_EXPR', '.'),
+        Token('COMMENT', '# comment \n'),
+        Token('IDENTIFIER', 'id'),
+        Token('COMMENT', '#'),
     ]
