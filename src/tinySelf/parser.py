@@ -49,6 +49,12 @@ class BinaryMessage(BaseBox):
         self.parameter = parameter
 
 
+class Send(BaseBox):
+    def __init__(self, obj, msg):
+        self.obj = obj
+        self.msg = msg
+
+
 pg = ParserGenerator(
     [
         "NUMBER",
@@ -80,12 +86,10 @@ def expression_number(p):
 
 
 @pg.production('expression : expression OPERATOR expression')
-def expression_operator(p):
+def expression_binary_message(p):
     assert len(p) == 3, "Bad number of operands for %s!" % p[1]
 
-    print p
-
-    return p
+    return Send(p[0], BinaryMessage(p[1].getstr(), p[2]))
 
 
 parser = pg.build()
