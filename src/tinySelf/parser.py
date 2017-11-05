@@ -27,6 +27,14 @@ class Number(BaseBox):  # TODO: remove
         return self.value
 
 
+class String(BaseBox):  # TODO: remove
+    def __init__(self, value):
+        self.value = value
+
+    def eval(self):
+        return self.value
+
+
 class Code(BaseBox):
     def __init__(self, message_sends):
         self.message_sends = message_sends
@@ -85,11 +93,21 @@ def expression_number(p):
     return Number(int(p[0].getstr()))
 
 
+@pg.production('expression : SINGLE_Q_STRING')
+@pg.production('expression : DOUBLE_Q_STRING')
+def expression_string(p):
+    return String(p[0].getstr()[1:-1])
+
+
 @pg.production('expression : expression OPERATOR expression')
 def expression_binary_message(p):
     assert len(p) == 3, "Bad number of operands for %s!" % p[1]
 
     return Send(p[0], BinaryMessage(p[1].getstr(), p[2]))
+
+
+def object(p):
+    pass
 
 
 parser = pg.build()

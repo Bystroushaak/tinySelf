@@ -8,6 +8,7 @@ from tinySelf.parser import parser
 
 from tinySelf.parser import Send
 from tinySelf.parser import Number
+from tinySelf.parser import String
 from tinySelf.parser import BinaryMessage
 
 
@@ -16,6 +17,19 @@ def test_parse_number():
 
     assert isinstance(result, Number)
     assert result.value == 1
+
+
+def test_parse_string():
+    result = parser.parse(lexer.lex('"asd"'))
+
+    assert isinstance(result, String)
+    assert result.value == "asd"
+
+    result = parser.parse(lexer.lex("'asd'"))
+    assert result.value == "asd"
+
+    result = parser.parse(lexer.lex('""'))
+    assert result.value == ""
 
 
 def test_parse_binary_op():
