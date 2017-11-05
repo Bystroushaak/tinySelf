@@ -9,31 +9,52 @@ from tinySelf.parser import parser
 from tinySelf.parser import Send
 from tinySelf.parser import Number
 from tinySelf.parser import String
+from tinySelf.parser import Object
 from tinySelf.parser import BinaryMessage
 
 
+def parse_and_lex(i):
+    return parser.parse(lexer.lex(i))
+
+
 def test_parse_number():
-    result = parser.parse(lexer.lex('1'))
+    result = parse_and_lex('1')
 
     assert isinstance(result, Number)
     assert result.value == 1
 
 
 def test_parse_string():
-    result = parser.parse(lexer.lex('"asd"'))
+    result = parse_and_lex('"asd"')
 
     assert isinstance(result, String)
     assert result.value == "asd"
 
-    result = parser.parse(lexer.lex("'asd'"))
+    result = parse_and_lex("'asd'")
     assert result.value == "asd"
 
-    result = parser.parse(lexer.lex('""'))
+    result = parse_and_lex('""')
     assert result.value == ""
 
 
+def test_parse_object():
+    result = parse_and_lex('()')
+
+    assert isinstance(result, Object)
+    assert result.slots == {}
+    assert result.code == []
+
+
+def test_parse_object_with_spaces():
+    result = parse_and_lex('(    )')
+
+    assert isinstance(result, Object)
+    assert result.slots == {}
+    assert result.code == []
+
+
 def test_parse_binary_op():
-    result = parser.parse(lexer.lex('1 + 1'))
+    result = parse_and_lex('1 + 1')
 
     assert isinstance(result, Send)
     assert isinstance(result.obj, Number)

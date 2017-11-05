@@ -10,7 +10,7 @@ from lexer import lexer
 
 
 class Object(BaseBox):
-    def __init__(self, slots, code):
+    def __init__(self, slots={}, code=[]):
         self.slots = slots
         self.code = code
 
@@ -106,8 +106,9 @@ def expression_binary_message(p):
     return Send(p[0], BinaryMessage(p[1].getstr(), p[2]))
 
 
+@pg.production('expression : OBJ_START OBJ_END')
 def object(p):
-    pass
+    return Object()
 
 
 parser = pg.build()
