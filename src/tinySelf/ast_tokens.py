@@ -6,6 +6,17 @@
 from rply.token import BaseBox
 
 
+class Self(BaseBox):
+    def __init__(self):
+        pass
+
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__)
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
+
 class Object(BaseBox):
     def __init__(self, slots={}, code=[]):
         self.slots = slots

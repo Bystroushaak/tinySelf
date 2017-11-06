@@ -17,6 +17,7 @@ from ast_tokens import Message
 from ast_tokens import KeywordMessage
 from ast_tokens import BinaryMessage
 from ast_tokens import Send
+from ast_tokens import Self
 
 
 pg = ParserGenerator(
@@ -55,6 +56,16 @@ def expression_string(p):
     return String(p[0].getstr()[1:-1])
 
 
+@pg.production('expression : IDENTIFIER')
+def expression_unary_message(p):
+    return Send(obj=Self(), msg=p[0].getstr())
+
+
+@pg.production('expression : expression IDENTIFIER')
+def expression_unary_message_to_expression(p):
+    return Send(obj=p[0], msg=p[1].getstr())
+
+
 @pg.production('expression : expression OPERATOR expression')
 def expression_binary_message(p):
     assert len(p) == 3, "Bad number of operands for %s!" % p[1]
@@ -66,6 +77,16 @@ def expression_binary_message(p):
 @pg.production('expression : OBJ_START SEPARATOR SEPARATOR OBJ_END')
 def expression_empty_object(p):
     return Object()
+
+
+@pg.production('expression : SEPARATOR SEPARATOR')
+def expression_empty_slots(p):
+    return {}
+
+
+# @pg.production('expression : SEPARATOR SEPARATOR')
+# def expression_slots(p):
+#     return {}
 
 
 # def parse_slots
