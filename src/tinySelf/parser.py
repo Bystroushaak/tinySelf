@@ -73,6 +73,45 @@ def expression_binary_message_to_expression(p):
     return Send(p[0], BinaryMessage(p[1].getstr(), p[2]))
 
 
+@pg.production('expression : FIRST_KW expression')
+def expression_keyword_message(p):
+    return Send(obj=Self(), msg=KeywordMessage(p[0].getstr(), [p[1]]))
+
+
+@pg.production('kwd : KEYWORD expression')
+@pg.production('kwd : KEYWORD expression kwd')
+def expression_keyword(p):
+    if len(p) == 2:
+        return p
+
+    # flatten the nested lists
+    tokens = [p[0], p[1]]
+    for group in p[2:]:
+        tokens.extend(group)
+
+    return tokens
+
+
+@pg.production('expression : FIRST_KW expression kwd')
+def expression_keyword_message_with_parameters(p):
+    signature = [p[0]]
+    parameters = [p[1]]
+
+    for cnt, token in enumerate(p[2]):
+        if cnt % 2 == 0:
+            signature.append(token)
+        else:
+            parameters.append(token)
+
+    return Send(
+        obj=Self(),
+        msg=KeywordMessage(
+            name="".join(token.getstr() for token in signature),
+            parameters=parameters
+        )
+    )
+
+
 @pg.production('expression : OBJ_START OBJ_END')
 @pg.production('expression : OBJ_START SEPARATOR SEPARATOR OBJ_END')
 def expression_empty_object(p):

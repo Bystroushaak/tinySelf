@@ -25,7 +25,6 @@ lg.add('KEYWORD', r'[A-Z]+[a-zA-Z0-9_]*:')
 lg.add('ARGUMENT', r':[a-zA-Z0-9_]*[a-zA-Z0-9_]+')
 lg.add('IDENTIFIER', r'[a-zA-Z0-9_]*[a-zA-Z0-9_]+')
 
-
 lg.add('OPERATOR', r'[!@\$%&\*\-\+=~/?<>,]')
 lg.add('RETURN', r'\^')
 lg.add('END_OF_EXPR', r'\.')

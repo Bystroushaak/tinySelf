@@ -13,6 +13,7 @@ from tinySelf.ast_tokens import String
 from tinySelf.ast_tokens import Object
 from tinySelf.ast_tokens import Message
 from tinySelf.ast_tokens import BinaryMessage
+from tinySelf.ast_tokens import KeywordMessage
 
 
 def parse_and_lex(i):
@@ -53,6 +54,48 @@ def test_parse_send_to_object():
     assert result.obj.obj == Self()
     assert result.obj.msg.name == "a"
     assert result.msg.name == "b"
+
+
+def test_parse_binary_message():
+    result = parse_and_lex('1 + 1')
+
+    assert isinstance(result, Send)
+    assert isinstance(result.obj, Number)
+    assert isinstance(result.msg, BinaryMessage)
+    assert isinstance(result.msg.parameter, Number)
+
+    assert result.obj.value == 1
+    assert result.msg.name == "+"
+    assert result.msg.parameter.value == 1
+
+
+def test_parse_keyword_message():
+    result = parse_and_lex('set: 1')
+
+    assert isinstance(result, Send)
+    assert isinstance(result.obj, Self)
+    assert isinstance(result.msg, KeywordMessage)
+    assert isinstance(result.msg.parameters, list)
+
+    assert result.obj == Self()
+    assert result.msg.name == "set:"
+    assert result.msg.parameters[0].value == 1
+
+
+def test_parse_keyword_message_with_parameters():
+    result = parse_and_lex('set: 1 And: 2 Also: 3 So: 4')
+
+    assert isinstance(result, Send)
+    assert isinstance(result.obj, Self)
+    assert isinstance(result.msg, KeywordMessage)
+    assert isinstance(result.msg.parameters, list)
+
+    assert result.obj == Self()
+    assert result.msg.name == "set:And:Also:So:"
+    assert result.msg.parameters[0].value == 1
+    assert result.msg.parameters[1].value == 2
+    assert result.msg.parameters[2].value == 3
+    assert result.msg.parameters[3].value == 4
 
 
 def test_parse_string():
@@ -104,16 +147,3 @@ def test_parse_empty_slots():
 #     assert isinstance(result, Object)
 #     assert result.slots == {}
 #     assert result.code == []
-
-
-def test_parse_binary_op():
-    result = parse_and_lex('1 + 1')
-
-    assert isinstance(result, Send)
-    assert isinstance(result.obj, Number)
-    assert isinstance(result.msg, BinaryMessage)
-    assert isinstance(result.msg.parameter, Number)
-
-    assert result.obj.value == 1
-    assert result.msg.name == "+"
-    assert result.msg.parameter.value == 1
