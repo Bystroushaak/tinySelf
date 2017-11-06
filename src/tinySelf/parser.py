@@ -58,16 +58,16 @@ def expression_string(p):
 
 @pg.production('expression : IDENTIFIER')
 def expression_unary_message(p):
-    return Send(obj=Self(), msg=p[0].getstr())
+    return Send(obj=Self(), msg=Message(p[0].getstr()))
 
 
 @pg.production('expression : expression IDENTIFIER')
 def expression_unary_message_to_expression(p):
-    return Send(obj=p[0], msg=p[1].getstr())
+    return Send(obj=p[0], msg=Message(p[1].getstr()))
 
 
 @pg.production('expression : expression OPERATOR expression')
-def expression_binary_message(p):
+def expression_binary_message_to_expression(p):
     assert len(p) == 3, "Bad number of operands for %s!" % p[1]
 
     return Send(p[0], BinaryMessage(p[1].getstr(), p[2]))

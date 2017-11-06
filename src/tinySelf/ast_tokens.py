@@ -54,8 +54,8 @@ class Message(BaseBox):
 
 
 class KeywordMessage(BaseBox):
-    def __init__(self, signature, parameters):
-        self.signature = signature
+    def __init__(self, name, parameters):
+        self.name = name
         self.parameters = parameters
 
 

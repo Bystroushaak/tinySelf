@@ -11,6 +11,7 @@ from tinySelf.ast_tokens import Number
 from tinySelf.ast_tokens import Self
 from tinySelf.ast_tokens import String
 from tinySelf.ast_tokens import Object
+from tinySelf.ast_tokens import Message
 from tinySelf.ast_tokens import BinaryMessage
 
 
@@ -34,9 +35,10 @@ def test_parse_send():
 
     assert isinstance(result, Send)
     assert isinstance(result.obj, Self)
+    assert isinstance(result.msg, Message)
 
     assert result.obj == Self()
-    assert result.msg == "asd"
+    assert result.msg.name == "asd"
 
 
 def test_parse_send_to_object():
@@ -44,11 +46,13 @@ def test_parse_send_to_object():
 
     assert isinstance(result, Send)
     assert isinstance(result.obj, Send)
+    assert isinstance(result.msg, Message)
+    assert isinstance(result.msg, Message)
     assert isinstance(result.obj.obj, Self)
 
     assert result.obj.obj == Self()
-    assert result.obj.msg == "a"
-    assert result.msg == "b"
+    assert result.obj.msg.name == "a"
+    assert result.msg.name == "b"
 
 
 def test_parse_string():
