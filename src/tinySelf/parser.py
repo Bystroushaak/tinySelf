@@ -45,17 +45,20 @@ pg = ParserGenerator(
 )
 
 
+# Number ######################################################################
 @pg.production('expression : NUMBER')
 def expression_number(p):
     return Number(int(p[0].getstr()))
 
 
+# Strings #####################################################################
 @pg.production('expression : SINGLE_Q_STRING')
 @pg.production('expression : DOUBLE_Q_STRING')
 def expression_string(p):
     return String(p[0].getstr()[1:-1])
 
 
+# Unary messages ##############################################################
 @pg.production('expression : IDENTIFIER')
 def expression_unary_message(p):
     return Send(obj=Self(), msg=Message(p[0].getstr()))
@@ -66,6 +69,7 @@ def expression_unary_message_to_expression(p):
     return Send(obj=p[0], msg=Message(p[1].getstr()))
 
 
+# Binary messages #############################################################
 @pg.production('expression : expression OPERATOR expression')
 def expression_binary_message_to_expression(p):
     assert len(p) == 3, "Bad number of operands for %s!" % p[1]
@@ -73,17 +77,24 @@ def expression_binary_message_to_expression(p):
     return Send(p[0], BinaryMessage(p[1].getstr(), p[2]))
 
 
+# Keyword messages ############################################################
 @pg.production('expression : FIRST_KW expression')
 def expression_keyword_message(p):
     return Send(obj=Self(), msg=KeywordMessage(p[0].getstr(), [p[1]]))
 
 
-@pg.production('kwd : KEYWORD expression')
-@pg.production('kwd : KEYWORD expression kwd')
-def expression_keyword(p):
-    if len(p) == 2:
-        return p
+@pg.production('expression : expression FIRST_KW expression')
+def expression_keyword_message_to_obj(p):
+    return Send(obj=p[0], msg=KeywordMessage(p[1].getstr(), [p[2]]))
 
+
+@pg.production('kwd : KEYWORD expression')
+def expression_keyword(p):
+    return p
+
+
+@pg.production('kwd : KEYWORD expression kwd')
+def expresion_keyword_multiple(p):
     # flatten the nested lists
     tokens = [p[0], p[1]]
     for group in p[2:]:
@@ -105,6 +116,26 @@ def expression_keyword_message_with_parameters(p):
 
     return Send(
         obj=Self(),
+        msg=KeywordMessage(
+            name="".join(token.getstr() for token in signature),
+            parameters=parameters
+        )
+    )
+
+
+@pg.production('expression : expression FIRST_KW expression kwd')
+def expression_keyword_message_to_obj_with_parameters(p):
+    signature = [p[1]]
+    parameters = [p[2]]
+
+    for cnt, token in enumerate(p[3]):
+        if cnt % 2 == 0:
+            signature.append(token)
+        else:
+            parameters.append(token)
+
+    return Send(
+        obj=p[0],
         msg=KeywordMessage(
             name="".join(token.getstr() for token in signature),
             parameters=parameters
