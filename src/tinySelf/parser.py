@@ -8,59 +8,15 @@ from rply.token import BaseBox
 
 from lexer import lexer
 
-
-class Object(BaseBox):
-    def __init__(self, slots={}, code=[]):
-        self.slots = slots
-        self.code = code
-
-
-class Block(Object):
-    pass
-
-
-class Number(BaseBox):  # TODO: remove
-    def __init__(self, value):
-        self.value = value
-
-    def eval(self):
-        return self.value
-
-
-class String(BaseBox):  # TODO: remove
-    def __init__(self, value):
-        self.value = value
-
-    def eval(self):
-        return self.value
-
-
-class Code(BaseBox):
-    def __init__(self, message_sends):
-        self.message_sends = message_sends
-
-
-class Message(BaseBox):
-    def __init__(self, name):
-        self.name = name
-
-
-class KeywordMessage(BaseBox):
-    def __init__(self, signature, parameters):
-        self.signature = signature
-        self.parameters = parameters
-
-
-class BinaryMessage(BaseBox):
-    def __init__(self, name, parameter):
-        self.name = name
-        self.parameter = parameter
-
-
-class Send(BaseBox):
-    def __init__(self, obj, msg):
-        self.obj = obj
-        self.msg = msg
+from ast_tokens import Object
+from ast_tokens import Block
+from ast_tokens import Number
+from ast_tokens import String
+from ast_tokens import Code
+from ast_tokens import Message
+from ast_tokens import KeywordMessage
+from ast_tokens import BinaryMessage
+from ast_tokens import Send
 
 
 pg = ParserGenerator(
@@ -107,8 +63,17 @@ def expression_binary_message(p):
 
 
 @pg.production('expression : OBJ_START OBJ_END')
-def object(p):
+@pg.production('expression : OBJ_START SEPARATOR SEPARATOR OBJ_END')
+def expression_empty_object(p):
     return Object()
+
+
+# def parse_slots
+
+
+# @pg.production('expression : OBJ_START SEPARATOR expression SEPARATOR OBJ_END')
+# def expression_object_with_slots(p):
+#     return Object(slots=p[2])
 
 
 parser = pg.build()
