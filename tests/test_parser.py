@@ -183,8 +183,27 @@ def test_parse_object_with_empty_slots():
 
 def test_parse_object_with_nil_slot():
     result = parse_and_lex('(| asd |)')
-
     assert result == Object(slots={"asd": None})
+
+    result = parse_and_lex('(| asd. |)')
+    assert result == Object(slots={"asd": None})
+
+    result = parse_and_lex('(asd |)')
+    assert result == Object(slots={"asd": None})
+
+    result = parse_and_lex('( asd. |)')
+    assert result == Object(slots={"asd": None})
+
+
+def test_parse_object_with_multiple_nil_slots():
+    result = parse_and_lex('(| asd. bsd |)')
+    assert result == Object(slots={"asd": None, "bsd": None})
+
+    result = parse_and_lex('(| asd. bsd. |)')
+    assert result == Object(slots={"asd": None, "bsd": None})
+
+    result = parse_and_lex('(asd. bsd. |)')
+    assert result == Object(slots={"asd": None, "bsd": None})
 
 
 # def test_parse_object_with_slots():
