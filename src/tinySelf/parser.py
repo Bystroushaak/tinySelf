@@ -189,9 +189,16 @@ def slot_definition(p):
     return p
 
 
-@pg.production('slots_definition : slot_name RW_ASSIGNMENT expression END_OF_EXPR slot_definition')
+@pg.production('slot_definition : slot_definition END_OF_EXPR')
+@pg.production('slot_definition : slot_definition END_OF_EXPR slot_definition')
+@pg.production('slot_definition : slot_definition END_OF_EXPR slot_definition END_OF_EXPR')
 def slots_definition(p):
-    return p
+    out = p[0]
+
+    if len(p) >= 3:
+        out.update(p[2])
+
+    return out
 
 
 
