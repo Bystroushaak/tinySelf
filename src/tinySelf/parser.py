@@ -4,6 +4,7 @@
 # Interpreter version: python 2.7
 #
 from rply import ParserGenerator
+from rply.token import Token
 from rply.token import BaseBox
 
 from lexer import lexer
@@ -33,6 +34,7 @@ pg = ParserGenerator(
         "FIRST_KW",
         "ARGUMENT",
         "IDENTIFIER",
+        "RW_ASSIGNMENT",
         "OPERATOR",
         "RETURN",
         "END_OF_EXPR",
@@ -143,15 +145,78 @@ def expression_keyword_message_to_obj_with_parameters(p):
     )
 
 
+# Slot definition #############################################################
+@pg.production('slot_kwd : KEYWORD IDENTIFIER')
+def slot_name_kwd_one(p):
+    return p
+
+
+@pg.production('slot_kwd : KEYWORD IDENTIFIER slot_kwd')
+def slot_name_kwd_multiple(p):
+    # flatten the nested lists
+    tokens = [p[0], p[1]]
+    for group in p[2:]:
+        tokens.extend(group)
+
+    return tokens
+
+
+# @pg.production('slot_name : FIRST_KW IDENTIFIER slot_kwd')
+# def slot_names_kwd(p):
+#     pass
+
+
+# @pg.production('slot_name : IDENTIFIER OPERATOR IDENTIFIER')
+# def slot_names_operator(p):
+    # pass
+
+
+@pg.production('slot_name : IDENTIFIER')
+def slot_names(p):
+    pass
+
+
+# @pg.production('slot_names : IDENTIFIER . slot_name')
+
+
+@pg.production('slot_definition : IDENTIFIER')
+def nil_slot_definition(p):
+    return {p[0].value:None}
+
+
+@pg.production('slot_definition : slot_name RW_ASSIGNMENT expression')
+def slot_definition(p):
+    return p
+
+
+@pg.production('slots_definition : slot_name RW_ASSIGNMENT expression END_OF_EXPR slot_definition')
+def slots_definition(p):
+    return p
+
+
+
+# Object definition ###########################################################
 @pg.production('expression : OBJ_START OBJ_END')
 @pg.production('expression : OBJ_START SEPARATOR SEPARATOR OBJ_END')
 def expression_empty_object(p):
     return Object()
 
 
-@pg.production('expression : SEPARATOR SEPARATOR')
-def expression_empty_slots(p):
-    return {}
+@pg.production('expression : OBJ_START slot_definition SEPARATOR OBJ_END')
+@pg.production('expression : OBJ_START SEPARATOR slot_definition SEPARATOR OBJ_END')
+def expression_empty_object(p):
+    while isinstance(p[0], Token) and p[0].name in {"OBJ_START", "SEPARATOR"}:
+        p.pop(0)
+
+    return Object(slots=p[0])
+
+
+
+# @pg.production('expression : SEPARATOR SEPARATOR')
+# @pg.production('expression : OBJ_START SEPARATOR')
+# @pg.production('expression : BLOCK_START SEPARATOR')
+# def expression_empty_slots(p):
+#     return {}
 
 
 # @pg.production('expression : SEPARATOR SEPARATOR')
