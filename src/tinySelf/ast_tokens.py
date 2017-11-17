@@ -42,6 +42,13 @@ class Number(BaseBox):  # TODO: remove
     def eval(self):
         return self.value
 
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and \
+               self.value == obj.value
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
 
 class String(BaseBox):  # TODO: remove
     def __init__(self, value):
@@ -49,6 +56,13 @@ class String(BaseBox):  # TODO: remove
 
     def eval(self):
         return self.value
+
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and \
+               self.value == obj.value
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
 
 
 class Code(BaseBox):
