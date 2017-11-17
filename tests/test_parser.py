@@ -222,45 +222,55 @@ def test_parse_multiple_slot_assignment():
     assert result == Object(slots={"asd": Number(2), "bsd": Number(4)})
 
 
-def test_parse_kwd_msg_assignment():
+def test_parse_kwd_slot_assignment():
     result = parse_and_lex('(| asd: a <- () |)')
-    assert result == Object(slots={"asd:": Object(params={"a"})})
+    assert result == Object(slots={"asd:": Object(params=["a"])})
 
     result = parse_and_lex('(| asd: a <- (). |)')
-    assert result == Object(slots={"asd:": Object(params={"a"})})
+    assert result == Object(slots={"asd:": Object(params=["a"])})
 
 
-def test_parse_kwd_msgs_assignment():
+def test_parse_kwd_slots_assignment():
     result = parse_and_lex('(| asd: a Bsd: b <- () |)')
-    assert result == Object(slots={"asd:Bsd:": Object(params={"a", "b"})})
+    assert result == Object(slots={"asd:Bsd:": Object(params=["a", "b"])})
 
     result = parse_and_lex('(asd: a Bsd: b <- (). |)')
-    assert result == Object(slots={"asd:Bsd:": Object(params={"a", "b"})})
+    assert result == Object(slots={"asd:Bsd:": Object(params=["a", "b"])})
 
 
-def test_parse_multiple_msgs_assignments():
+def test_parse_multiple_slots_assignments():
     result = parse_and_lex('(| asd: a Bsd: b <- (). a: p <- () |)')
 
     assert result == Object(
         slots={
-            "asd:Bsd:": Object(params={"a", "b"}),
-            "a:": Object(params={"p"}),
+            "asd:Bsd:": Object(params=["a", "b"]),
+            "a:": Object(params=["p"]),
         }
     )
 
 
 def test_parse_error_in_msg_slot_value_assignment():
     try:
-        result = parse_and_lex('(| asd: a Bsd: b <- 1 |)')
+        parse_and_lex('(| asd: a Bsd: b <- 1 |)')
     except AssertionError:
         return
 
     raise AssertionError("KW slot value assignment shouldn't be allowed!")
 
 
-# def test_parse_object_with_slots():
-#     result = parse_and_lex('(| 1 |)')
+def test_parse_op_slot_assignment():
+    result = parse_and_lex('(| + b <- () |)')
+    assert result == Object(slots={"+": Object(params=["b"])})
 
-#     assert isinstance(result, Object)
-#     assert result.slots == {}
-#     assert result.code == []
+    result = parse_and_lex('(+ b <- (). |)')
+    assert result == Object(slots={"+": Object(params=["b"])})
+
+
+def test_parse_multiple_op_slot_assignments():
+    result = parse_and_lex('(| + b <- (). - a <- () |)')
+    assert result == Object(
+        slots={
+            "+": Object(params=["b"]),
+            "-": Object(params=["a"]),
+        }
+    )

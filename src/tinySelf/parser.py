@@ -146,6 +146,22 @@ def expression_keyword_message_to_obj_with_parameters(p):
 
 
 # Slot definition #############################################################
+@pg.production('slot_name : IDENTIFIER')
+def slot_names(p):
+    return p[0].value
+
+
+@pg.production('slot_definition : slot_name')
+def nil_slot_definition(p):
+    return {p[0]: None}
+
+
+@pg.production('slot_definition : slot_name RW_ASSIGNMENT expression')
+def slot_definition(p):
+    return {p[0]: p[2]}
+
+
+# Keywords
 @pg.production('slot_kwd : KEYWORD IDENTIFIER')
 def slot_name_kwd_one(p):
     return p
@@ -162,12 +178,18 @@ def slot_name_kwd_multiple(p):
 
 
 @pg.production('kw_slot_name : FIRST_KW IDENTIFIER')
-def slot_names_kwd(p):
-    return p[0].value, set([p[1].value])
+def slot_name_kwd(p):
+    """
+    Returns (slotname, parameter_list)
+    """
+    return p[0].value, [p[1].value]
 
 
 @pg.production('kw_slot_name : FIRST_KW IDENTIFIER slot_kwd')
 def slot_names_kwds(p):
+    """
+    Returns (slotname, parameter_list)
+    """
     signature = [p[0]]
     parameters = [p[1]]
 
@@ -181,38 +203,41 @@ def slot_names_kwds(p):
 
 
 @pg.production('slot_definition : kw_slot_name RW_ASSIGNMENT expression')
-def nil_slot_definition(p):
+def kw_slot_definition(p):
     assert isinstance(p[2], Object), "Only objects are assignable to kw slots!"
 
     slot_name = p[0][0]
     parameters = p[0][1]
 
     obj = p[2]
-    obj.params.update(parameters)
+    obj.params.extend(parameters)
 
     return {slot_name: obj}
 
 
-# @pg.production('slot_name : IDENTIFIER OPERATOR IDENTIFIER')
-# def slot_names_operator(p):
-    # pass
+# Operators
+@pg.production('op_slot_name : OPERATOR IDENTIFIER')
+def slot_name_op(p):
+    """
+    Returns (slotname, parameter_list)
+    """
+    return p[0].value, [p[1].value]
 
 
-@pg.production('slot_name : IDENTIFIER')
-def slot_names(p):
-    return p[0].value
+@pg.production('slot_definition : op_slot_name RW_ASSIGNMENT expression')
+def operator_slot_definition(p):
+    assert isinstance(p[2], Object), "Only objects are assignable to op slots!"
+
+    slot_name = p[0][0]
+    parameters = p[0][1]
+
+    obj = p[2]
+    obj.params.extend(parameters)
+
+    return {slot_name: obj}
 
 
-@pg.production('slot_definition : slot_name')
-def nil_slot_definition(p):
-    return {p[0]: None}
-
-
-@pg.production('slot_definition : slot_name RW_ASSIGNMENT expression')
-def slot_definition(p):
-    return {p[0]: p[2]}
-
-
+# Allow list of dot-separated of slot definitions.
 @pg.production('slot_definition : slot_definition END_OF_EXPR')
 @pg.production('slot_definition : slot_definition END_OF_EXPR slot_definition')
 def slots_definition(p):
@@ -222,7 +247,6 @@ def slots_definition(p):
         out.update(p[2])
 
     return out
-
 
 
 # Object definition ###########################################################

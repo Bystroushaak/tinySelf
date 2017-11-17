@@ -18,7 +18,7 @@ class Self(BaseBox):
 
 
 class Object(BaseBox):
-    def __init__(self, slots={}, params=set(), code=[]):
+    def __init__(self, slots=None, params=None, code=None):
         self.slots = slots
         self.params = params
         self.code = code
@@ -27,7 +27,7 @@ class Object(BaseBox):
         if not slots:
             self.slots = {}
         if not params:
-            self.params = set()
+            self.params = []
         if not code:
             self.code = []
 
