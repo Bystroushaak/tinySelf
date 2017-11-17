@@ -24,10 +24,8 @@ from ast_tokens import Self
 pg = ParserGenerator(
     [
         "NUMBER",
-        "OBJ_START",
-        "OBJ_END",
-        "BLOCK_START",
-        "BLOCK_END",
+        "OBJ_START", "OBJ_END",
+        "BLOCK_START", "BLOCK_END",
         "SINGLE_Q_STRING",
         "DOUBLE_Q_STRING",
         "KEYWORD",
@@ -161,6 +159,12 @@ def slot_definition(p):
     return {p[0]: p[2]}
 
 
+# Arguments
+@pg.production('slot_definition : ARGUMENT')
+def nil_argument_definition(p):
+    return {p[0].value: None}
+
+
 # Keywords
 @pg.production('slot_kwd : KEYWORD IDENTIFIER')
 def slot_name_kwd_one(p):
@@ -256,13 +260,31 @@ def empty_object(p):
     return Object()
 
 
+def parse_slots_and_params(slots):
+    slot_names = []
+    param_names = []
+    for name in slots.keys():
+        if name.startswith(":"):
+            param_names.append(name)
+        else:
+            slot_names.append(name)
+
+    params = [k[1:] for k in param_names]
+    slots = {k: slots[k] for k in slot_names}
+
+    return slots, params
+
+
 @pg.production('obj : OBJ_START slot_definition SEPARATOR OBJ_END')
 @pg.production('obj : OBJ_START SEPARATOR slot_definition SEPARATOR OBJ_END')
 def object_with_slots(p):
+    # remove tokens from the beginning
     while isinstance(p[0], Token) and p[0].name in {"OBJ_START", "SEPARATOR"}:
         p.pop(0)
 
-    return Object(slots=p[0])
+    slots, params = parse_slots_and_params(p[0])
+
+    return Object(slots=slots, params=params)
 
 
 

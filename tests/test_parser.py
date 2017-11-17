@@ -295,3 +295,14 @@ def test_parse_slot_definition_with_combination_of_slots():
             "-": Object(params=["a"]),
         }
     )
+
+
+def test_argument_parser():
+    result = parse_and_lex('(| :a |)')
+    assert result == Object(params=["a"])
+
+    result = parse_and_lex('(| :a. |)')
+    assert result == Object(params=["a"])
+
+    result = parse_and_lex('(| :a. :b |)')
+    assert result == Object(params=["a", "b"])
