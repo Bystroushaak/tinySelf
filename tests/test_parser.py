@@ -181,10 +181,10 @@ def test_parse_object_with_empty_slots():
     assert result.code == []
 
 
-def test_parse_empty_slots():
-    result = parse_and_lex('||')
+def test_parse_object_with_nil_slot():
+    result = parse_and_lex('(| asd |)')
 
-    assert result == {}
+    assert result == Object(slots={"asd": None})
 
 
 # def test_parse_object_with_slots():

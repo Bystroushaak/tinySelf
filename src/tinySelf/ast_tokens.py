@@ -22,6 +22,14 @@ class Object(BaseBox):
         self.slots = slots
         self.code = code
 
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and \
+               self.slots == obj.slots and \
+               self.code == obj.code
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
 
 class Block(Object):
     pass

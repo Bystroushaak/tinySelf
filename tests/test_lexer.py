@@ -209,3 +209,8 @@ def test_cascade():
         Token('IDENTIFIER', 'message2'),
         Token('END_OF_EXPR', '.'),
     ]
+
+def test_assingment_op():
+    assert list(lexer.lex('->')) == [
+        Token('RW_ASSIGNMENT', '->'),
+    ]
