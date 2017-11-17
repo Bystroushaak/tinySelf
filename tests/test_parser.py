@@ -274,3 +274,24 @@ def test_parse_multiple_op_slot_assignments():
             "-": Object(params=["a"]),
         }
     )
+
+
+def test_parse_slot_definition_with_combination_of_slots():
+    result = parse_and_lex("""
+        (|
+            a.
+            asd: b <- ().
+            asd: a Bsd: b <- ().
+            + b <- ().
+            - a <- ().
+        |)
+    """)
+    assert result == Object(
+        slots={
+            "a": None,
+            "asd:Bsd:": Object(params=["a", "b"]),
+            "asd:": Object(params=["b"]),
+            "+": Object(params=["b"]),
+            "-": Object(params=["a"]),
+        }
+    )
