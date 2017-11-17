@@ -222,6 +222,42 @@ def test_parse_multiple_slot_assignment():
     assert result == Object(slots={"asd": Number(2), "bsd": Number(4)})
 
 
+def test_parse_kwd_msg_assignment():
+    result = parse_and_lex('(| asd: a <- () |)')
+    assert result == Object(slots={"asd:": Object(params={"a"})})
+
+    result = parse_and_lex('(| asd: a <- (). |)')
+    assert result == Object(slots={"asd:": Object(params={"a"})})
+
+
+def test_parse_kwd_msgs_assignment():
+    result = parse_and_lex('(| asd: a Bsd: b <- () |)')
+    assert result == Object(slots={"asd:Bsd:": Object(params={"a", "b"})})
+
+    result = parse_and_lex('(asd: a Bsd: b <- (). |)')
+    assert result == Object(slots={"asd:Bsd:": Object(params={"a", "b"})})
+
+
+def test_parse_multiple_msgs_assignments():
+    result = parse_and_lex('(| asd: a Bsd: b <- (). a: p <- () |)')
+
+    assert result == Object(
+        slots={
+            "asd:Bsd:": Object(params={"a", "b"}),
+            "a:": Object(params={"p"}),
+        }
+    )
+
+
+def test_parse_error_in_msg_slot_value_assignment():
+    try:
+        result = parse_and_lex('(| asd: a Bsd: b <- 1 |)')
+    except AssertionError:
+        return
+
+    raise AssertionError("KW slot value assignment shouldn't be allowed!")
+
+
 # def test_parse_object_with_slots():
 #     result = parse_and_lex('(| 1 |)')
 

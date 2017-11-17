@@ -18,13 +18,23 @@ class Self(BaseBox):
 
 
 class Object(BaseBox):
-    def __init__(self, slots={}, code=[]):
+    def __init__(self, slots={}, params=set(), code=[]):
         self.slots = slots
+        self.params = params
         self.code = code
+
+        # mutable parameters strikes again
+        if not slots:
+            self.slots = {}
+        if not params:
+            self.params = set()
+        if not code:
+            self.code = []
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
                self.slots == obj.slots and \
+               self.params == obj.params and \
                self.code == obj.code
 
     def __ne__(self, obj):
