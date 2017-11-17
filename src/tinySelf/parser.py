@@ -173,25 +173,25 @@ def slot_name_kwd_multiple(p):
 
 @pg.production('slot_name : IDENTIFIER')
 def slot_names(p):
-    pass
+    return p[0].value
 
 
 # @pg.production('slot_names : IDENTIFIER . slot_name')
 
 
-@pg.production('slot_definition : IDENTIFIER')
+@pg.production('slot_definition : slot_name')
 def nil_slot_definition(p):
-    return {p[0].value:None}
+    return {p[0]: None}
 
 
 @pg.production('slot_definition : slot_name RW_ASSIGNMENT expression')
 def slot_definition(p):
-    return p
+    return {p[0]: p[2]}
 
 
 @pg.production('slot_definition : slot_definition END_OF_EXPR')
 @pg.production('slot_definition : slot_definition END_OF_EXPR slot_definition')
-@pg.production('slot_definition : slot_definition END_OF_EXPR slot_definition END_OF_EXPR')
+# @pg.production('slot_definition : slot_definition END_OF_EXPR slot_definition END_OF_EXPR')
 def slots_definition(p):
     out = p[0]
 

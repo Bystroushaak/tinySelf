@@ -206,6 +206,14 @@ def test_parse_object_with_multiple_nil_slots():
     assert result == Object(slots={"asd": None, "bsd": None})
 
 
+def test_parse_slot_assignment():
+    result = parse_and_lex('(| asd <- 2 |)')
+    assert result == Object(slots={"asd": Number(2)})
+
+    result = parse_and_lex('(| asd <- 2. |)')
+    assert result == Object(slots={"asd": Number(2)})
+
+
 # def test_parse_object_with_slots():
 #     result = parse_and_lex('(| 1 |)')
 

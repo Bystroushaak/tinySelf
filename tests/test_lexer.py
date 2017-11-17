@@ -212,6 +212,6 @@ def test_cascade():
 
 
 def test_assingment_op():
-    assert list(lexer.lex('->')) == [
-        Token('RW_ASSIGNMENT', '->'),
+    assert list(lexer.lex('<-')) == [
+        Token('RW_ASSIGNMENT', '<-'),
     ]
