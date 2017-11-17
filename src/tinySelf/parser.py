@@ -161,9 +161,36 @@ def slot_name_kwd_multiple(p):
     return tokens
 
 
-# @pg.production('slot_name : FIRST_KW IDENTIFIER slot_kwd')
-# def slot_names_kwd(p):
-#     pass
+@pg.production('kw_slot_name : FIRST_KW IDENTIFIER')
+def slot_names_kwd(p):
+    return p[0].value, set([p[1].value])
+
+
+@pg.production('kw_slot_name : FIRST_KW IDENTIFIER slot_kwd')
+def slot_names_kwds(p):
+    signature = [p[0]]
+    parameters = [p[1]]
+
+    for cnt, token in enumerate(p[2]):
+        if cnt % 2 == 0:
+            signature.append(token)
+        else:
+            parameters.append(token)
+
+    return "".join(x.value for x in signature), {x.value for x in parameters}
+
+
+@pg.production('slot_definition : kw_slot_name RW_ASSIGNMENT expression')
+def nil_slot_definition(p):
+    assert isinstance(p[2], Object), "Only objects are assignable to kw slots!"
+
+    slot_name = p[0][0]
+    parameters = p[0][1]
+
+    obj = p[2]
+    obj.params.update(parameters)
+
+    return {slot_name: obj}
 
 
 # @pg.production('slot_name : IDENTIFIER OPERATOR IDENTIFIER')
@@ -174,9 +201,6 @@ def slot_name_kwd_multiple(p):
 @pg.production('slot_name : IDENTIFIER')
 def slot_names(p):
     return p[0].value
-
-
-# @pg.production('slot_names : IDENTIFIER . slot_name')
 
 
 @pg.production('slot_definition : slot_name')
@@ -191,7 +215,6 @@ def slot_definition(p):
 
 @pg.production('slot_definition : slot_definition END_OF_EXPR')
 @pg.production('slot_definition : slot_definition END_OF_EXPR slot_definition')
-# @pg.production('slot_definition : slot_definition END_OF_EXPR slot_definition END_OF_EXPR')  # TODO: remove?
 def slots_definition(p):
     out = p[0]
 
@@ -203,19 +226,34 @@ def slots_definition(p):
 
 
 # Object definition ###########################################################
-@pg.production('expression : OBJ_START OBJ_END')
-@pg.production('expression : OBJ_START SEPARATOR SEPARATOR OBJ_END')
-def expression_empty_object(p):
+@pg.production('obj : OBJ_START OBJ_END')
+@pg.production('obj : OBJ_START SEPARATOR SEPARATOR OBJ_END')
+def empty_object(p):
     return Object()
 
 
-@pg.production('expression : OBJ_START slot_definition SEPARATOR OBJ_END')
-@pg.production('expression : OBJ_START SEPARATOR slot_definition SEPARATOR OBJ_END')
-def expression_empty_object(p):
+@pg.production('obj : OBJ_START slot_definition SEPARATOR OBJ_END')
+@pg.production('obj : OBJ_START SEPARATOR slot_definition SEPARATOR OBJ_END')
+def object_with_slots(p):
     while isinstance(p[0], Token) and p[0].name in {"OBJ_START", "SEPARATOR"}:
         p.pop(0)
 
     return Object(slots=p[0])
+
+
+
+
+
+
+
+
+
+
+
+# TODO: remove later?
+@pg.production('expression : obj')
+def expression_object(p):
+    return p[0]
 
 
 
