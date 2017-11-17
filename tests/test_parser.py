@@ -214,6 +214,14 @@ def test_parse_slot_assignment():
     assert result == Object(slots={"asd": Number(2)})
 
 
+def test_parse_multiple_slot_assignment():
+    result = parse_and_lex('(asd <- 2. bsd <- 4 |)')
+    assert result == Object(slots={"asd": Number(2), "bsd": Number(4)})
+
+    result = parse_and_lex('(| asd <- 2. bsd <- 4. |)')
+    assert result == Object(slots={"asd": Number(2), "bsd": Number(4)})
+
+
 # def test_parse_object_with_slots():
 #     result = parse_and_lex('(| 1 |)')
 
