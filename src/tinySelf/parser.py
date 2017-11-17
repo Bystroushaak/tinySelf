@@ -191,7 +191,7 @@ def slot_definition(p):
 
 @pg.production('slot_definition : slot_definition END_OF_EXPR')
 @pg.production('slot_definition : slot_definition END_OF_EXPR slot_definition')
-# @pg.production('slot_definition : slot_definition END_OF_EXPR slot_definition END_OF_EXPR')
+# @pg.production('slot_definition : slot_definition END_OF_EXPR slot_definition END_OF_EXPR')  # TODO: remove?
 def slots_definition(p):
     out = p[0]
 
