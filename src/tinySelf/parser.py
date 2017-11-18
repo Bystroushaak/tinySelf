@@ -22,7 +22,7 @@ from ast_tokens import Self
 
 
 pg = ParserGenerator(
-    [
+    (
         "NUMBER",
         "OBJ_START", "OBJ_END",
         "BLOCK_START", "BLOCK_END",
@@ -40,9 +40,12 @@ pg = ParserGenerator(
         "CASCADE",
         "ASSIGNMENT",
         "COMMENT",
-    ],
-    precedence=[
-    ]
+    ),
+    precedence=(
+        ("left", ["IDENTIFIER"]),
+        ("left", ["OPERATOR"]),
+        # ("right", ["FIRST_KW", "KEYWORD"]),
+    )
 )
 
 
@@ -61,19 +64,19 @@ def expression_string(p):
 
 # Unary messages ##############################################################
 @pg.production('expression : IDENTIFIER')
-def expression_unary_message(p):
+def unary_message(p):
     return Send(obj=Self(), msg=Message(p[0].getstr()))
 
 
 @pg.production('expression : expression IDENTIFIER')
-def expression_unary_message_to_expression(p):
+def unary_message_to_expression(p):
     return Send(obj=p[0], msg=Message(p[1].getstr()))
 
 
 # Binary messages #############################################################
 @pg.production('expression : expression OPERATOR expression')
 @pg.production('expression : expression ASSIGNMENT expression')
-def expression_binary_message_to_expression(p):
+def binary_message_to_expression(p):
     assert len(p) == 3, "Bad number of operands for %s!" % p[1]
 
     return Send(p[0], BinaryMessage(p[1].getstr(), p[2]))
@@ -81,22 +84,22 @@ def expression_binary_message_to_expression(p):
 
 # Keyword messages ############################################################
 @pg.production('expression : FIRST_KW expression')
-def expression_keyword_message(p):
+def keyword_message(p):
     return Send(obj=Self(), msg=KeywordMessage(p[0].getstr(), [p[1]]))
 
 
 @pg.production('expression : expression FIRST_KW expression')
-def expression_keyword_message_to_obj(p):
+def keyword_message_to_obj(p):
     return Send(obj=p[0], msg=KeywordMessage(p[1].getstr(), [p[2]]))
 
 
 @pg.production('kwd : KEYWORD expression')
-def expression_keyword(p):
+def keyword(p):
     return p
 
 
 @pg.production('kwd : KEYWORD expression kwd')
-def expresion_keyword_multiple(p):
+def keyword_multiple(p):
     # flatten the nested lists
     tokens = [p[0], p[1]]
     for group in p[2:]:
@@ -105,8 +108,8 @@ def expresion_keyword_multiple(p):
     return tokens
 
 
-@pg.production('expression : FIRST_KW expression kwd')
-def expression_keyword_message_with_parameters(p):
+@pg.production('keyword_msg : FIRST_KW expression kwd')
+def keyword_message_with_parameters(p):
     signature = [p[0]]
     parameters = [p[1]]
 
@@ -125,8 +128,8 @@ def expression_keyword_message_with_parameters(p):
     )
 
 
-@pg.production('expression : expression FIRST_KW expression kwd')
-def expression_keyword_message_to_obj_with_parameters(p):
+@pg.production('keyword_msg : expression FIRST_KW expression kwd')
+def keyword_message_to_obj_with_parameters(p):
     signature = [p[1]]
     parameters = [p[2]]
 
@@ -143,6 +146,46 @@ def expression_keyword_message_to_obj_with_parameters(p):
             parameters=parameters
         )
     )
+
+
+# TODO: remove later?
+@pg.production('expression : keyword_msg')
+def expression_keyword_msg(p):
+    return p[0]
+
+
+# Cascades ####################################################################
+def parse_cascade_messages(msgs):
+    out = []
+    for msg in msgs:
+        if isinstance(msg, Send) and msg.obj == Self():
+            msg = msg.msg
+
+        out.append(msg)
+
+    return out
+
+
+@pg.production('cascade : expression CASCADE expression')
+@pg.production('cascade : keyword_msg CASCADE expression')
+def cascade(p):
+    return Cascade(obj=Self(), msgs=parse_cascade_messages([p[0], p[2]]))
+
+
+@pg.production('cascade : expression expression CASCADE expression')
+@pg.production('cascade : expression keyword_msg CASCADE expression')
+def cascades(p):
+    msgs = parse_cascade_messages([p[1], p[3]])
+
+    print p[0]
+
+    return Cascade(obj=p[0], msgs=msgs)
+
+
+# TODO: remove later?
+@pg.production('expression : cascade')
+def expression_cascade(p):
+    return p[0]
 
 
 # Slot definition #############################################################
@@ -361,7 +404,7 @@ def block_with_slots_and_code(p):
 
 # TODO: remove later?
 @pg.production('expression : block')
-def expression_object(p):
+def expression_block(p):
     return p[0]
 
 

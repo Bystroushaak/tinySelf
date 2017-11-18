@@ -12,6 +12,7 @@ from tinySelf.ast_tokens import Block
 from tinySelf.ast_tokens import Object
 from tinySelf.ast_tokens import Number
 from tinySelf.ast_tokens import String
+from tinySelf.ast_tokens import Cascade
 from tinySelf.ast_tokens import Message
 from tinySelf.ast_tokens import BinaryMessage
 from tinySelf.ast_tokens import KeywordMessage
@@ -156,6 +157,66 @@ def test_parse_string():
 
     result = parse_and_lex('""')
     assert result.value == ""
+
+
+# def test_parse_cascade_to_self():
+#     result = parse_and_lex('a; b')
+
+#     assert result == Cascade(
+#         obj=Self(),
+#         msgs=[
+#             Message("a"),
+#             Message("b"),
+#         ]
+#     )
+
+
+# def test_parse_cascade_kw_to_self():
+#     result = parse_and_lex('a: 1; b')
+
+#     assert result == Cascade(
+#         obj=Self(),
+#         msgs=[
+#             KeywordMessage("a:", [Number(1)]),
+#             Message("b"),
+#         ]
+#     )
+
+
+# def test_parse_cascade():
+#     result = parse_and_lex('a b; c')
+
+#     assert result == Cascade(
+#         obj=Send(Self(), Message("a")),
+#         msgs=[
+#             Message("b"),
+#             Message("c"),
+#         ]
+#     )
+
+
+# def test_parse_cascade_kw():
+#     result = parse_and_lex('s a: 1 B: 2; b')
+
+#     assert result == Cascade(
+#         obj=Send(Self(), Message("s")),
+#         msgs=[
+#             KeywordMessage("a:B:", [Number(1), Number(2)]),
+#             Message("b"),
+#         ]
+#     )
+
+
+def test_parse_cascade_to_kw():
+    result = parse_and_lex('x: 1 Y: 2 a: 1 B: 2; b')
+
+    assert result == Cascade(
+        obj=Send(Self(), KeywordMessage("x:Y:", [Number(1), Number(2)])),
+        msgs=[
+            KeywordMessage("a:B:", [Number(1), Number(2)]),
+            Message("b"),
+        ]
+    )
 
 
 def test_parse_object():
