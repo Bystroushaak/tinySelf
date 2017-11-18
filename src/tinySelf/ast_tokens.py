@@ -84,6 +84,13 @@ class Message(BaseBox):
     def __init__(self, name):
         self.name = name
 
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and \
+               self.name == obj.name
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
 
 class KeywordMessage(BaseBox):
     def __init__(self, name, parameters):
@@ -101,3 +108,11 @@ class Send(BaseBox):
     def __init__(self, obj, msg):
         self.obj = obj
         self.msg = msg
+
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and \
+               self.obj == obj.obj and \
+               self.msg == obj.msg
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
