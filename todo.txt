@@ -2,7 +2,15 @@ https://github.com/joshsharp/python-braid/blob/master/parser.py
 
 when-changed -s -r src/tinySelf/*.py -r tests/*.py -c ./run_tests.sh -s
 
+Cascade precendence / kw precedence
+
 Read only slots
 Cascades
 Parents
 Blocks
+
+Block parent auto-settings.
+
+Comments.
+
+Parens for priorities
