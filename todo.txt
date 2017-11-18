@@ -1,3 +1,7 @@
 https://github.com/joshsharp/python-braid/blob/master/parser.py
 
 when-changed -s -r src/tinySelf/*.py -r tests/*.py -c ./run_tests.sh -s
+
+Read only slots
+Cascades
+Blocks
