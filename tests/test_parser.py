@@ -445,3 +445,23 @@ def test_block_slots():
             "-": Object(params=["a"]),
         }
     )
+
+
+def test_block_with_code_statements():
+    result = parse_and_lex('[| a. :b | a printLine. a print. test]')
+
+    assert result == Block(
+        slots={"a": None},
+        params=["b"],
+        code=[
+            Send(
+                Send(Self(), Message("a")),
+                Message("printLine")
+            ),
+            Send(
+                Send(Self(), Message("a")),
+                Message("print")
+            ),
+            Send(Self(), Message("test"))
+        ]
+    )
