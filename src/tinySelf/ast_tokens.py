@@ -16,6 +16,9 @@ class Self(BaseBox):
     def __ne__(self, obj):
         return not self.__eq__(obj)
 
+    def __repr__(self):
+        return "Self()"
+
 
 class Object(BaseBox):
     def __init__(self, slots=None, params=None, code=None):
@@ -75,20 +78,6 @@ class String(BaseBox):  # TODO: remove
         return not self.__eq__(obj)
 
 
-class Cascade(BaseBox):
-    def __init__(self, obj, msgs):
-        self.obj = obj
-        self.msgs = msgs
-
-    def __eq__(self, obj):
-        return isinstance(obj, self.__class__) and \
-               self.obj == obj.obj and \
-               self.msgs == obj.msgs
-
-    def __ne__(self, obj):
-        return not self.__eq__(obj)
-
-
 class Message(BaseBox):
     def __init__(self, name):
         self.name = name
@@ -99,6 +88,9 @@ class Message(BaseBox):
 
     def __ne__(self, obj):
         return not self.__eq__(obj)
+
+    def __repr__(self):
+        return "Message(%s)" % self.name
 
 
 class KeywordMessage(BaseBox):
@@ -129,6 +121,20 @@ class BinaryMessage(BaseBox):
         return not self.__eq__(obj)
 
 
+class Cascade(BaseBox):
+    def __init__(self, obj, msgs):
+        self.obj = obj
+        self.msgs = msgs
+
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and \
+               self.obj == obj.obj and \
+               self.msgs == obj.msgs
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
+
 class Send(BaseBox):
     def __init__(self, obj, msg):
         self.obj = obj
@@ -141,3 +147,6 @@ class Send(BaseBox):
 
     def __ne__(self, obj):
         return not self.__eq__(obj)
+
+    def __repr__(self):
+        return "Send(%s, %s)" % (self.obj, self.msg)
