@@ -386,5 +386,62 @@ def test_recursive_obj_definition():
 
 def test_empty_block():
     result = parse_and_lex('[]')
-
     assert result == Block()
+
+
+def test_block_slots():
+    result = parse_and_lex('[ asd. |]')
+    assert result == Block(slots={"asd": None})
+
+    result = parse_and_lex('[| asd <- 2 |]')
+    assert result == Block(slots={"asd": Number(2)})
+
+    result = parse_and_lex('[| asd <- 2. |]')
+    assert result == Block(slots={"asd": Number(2)})
+
+    result = parse_and_lex('[asd <- 2. bsd <- 4 |]')
+    assert result == Block(slots={"asd": Number(2), "bsd": Number(4)})
+
+    result = parse_and_lex('[| asd <- 2. bsd <- 4. |]')
+    assert result == Block(slots={"asd": Number(2), "bsd": Number(4)})
+
+    result = parse_and_lex('[| asd: a = () |]')
+    assert result == Block(slots={"asd:": Object(params=["a"])})
+
+    result = parse_and_lex('[| asd: a = (). |]')
+    assert result == Block(slots={"asd:": Object(params=["a"])})
+
+    result = parse_and_lex('[| asd: a Bsd: b = () |]')
+    assert result == Block(slots={"asd:Bsd:": Object(params=["a", "b"])})
+
+    result = parse_and_lex('[| :a |]')
+    assert result == Block(params=["a"])
+
+    result = parse_and_lex('[| :a. |]')
+    assert result == Block(params=["a"])
+
+    result = parse_and_lex('[| :a. :b |]')
+    assert result == Block(params=["a", "b"])
+
+    result = parse_and_lex('[:a |]')
+    assert result == Block(params=["a"])
+
+    result = parse_and_lex('[ :a. |]')
+    assert result == Block(params=["a"])
+
+    result = parse_and_lex('[:a. :b |]')
+    assert result == Block(params=["a", "b"])
+
+    result = parse_and_lex('[| + b = () |]')
+    assert result == Block(slots={"+": Object(params=["b"])})
+
+    result = parse_and_lex('[+ b = (). |]')
+    assert result == Block(slots={"+": Object(params=["b"])})
+
+    result = parse_and_lex('[| + b = (). - a = () |]')
+    assert result == Block(
+        slots={
+            "+": Object(params=["b"]),
+            "-": Object(params=["a"]),
+        }
+    )

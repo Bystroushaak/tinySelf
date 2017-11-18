@@ -335,6 +335,18 @@ def empty_block(p):
     return Block()
 
 
+@pg.production('block : BLOCK_START slot_definition SEPARATOR BLOCK_END')
+@pg.production('block : BLOCK_START SEPARATOR slot_definition SEPARATOR BLOCK_END')
+def block_with_slots(p):
+    # remove tokens from the beginning
+    while isinstance(p[0], Token) and p[0].name in {"BLOCK_START", "SEPARATOR"}:
+        p.pop(0)
+
+    slots, params = parse_slots_and_params(p[0])
+
+    return Block(slots=slots, params=params)
+
+
 
 # TODO: remove later?
 @pg.production('expression : block')
