@@ -7,10 +7,11 @@ from tinySelf.lexer import lexer
 from tinySelf.parser import parser
 
 from tinySelf.ast_tokens import Send
-from tinySelf.ast_tokens import Number
 from tinySelf.ast_tokens import Self
-from tinySelf.ast_tokens import String
+from tinySelf.ast_tokens import Block
 from tinySelf.ast_tokens import Object
+from tinySelf.ast_tokens import Number
+from tinySelf.ast_tokens import String
 from tinySelf.ast_tokens import Message
 from tinySelf.ast_tokens import BinaryMessage
 from tinySelf.ast_tokens import KeywordMessage
@@ -381,3 +382,9 @@ def test_recursive_obj_definition():
         },
         code=[Send(Self(), Message("nil"))]
     )
+
+
+def test_empty_block():
+    result = parse_and_lex('[]')
+
+    assert result == Block()

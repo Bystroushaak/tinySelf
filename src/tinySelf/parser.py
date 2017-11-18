@@ -13,7 +13,7 @@ from ast_tokens import Object
 from ast_tokens import Block
 from ast_tokens import Number
 from ast_tokens import String
-from ast_tokens import Code
+from ast_tokens import Cascade
 from ast_tokens import Message
 from ast_tokens import KeywordMessage
 from ast_tokens import BinaryMessage
@@ -259,6 +259,7 @@ def slots_definition(p):
 
 # Object definition ###########################################################
 @pg.production('obj : OBJ_START OBJ_END')
+@pg.production('obj : OBJ_START SEPARATOR OBJ_END')
 @pg.production('obj : OBJ_START SEPARATOR SEPARATOR OBJ_END')
 def empty_object(p):
     return Object()
@@ -320,37 +321,25 @@ def object_with_slots_and_code(p):
     return Object(slots=slots, params=params, code=p[2])
 
 
-
-
-
-
-
-
 # TODO: remove later?
 @pg.production('expression : obj')
 def expression_object(p):
     return p[0]
 
 
-
-# @pg.production('expression : SEPARATOR SEPARATOR')
-# @pg.production('expression : OBJ_START SEPARATOR')
-# @pg.production('expression : BLOCK_START SEPARATOR')
-# def expression_empty_slots(p):
-#     return {}
-
-
-# @pg.production('expression : SEPARATOR SEPARATOR')
-# def expression_slots(p):
-#     return {}
+# Block definition ############################################################
+@pg.production('block : BLOCK_START BLOCK_END')
+@pg.production('block : BLOCK_START SEPARATOR BLOCK_END')
+@pg.production('block : BLOCK_START SEPARATOR SEPARATOR BLOCK_END')
+def empty_block(p):
+    return Block()
 
 
-# def parse_slots
 
-
-# @pg.production('expression : OBJ_START SEPARATOR expression SEPARATOR OBJ_END')
-# def expression_object_with_slots(p):
-#     return Object(slots=p[2])
+# TODO: remove later?
+@pg.production('expression : block')
+def expression_object(p):
+    return p[0]
 
 
 parser = pg.build()
