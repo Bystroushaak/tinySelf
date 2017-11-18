@@ -288,6 +288,35 @@ def object_with_slots(p):
 
 
 
+# Object with code
+@pg.production('code : expression')
+def code_definition(p):
+    return p
+
+
+@pg.production('code : expression END_OF_EXPR')
+@pg.production('code : expression END_OF_EXPR code')
+def code_definition(p):
+    out = [p[0]]
+
+    if len(p) > 2:
+        out.extend(p[2])
+
+    return out
+
+
+@pg.production('obj : OBJ_START slot_definition SEPARATOR code OBJ_END')
+@pg.production('obj : OBJ_START SEPARATOR slot_definition SEPARATOR code OBJ_END')
+def object_with_slots_and_code(p):
+    # remove tokens from the beginning
+    while isinstance(p[0], Token) and p[0].name in {"OBJ_START", "SEPARATOR"}:
+        p.pop(0)
+
+    slots, params = parse_slots_and_params(p[0])
+
+    print p
+
+    return Object(slots=slots, params=params, code=p[2])
 
 
 

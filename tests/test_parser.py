@@ -306,3 +306,76 @@ def test_argument_parser():
 
     result = parse_and_lex('(| :a. :b |)')
     assert result == Object(params=["a", "b"])
+
+
+def test_obj_with_code():
+    result = parse_and_lex('(| a | a printLine)')
+
+    assert result == Object(
+        slots={"a": None},
+        code=[
+            Send(
+                Send(Self(), Message("a")),
+                Message("printLine")
+            )
+        ]
+    )
+
+
+def test_obj_with_code_with_dot():
+    result = parse_and_lex('(| a | a printLine.)')
+
+    assert result == Object(
+        slots={"a": None},
+        code=[
+            Send(
+                Send(Self(), Message("a")),
+                Message("printLine")
+            )
+        ]
+    )
+
+
+def test_obj_with_code_statements():
+    result = parse_and_lex('(| a | a printLine. a print. test)')
+
+    assert result == Object(
+        slots={"a": None},
+        code=[
+            Send(
+                Send(Self(), Message("a")),
+                Message("printLine")
+            ),
+            Send(
+                Send(Self(), Message("a")),
+                Message("print")
+            ),
+            Send(Self(), Message("test"))
+        ]
+    )
+
+
+def test_recursive_obj_definition():
+    result = parse_and_lex("""
+        (|
+            a <- (| var | var printLine. var).
+            b <- nil.
+        | nil.)
+    """)
+
+    assert result == Object(
+        slots={
+            "a": Object(
+                slots={"var": None},
+                code=[
+                    Send(
+                        Send(Self(), Message("var")),
+                        Message("printLine")
+                    ),
+                    Send(Self(), Message("var")),
+                ]
+            ),
+            "b": Send(Self(), Message("nil"))
+        },
+        code=[Send(Self(), Message("nil"))]
+    )
