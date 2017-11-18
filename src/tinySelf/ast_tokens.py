@@ -75,9 +75,18 @@ class String(BaseBox):  # TODO: remove
         return not self.__eq__(obj)
 
 
-class Code(BaseBox):
-    def __init__(self, message_sends):
-        self.message_sends = message_sends
+class Cascade(BaseBox):
+    def __init__(self, obj, msgs):
+        self.obj = obj
+        self.msgs = msgs
+
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and \
+               self.obj == obj.obj and \
+               self.msgs == obj.msgs
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
 
 
 class Message(BaseBox):
@@ -97,11 +106,27 @@ class KeywordMessage(BaseBox):
         self.name = name
         self.parameters = parameters
 
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and \
+               self.name == obj.name and \
+               self.parameters == obj.parameters
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
 
 class BinaryMessage(BaseBox):
     def __init__(self, name, parameter):
         self.name = name
         self.parameter = parameter
+
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and \
+               self.name == obj.name and \
+               self.parameter == obj.parameter
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
 
 
 class Send(BaseBox):
