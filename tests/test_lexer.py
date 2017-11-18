@@ -103,7 +103,7 @@ def test_operator():
         Token('OPERATOR', '!'),
     ]
 
-    assert list(lexer.lex('!@$%&*-+=~/?<>,')) == [
+    assert list(lexer.lex('!@$%&*-+~/?<>,')) == [
         Token('OPERATOR', '!'),
         Token('OPERATOR', '@'),
         Token('OPERATOR', '$'),
@@ -112,7 +112,6 @@ def test_operator():
         Token('OPERATOR', '*'),
         Token('OPERATOR', '-'),
         Token('OPERATOR', '+'),
-        Token('OPERATOR', '='),
         Token('OPERATOR', '~'),
         Token('OPERATOR', '/'),
         Token('OPERATOR', '?'),
@@ -121,7 +120,7 @@ def test_operator():
         Token('OPERATOR', ','),
     ]
 
-    assert list(lexer.lex('! @ $ % & * - + = ~ / ? < > ,')) == [
+    assert list(lexer.lex('! @ $ % & * - + ~ / ? < > ,')) == [
         Token('OPERATOR', '!'),
         Token('OPERATOR', '@'),
         Token('OPERATOR', '$'),
@@ -130,7 +129,6 @@ def test_operator():
         Token('OPERATOR', '*'),
         Token('OPERATOR', '-'),
         Token('OPERATOR', '+'),
-        Token('OPERATOR', '='),
         Token('OPERATOR', '~'),
         Token('OPERATOR', '/'),
         Token('OPERATOR', '?'),
@@ -212,6 +210,12 @@ def test_cascade():
 
 
 def test_assingment_op():
+    assert list(lexer.lex('=')) == [
+        Token('ASSIGNMENT', '='),
+    ]
+
+
+def test_rw_assingment_op():
     assert list(lexer.lex('<-')) == [
         Token('RW_ASSIGNMENT', '<-'),
     ]

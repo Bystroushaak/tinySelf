@@ -27,12 +27,13 @@ lg.add('IDENTIFIER', r'[a-zA-Z0-9_]*[a-zA-Z0-9_]+')
 
 lg.add('RW_ASSIGNMENT', r'\<-')
 
-lg.add('OPERATOR', r'[!@\$%&\*\-\+=~/?<>,]')
+lg.add('OPERATOR', r'[!@\$%&\*\-\+~/?<>,]')
 lg.add('RETURN', r'\^')
 lg.add('END_OF_EXPR', r'\.')
 lg.add('SEPARATOR', r'\|')
 lg.add('CASCADE', r';')
 
+lg.add('ASSIGNMENT', r'=')
 
 lg.add('COMMENT', r'#.*[\n|$]?')
 

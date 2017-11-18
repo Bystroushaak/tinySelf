@@ -223,23 +223,23 @@ def test_parse_multiple_slot_assignment():
 
 
 def test_parse_kwd_slot_assignment():
-    result = parse_and_lex('(| asd: a <- () |)')
+    result = parse_and_lex('(| asd: a = () |)')
     assert result == Object(slots={"asd:": Object(params=["a"])})
 
-    result = parse_and_lex('(| asd: a <- (). |)')
+    result = parse_and_lex('(| asd: a = (). |)')
     assert result == Object(slots={"asd:": Object(params=["a"])})
 
 
 def test_parse_kwd_slots_assignment():
-    result = parse_and_lex('(| asd: a Bsd: b <- () |)')
+    result = parse_and_lex('(| asd: a Bsd: b = () |)')
     assert result == Object(slots={"asd:Bsd:": Object(params=["a", "b"])})
 
-    result = parse_and_lex('(asd: a Bsd: b <- (). |)')
+    result = parse_and_lex('(asd: a Bsd: b = (). |)')
     assert result == Object(slots={"asd:Bsd:": Object(params=["a", "b"])})
 
 
 def test_parse_multiple_slots_assignments():
-    result = parse_and_lex('(| asd: a Bsd: b <- (). a: p <- () |)')
+    result = parse_and_lex('(| asd: a Bsd: b = (). a: p = () |)')
 
     assert result == Object(
         slots={
@@ -251,7 +251,7 @@ def test_parse_multiple_slots_assignments():
 
 def test_parse_error_in_msg_slot_value_assignment():
     try:
-        parse_and_lex('(| asd: a Bsd: b <- 1 |)')
+        parse_and_lex('(| asd: a Bsd: b = 1 |)')
     except AssertionError:
         return
 
@@ -259,15 +259,15 @@ def test_parse_error_in_msg_slot_value_assignment():
 
 
 def test_parse_op_slot_assignment():
-    result = parse_and_lex('(| + b <- () |)')
+    result = parse_and_lex('(| + b = () |)')
     assert result == Object(slots={"+": Object(params=["b"])})
 
-    result = parse_and_lex('(+ b <- (). |)')
+    result = parse_and_lex('(+ b = (). |)')
     assert result == Object(slots={"+": Object(params=["b"])})
 
 
 def test_parse_multiple_op_slot_assignments():
-    result = parse_and_lex('(| + b <- (). - a <- () |)')
+    result = parse_and_lex('(| + b = (). - a = () |)')
     assert result == Object(
         slots={
             "+": Object(params=["b"]),
@@ -280,10 +280,11 @@ def test_parse_slot_definition_with_combination_of_slots():
     result = parse_and_lex("""
         (|
             a.
-            asd: b <- ().
-            asd: a Bsd: b <- ().
-            + b <- ().
-            - a <- ().
+            asd: b = ().
+            asd: a Bsd: b = ().
+            + b = ().
+            - a = ().
+            = a = ().
         |)
     """)
     assert result == Object(
@@ -293,6 +294,7 @@ def test_parse_slot_definition_with_combination_of_slots():
             "asd:": Object(params=["b"]),
             "+": Object(params=["b"]),
             "-": Object(params=["a"]),
+            "=": Object(params=["a"]),
         }
     )
 

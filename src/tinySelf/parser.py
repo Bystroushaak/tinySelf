@@ -38,6 +38,7 @@ pg = ParserGenerator(
         "END_OF_EXPR",
         "SEPARATOR",
         "CASCADE",
+        "ASSIGNMENT",
         "COMMENT",
     ],
     precedence=[
@@ -71,6 +72,7 @@ def expression_unary_message_to_expression(p):
 
 # Binary messages #############################################################
 @pg.production('expression : expression OPERATOR expression')
+@pg.production('expression : expression ASSIGNMENT expression')
 def expression_binary_message_to_expression(p):
     assert len(p) == 3, "Bad number of operands for %s!" % p[1]
 
@@ -154,6 +156,7 @@ def nil_slot_definition(p):
     return {p[0]: None}
 
 
+@pg.production('slot_definition : slot_name ASSIGNMENT expression')
 @pg.production('slot_definition : slot_name RW_ASSIGNMENT expression')
 def slot_definition(p):
     return {p[0]: p[2]}
@@ -206,7 +209,7 @@ def slot_names_kwds(p):
     return "".join(x.value for x in signature), {x.value for x in parameters}
 
 
-@pg.production('slot_definition : kw_slot_name RW_ASSIGNMENT expression')
+@pg.production('slot_definition : kw_slot_name ASSIGNMENT expression')
 def kw_slot_definition(p):
     assert isinstance(p[2], Object), "Only objects are assignable to kw slots!"
 
@@ -221,6 +224,7 @@ def kw_slot_definition(p):
 
 # Operators
 @pg.production('op_slot_name : OPERATOR IDENTIFIER')
+@pg.production('op_slot_name : ASSIGNMENT IDENTIFIER')
 def slot_name_op(p):
     """
     Returns (slotname, parameter_list)
@@ -228,7 +232,7 @@ def slot_name_op(p):
     return p[0].value, [p[1].value]
 
 
-@pg.production('slot_definition : op_slot_name RW_ASSIGNMENT expression')
+@pg.production('slot_definition : op_slot_name ASSIGNMENT expression')
 def operator_slot_definition(p):
     assert isinstance(p[2], Object), "Only objects are assignable to op slots!"
 
@@ -287,7 +291,6 @@ def object_with_slots(p):
     return Object(slots=slots, params=params)
 
 
-
 # Object with code
 @pg.production('code : expression')
 def code_definition(p):
@@ -296,7 +299,7 @@ def code_definition(p):
 
 @pg.production('code : expression END_OF_EXPR')
 @pg.production('code : expression END_OF_EXPR code')
-def code_definition(p):
+def code_definitions(p):
     out = [p[0]]
 
     if len(p) > 2:
@@ -313,8 +316,6 @@ def object_with_slots_and_code(p):
         p.pop(0)
 
     slots, params = parse_slots_and_params(p[0])
-
-    print p
 
     return Object(slots=slots, params=params, code=p[2])
 
