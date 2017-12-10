@@ -18,14 +18,18 @@ block: ["["] slots? sends* ["]"];
 return: ["^"] expression;
 expression: IDENTIFIER | value | object | block | send;
 
-sends: (send ["\."])* send ["\."]?;
-send: (receiver? keyword) | (receiver? message);
+#sends: (send ["\."])* send ["\."]?;
+sends: (expression ["\."])* expression ["\."]?;
+send: (receiver? keyword) | (receiver? message) | (receiver? receiver? operator receiver);
 receiver: IDENTIFIER | object | block;
 message: IDENTIFIER;
 keyword: FIRST_KW_IDENTIFIER >expression< (KEYWORD_IDENTIFIER >expression<)*;
+operator: operator_characters+;
+operator_characters: "!" | "@" | "#" | "$" | "%" | "&" | "*" | "-" | "+" | \
+                     "=" | "~" | "/" | "?" | "<" | ">" | "," | ";";
 
 slots: ["|"] (>slot_definition< ["\."])* >slot_definition<? ["\."]? ["|"];
-slot_definition: IDENTIFIER | (FIRST_KW_IDENTIFIER >expression<) | PARAMETER;
+slot_definition: IDENTIFIER | (FIRST_KW_IDENTIFIER >expression<) | ARGUMENT;
 
 value: <string> | <float> | <integer>;
 
@@ -34,7 +38,7 @@ integer: "\-" POSINT | POSINT;
 
 POSINT: "0|[1-9][0-9]*";
 
-PARAMETER: ":[a-z_][a-zA-Z0-9_\*]*";
+ARGUMENT: ":[a-z_][a-zA-Z0-9_\*]*";
 IDENTIFIER: "[a-z_][a-zA-Z0-9_\*]*";
 FIRST_KW_IDENTIFIER: "[a-z_][a-zA-Z0-9_]*:";
 KEYWORD_IDENTIFIER: "[A-Z][a-zA-Z0-9_]*:";
@@ -93,7 +97,7 @@ a: (| asd. bsd. | hello: xe.).
 
 """)
 print
-print parse("0")
+print parse("( asd + bsd. )")
 
 # print
 # import pdb

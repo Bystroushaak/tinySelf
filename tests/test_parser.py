@@ -1,8 +1,11 @@
 #! /usr/bin/env python3
 
 
-import parser
+from parser import parse
 
 
-def test_():
-    pass
+def test_parse_object():
+    tree = parse("(asd.)")
+
+    assert tree.symbol == "root"
+    assert tree.children[0].symbol == "expression"
