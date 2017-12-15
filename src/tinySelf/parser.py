@@ -325,7 +325,10 @@ def parse_slots_and_params(slots):
 
 
 def remove_obj_tokens_from_beginning(p):
-    while isinstance(p[0], Token) and p[0].name in {"OBJ_START", "SEPARATOR"}:
+    while isinstance(p[0], Token) and p[0].name == "OBJ_START":
+        p.pop(0)
+
+    while isinstance(p[0], Token) and p[0].name == "SEPARATOR":
         p.pop(0)
 
     return p
@@ -404,7 +407,10 @@ def object_with_empty_slots_and_code(p):
 
 
 def remove_block_tokens_from_beginning(p):
-    while isinstance(p[0], Token) and p[0].name in {"BLOCK_START", "SEPARATOR"}:
+    while isinstance(p[0], Token) and p[0].name == "BLOCK_START":
+        p.pop(0)
+
+    while isinstance(p[0], Token) and p[0].name == "SEPARATOR":
         p.pop(0)
 
     return p
