@@ -219,3 +219,9 @@ def test_rw_assingment_op():
     assert list(lexer.lex('<-')) == [
         Token('RW_ASSIGNMENT', '<-'),
     ]
+
+
+def test_self_keyword():
+    assert list(lexer.lex('self')) == [
+        Token('SELF', 'self'),
+    ]
