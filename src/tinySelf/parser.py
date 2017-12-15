@@ -324,12 +324,25 @@ def parse_slots_and_params(slots):
     return slots, params
 
 
+def remove_obj_tokens_from_beginning(p):
+    while isinstance(p[0], Token) and p[0].name in {"OBJ_START", "SEPARATOR"}:
+        p.pop(0)
+
+    return p
+
+
+# @pg.production('obj : OBJ_START SEPARATOR code OBJ_END')  # doesn't work - why?
+@pg.production('obj : OBJ_START SEPARATOR SEPARATOR code OBJ_END')
+def object_with_just_code(p):
+    p = remove_obj_tokens_from_beginning(p)
+
+    return Object(code=p[0])
+
+
 @pg.production('obj : OBJ_START slot_definition SEPARATOR OBJ_END')
 @pg.production('obj : OBJ_START SEPARATOR slot_definition SEPARATOR OBJ_END')
 def object_with_slots(p):
-    # remove tokens from the beginning
-    while isinstance(p[0], Token) and p[0].name in {"OBJ_START", "SEPARATOR"}:
-        p.pop(0)
+    p = remove_obj_tokens_from_beginning(p)
 
     slots, params = parse_slots_and_params(p[0])
 
@@ -356,9 +369,7 @@ def code_definitions(p):
 @pg.production('obj : OBJ_START slot_definition SEPARATOR code OBJ_END')
 @pg.production('obj : OBJ_START SEPARATOR slot_definition SEPARATOR code OBJ_END')
 def object_with_slots_and_code(p):
-    # remove tokens from the beginning
-    while isinstance(p[0], Token) and p[0].name in {"OBJ_START", "SEPARATOR"}:
-        p.pop(0)
+    p = remove_obj_tokens_from_beginning(p)
 
     slots, params = parse_slots_and_params(p[0])
 
@@ -379,12 +390,30 @@ def empty_block(p):
     return Block()
 
 
+@pg.production('obj : BLOCK_START code BLOCK_END')
+def object_with_empty_slots_and_code(p):
+    return Block(code=p[1])
+
+
+# @pg.production('obj : BLOCK_START SEPARATOR code BLOCK_END')  # doesn't work - why?
+@pg.production('obj : BLOCK_START SEPARATOR SEPARATOR code BLOCK_END')
+def object_with_empty_slots_and_code(p):
+    p = remove_block_tokens_from_beginning(p)
+
+    return Block(code=p[0])
+
+
+def remove_block_tokens_from_beginning(p):
+    while isinstance(p[0], Token) and p[0].name in {"BLOCK_START", "SEPARATOR"}:
+        p.pop(0)
+
+    return p
+
+
 @pg.production('block : BLOCK_START slot_definition SEPARATOR BLOCK_END')
 @pg.production('block : BLOCK_START SEPARATOR slot_definition SEPARATOR BLOCK_END')
 def block_with_slots(p):
-    # remove tokens from the beginning
-    while isinstance(p[0], Token) and p[0].name in {"BLOCK_START", "SEPARATOR"}:
-        p.pop(0)
+    p = remove_block_tokens_from_beginning(p)
 
     slots, params = parse_slots_and_params(p[0])
 
@@ -394,9 +423,7 @@ def block_with_slots(p):
 @pg.production('block : BLOCK_START slot_definition SEPARATOR code BLOCK_END')
 @pg.production('block : BLOCK_START SEPARATOR slot_definition SEPARATOR code BLOCK_END')
 def block_with_slots_and_code(p):
-    # remove tokens from the beginning
-    while isinstance(p[0], Token) and p[0].name in {"BLOCK_START", "SEPARATOR"}:
-        p.pop(0)
+    p = remove_block_tokens_from_beginning(p)
 
     slots, params = parse_slots_and_params(p[0])
 

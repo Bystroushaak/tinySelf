@@ -222,6 +222,7 @@ def test_multiple_cascades():
     )
 
 
+# Objects #####################################################################
 def test_parse_object():
     result = parse_and_lex('()')
 
@@ -448,14 +449,33 @@ def test_recursive_obj_definition():
     )
 
 
+def test_object_without_slots():
+    result = parse_and_lex('(|| a printLine)')
+
+    assert result == Object(
+        code=[
+            Send(
+                Send(Self(), Message("a")),
+                Message("printLine")
+            )
+        ]
+    )
+
+
+# def test_return_from_object():
+    # pass
+
+
+
+# Blocks ######################################################################
 def test_empty_block():
     result = parse_and_lex('[]')
     assert result == Block()
 
 
 def test_block_slots():
-    result = parse_and_lex('[ asd. |]')
-    assert result == Block(slots={"asd": None})
+    # result = parse_and_lex('[ asd. |]')
+    # assert result == Block(slots={"asd": None})
 
     result = parse_and_lex('[| asd <- 2 |]')
     assert result == Block(slots={"asd": Number(2)})
@@ -511,12 +531,48 @@ def test_block_slots():
     )
 
 
+def test_block_empty_slots_and_code():
+    result = parse_and_lex('[|| a printLine. a print. test]')
+
+    assert result == Block(
+        code=[
+            Send(
+                Send(Self(), Message("a")),
+                Message("printLine")
+            ),
+            Send(
+                Send(Self(), Message("a")),
+                Message("print")
+            ),
+            Send(Self(), Message("test"))
+        ]
+    )
+
+
 def test_block_with_code_statements():
     result = parse_and_lex('[| a. :b | a printLine. a print. test]')
 
     assert result == Block(
         slots={"a": None},
         params=["b"],
+        code=[
+            Send(
+                Send(Self(), Message("a")),
+                Message("printLine")
+            ),
+            Send(
+                Send(Self(), Message("a")),
+                Message("print")
+            ),
+            Send(Self(), Message("test"))
+        ]
+    )
+
+
+def test_block_with_just_code():
+    result = parse_and_lex('[ a printLine. a print. test]')
+
+    assert result == Block(
         code=[
             Send(
                 Send(Self(), Message("a")),
