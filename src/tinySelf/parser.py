@@ -11,14 +11,19 @@ from lexer import lexer
 
 from ast_tokens import Object
 from ast_tokens import Block
+
 from ast_tokens import Number
 from ast_tokens import String
-from ast_tokens import Cascade
+
 from ast_tokens import Message
 from ast_tokens import KeywordMessage
 from ast_tokens import BinaryMessage
+
 from ast_tokens import Send
+from ast_tokens import Cascade
+
 from ast_tokens import Self
+from ast_tokens import Return
 
 
 pg = ParserGenerator(
@@ -440,6 +445,12 @@ def block_with_slots_and_code(p):
 @pg.production('expression : block')
 def expression_block(p):
     return p[0]
+
+
+# Returns #####################################################################
+@pg.production('expression : RETURN expression')
+def return_parser(p):
+    return Return(p[1])
 
 
 parser = pg.build()

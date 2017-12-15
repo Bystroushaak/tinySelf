@@ -62,8 +62,11 @@ class Number(BaseBox):  # TODO: remove
     def __ne__(self, obj):
         return not self.__eq__(obj)
 
+    def __repr__(self):
+        return "Number(%s)" % self.value
 
-class String(BaseBox):  # TODO: remove
+
+class String(BaseBox):  # TODO: remove?
     def __init__(self, value):
         self.value = value
 
@@ -106,6 +109,9 @@ class KeywordMessage(BaseBox):
     def __ne__(self, obj):
         return not self.__eq__(obj)
 
+    def __repr__(self):
+        return "KeywordMessage(%r, %r)" % (self.name, self.parameters)
+
 
 class BinaryMessage(BaseBox):
     def __init__(self, name, parameter):
@@ -130,6 +136,21 @@ class Cascade(BaseBox):
         return isinstance(obj, self.__class__) and \
                self.obj == obj.obj and \
                self.msgs == obj.msgs
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
+    def __repr__(self):
+        return "Cascade(%s, %s" % (repr(self.obj), repr([x for x in self.msgs]))
+
+
+class Return(BaseBox):
+    def __init__(self, value):
+        self.value = value
+
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and \
+               self.value == obj.value
 
     def __ne__(self, obj):
         return not self.__eq__(obj)

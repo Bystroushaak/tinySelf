@@ -12,6 +12,7 @@ from tinySelf.ast_tokens import Block
 from tinySelf.ast_tokens import Object
 from tinySelf.ast_tokens import Number
 from tinySelf.ast_tokens import String
+from tinySelf.ast_tokens import Return
 from tinySelf.ast_tokens import Cascade
 from tinySelf.ast_tokens import Message
 from tinySelf.ast_tokens import BinaryMessage
@@ -583,5 +584,42 @@ def test_block_with_just_code():
                 Message("print")
             ),
             Send(Self(), Message("test"))
+        ]
+    )
+
+
+# Return ######################################################################
+def test_return_in_block():
+    result = parse_and_lex('[ a printLine. a print. ^test]')
+
+    assert result == Block(
+        code=[
+            Send(
+                Send(Self(), Message("a")),
+                Message("printLine")
+            ),
+            Send(
+                Send(Self(), Message("a")),
+                Message("print")
+            ),
+            Return(Send(Self(), Message("test")))
+        ]
+    )
+
+
+def test_return_in_object():
+    result = parse_and_lex('(|| a printLine. a print. ^test)')
+
+    assert result == Object(
+        code=[
+            Send(
+                Send(Self(), Message("a")),
+                Message("printLine")
+            ),
+            Send(
+                Send(Self(), Message("a")),
+                Message("print")
+            ),
+            Return(Send(Self(), Message("test")))
         ]
     )
