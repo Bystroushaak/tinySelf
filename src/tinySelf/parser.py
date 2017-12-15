@@ -44,7 +44,7 @@ pg = ParserGenerator(
     precedence=(
         ("left", ["IDENTIFIER"]),
         ("left", ["OPERATOR"]),
-        # ("right", ["FIRST_KW", "KEYWORD"]),
+        ("right", ["FIRST_KW", "KEYWORD"]),
     )
 )
 
@@ -158,8 +158,13 @@ def expression_keyword_msg(p):
 def parse_cascade_messages(msgs):
     out = []
     for msg in msgs:
-        if isinstance(msg, Send) and msg.obj == Self():
-            msg = msg.msg
+        if hasattr(msg, "obj") and msg.obj == Self():
+            if isinstance(msg, Send):
+                msg = msg.msg
+
+            if isinstance(msg, Cascade):
+                out.extend(msg.msgs)
+                continue
 
         out.append(msg)
 
@@ -167,17 +172,13 @@ def parse_cascade_messages(msgs):
 
 
 @pg.production('cascade : expression CASCADE expression')
-@pg.production('cascade : keyword_msg CASCADE expression')
 def cascade(p):
     return Cascade(obj=Self(), msgs=parse_cascade_messages([p[0], p[2]]))
 
 
 @pg.production('cascade : expression expression CASCADE expression')
-@pg.production('cascade : expression keyword_msg CASCADE expression')
 def cascades(p):
     msgs = parse_cascade_messages([p[1], p[3]])
-
-    print p[0]
 
     return Cascade(obj=p[0], msgs=msgs)
 
