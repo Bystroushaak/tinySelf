@@ -9,6 +9,8 @@ from rply import LexerGenerator
 lg = LexerGenerator()
 lg.ignore(r'\s+')
 
+lg.add('SELF', r'self')
+
 lg.add('NUMBER', r'\d+')
 
 lg.add('OBJ_START', r'\(')
@@ -36,5 +38,6 @@ lg.add('CASCADE', r'\;')
 lg.add('ASSIGNMENT', r'=')
 
 lg.add('COMMENT', r'#.*[\n|$]?')
+
 
 lexer = lg.build()

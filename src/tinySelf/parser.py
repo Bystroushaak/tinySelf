@@ -45,6 +45,7 @@ pg = ParserGenerator(
         "CASCADE",
         "ASSIGNMENT",
         "COMMENT",
+        "SELF",
     ),
     precedence=(
         ("left", ["IDENTIFIER"]),
@@ -52,6 +53,12 @@ pg = ParserGenerator(
         ("right", ["FIRST_KW", "KEYWORD"]),
     )
 )
+
+
+# Self keyword ################################################################
+@pg.production('expression : SELF')
+def self_parser(p):
+    return Self()
 
 
 # Number ######################################################################

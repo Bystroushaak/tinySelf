@@ -623,3 +623,22 @@ def test_return_in_object():
             Return(Send(Self(), Message("test")))
         ]
     )
+
+
+# Self ########################################################################
+def test_self_kw():
+    result = parse_and_lex('(|| self)')
+
+    assert result == Object(
+        code=[
+            Self()
+        ]
+    )
+
+    result = parse_and_lex('(|| self xe)')
+
+    assert result == Object(
+        code=[
+            Send(Self(), Message("xe"))
+        ]
+    )

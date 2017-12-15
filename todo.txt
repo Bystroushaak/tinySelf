@@ -4,9 +4,6 @@ https://github.com/joshsharp/python-braid/blob/master/parser.py
 when-changed -s -r src/tinySelf/*.py -r tests/*.py -c ./run_tests.sh -s
 
 
-
-Keyword self.
-
 Read only slots
 Parents
 Blocks
@@ -18,6 +15,7 @@ Comments.
 Parens for priorities
 
 Done:
+    Keyword self.
     Returns.
     Cascades.
     Cascade precendence / kw precedence.
