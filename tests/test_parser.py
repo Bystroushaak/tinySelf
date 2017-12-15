@@ -114,20 +114,6 @@ def test_parse_keyword_message_to_obj_with_parameters():
     assert result.msg.parameters[0].value == 1
 
 
-def test_parse_keyword_message_to_obj_with_parameters():
-    result = parse_and_lex('asd set: 1')
-
-    assert isinstance(result, Send)
-    assert isinstance(result.obj, Send)
-    assert isinstance(result.obj.obj, Self)
-    assert isinstance(result.msg, KeywordMessage)
-
-    assert result.obj.obj == Self()
-    assert result.obj.msg.name == "asd"
-    assert result.msg.name == "set:"
-    assert result.msg.parameters[0].value == 1
-
-
 def test_parse_keyword_message_to_obj_with_multiple_parameters():
     result = parse_and_lex('asd set: 1 And: 2 Also: 3 So: 4')
 
@@ -159,62 +145,79 @@ def test_parse_string():
     assert result.value == ""
 
 
-# def test_parse_cascade_to_self():
-#     result = parse_and_lex('a; b')
-
-#     assert result == Cascade(
-#         obj=Self(),
-#         msgs=[
-#             Message("a"),
-#             Message("b"),
-#         ]
-#     )
-
-
-# def test_parse_cascade_kw_to_self():
-#     result = parse_and_lex('a: 1; b')
-
-#     assert result == Cascade(
-#         obj=Self(),
-#         msgs=[
-#             KeywordMessage("a:", [Number(1)]),
-#             Message("b"),
-#         ]
-#     )
-
-
-# def test_parse_cascade():
-#     result = parse_and_lex('a b; c')
-
-#     assert result == Cascade(
-#         obj=Send(Self(), Message("a")),
-#         msgs=[
-#             Message("b"),
-#             Message("c"),
-#         ]
-#     )
-
-
-# def test_parse_cascade_kw():
-#     result = parse_and_lex('s a: 1 B: 2; b')
-
-#     assert result == Cascade(
-#         obj=Send(Self(), Message("s")),
-#         msgs=[
-#             KeywordMessage("a:B:", [Number(1), Number(2)]),
-#             Message("b"),
-#         ]
-#     )
-
-
-def test_parse_cascade_to_kw():
-    result = parse_and_lex('x: 1 Y: 2 a: 1 B: 2; b')
+def test_parse_cascade_to_self():
+    result = parse_and_lex('a; b')
 
     assert result == Cascade(
-        obj=Send(Self(), KeywordMessage("x:Y:", [Number(1), Number(2)])),
+        obj=Self(),
+        msgs=[
+            Message("a"),
+            Message("b"),
+        ]
+    )
+
+
+def test_parse_cascade_kw_to_self():
+    result = parse_and_lex('a: 1; b')
+
+    assert result == Cascade(
+        obj=Self(),
+        msgs=[
+            KeywordMessage("a:", [Number(1)]),
+            Message("b"),
+        ]
+    )
+
+
+def test_parse_cascade():
+    result = parse_and_lex('a b; c')
+
+    assert result == Cascade(
+        obj=Send(Self(), Message("a")),
+        msgs=[
+            Message("b"),
+            Message("c"),
+        ]
+    )
+
+
+def test_parse_cascade_kw():
+    result = parse_and_lex('s a: 1 B: 2; b')
+
+    assert result == Cascade(
+        obj=Send(Self(), Message("s")),
         msgs=[
             KeywordMessage("a:B:", [Number(1), Number(2)]),
             Message("b"),
+        ]
+    )
+
+
+def test_parse_cascade_to_kw():
+    result = parse_and_lex('x: 1 Y: 2; a: 1 B: 2; b')
+
+    assert result == Cascade(
+        obj=Self(),
+        msgs=[
+            KeywordMessage("x:Y:", [Number(1), Number(2)]),
+            KeywordMessage("a:B:", [Number(1), Number(2)]),
+            Message("b"),
+        ]
+    )
+
+
+def test_multiple_cascades():
+    result = parse_and_lex('obj a; b; c')
+
+    assert result == Cascade(
+        obj=Send(
+            Self(),
+            Message("obj")
+        ),
+        msgs=[
+            Message("a"),
+            Message("b"),
+            Message("c"),
         ]
     )
 
