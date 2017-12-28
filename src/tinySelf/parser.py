@@ -24,6 +24,7 @@ from ast_tokens import Cascade
 
 from ast_tokens import Self
 from ast_tokens import Return
+from ast_tokens import AssignmentPrimitive
 
 
 pg = ParserGenerator(
@@ -213,9 +214,19 @@ def nil_slot_definition(p):
 
 
 @pg.production('slot_definition : slot_name ASSIGNMENT expression')
-@pg.production('slot_definition : slot_name RW_ASSIGNMENT expression')
 def slot_definition(p):
     return {p[0]: p[2]}
+
+
+@pg.production('slot_definition : slot_name RW_ASSIGNMENT expression')
+def slot_definition_rw(p):
+    r_slot_name = p[0]
+    w_slot_name = p[0] + ":"
+
+    return {
+        r_slot_name: p[2],
+        w_slot_name: AssignmentPrimitive(),
+    }
 
 
 # Arguments
