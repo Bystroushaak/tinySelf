@@ -7,9 +7,6 @@ from rply.token import BaseBox
 
 
 class Self(BaseBox):
-    def __init__(self):
-        pass
-
     def __eq__(self, obj):
         return isinstance(obj, self.__class__)
 
@@ -127,6 +124,23 @@ class BinaryMessage(BaseBox):
         return not self.__eq__(obj)
 
 
+class Send(BaseBox):
+    def __init__(self, obj, msg):
+        self.obj = obj
+        self.msg = msg
+
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and \
+               self.obj == obj.obj and \
+               self.msg == obj.msg
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
+    def __repr__(self):
+        return "Send(%s, %s)" % (self.obj, self.msg)
+
+
 class Cascade(BaseBox):
     def __init__(self, obj, msgs):
         self.obj = obj
@@ -156,18 +170,9 @@ class Return(BaseBox):
         return not self.__eq__(obj)
 
 
-class Send(BaseBox):
-    def __init__(self, obj, msg):
-        self.obj = obj
-        self.msg = msg
-
+class AssignmentPrimitive(BaseBox):
     def __eq__(self, obj):
-        return isinstance(obj, self.__class__) and \
-               self.obj == obj.obj and \
-               self.msg == obj.msg
+        return isinstance(obj, self.__class__)
 
     def __ne__(self, obj):
         return not self.__eq__(obj)
-
-    def __repr__(self):
-        return "Send(%s, %s)" % (self.obj, self.msg)
