@@ -5,6 +5,7 @@
 #
 from tinySelf.lexer import lexer
 from tinySelf.parser import parser
+from tinySelf.parser import _rw_slot
 
 from tinySelf.ast_tokens import Send
 from tinySelf.ast_tokens import Self
@@ -17,7 +18,6 @@ from tinySelf.ast_tokens import Cascade
 from tinySelf.ast_tokens import Message
 from tinySelf.ast_tokens import BinaryMessage
 from tinySelf.ast_tokens import KeywordMessage
-from tinySelf.ast_tokens import AssignmentPrimitive
 
 
 def parse_and_lex(i):
@@ -32,28 +32,8 @@ def join_dicts(*args):
     return out
 
 
-def _to_assignment_name(name):
-    return name + ":"
-
-
-def rw_slot(name, value):
-    r_slot_name = name
-    w_slot_name = _to_assignment_name(name)
-
-    return {
-        r_slot_name: value,
-        w_slot_name: AssignmentPrimitive(),
-    }
-
-
 def rw_slots(slot_dict):
-    slots = (
-        {
-            k: v,
-            _to_assignment_name(k): AssignmentPrimitive()
-        }
-        for k, v in slot_dict.iteritems()
-    )
+    slots = (_rw_slot(k, v) for k, v in slot_dict.iteritems())
 
     out = {}
     for i in slots:
@@ -314,10 +294,10 @@ def test_parse_object_with_multiple_nil_slots():
 
 def test_parse_slot_assignment():
     result = parse_and_lex('(| asd <- 2 |)')
-    assert result == Object(slots=rw_slot("asd", Number(2)))
+    assert result == Object(slots=_rw_slot("asd", Number(2)))
 
     result = parse_and_lex('(| asd <- 2. |)')
-    assert result == Object(slots=rw_slot("asd", Number(2)))
+    assert result == Object(slots=_rw_slot("asd", Number(2)))
 
 
 def test_parse_multiple_slot_assignment():
@@ -331,7 +311,7 @@ def test_parse_multiple_slot_assignment():
 def test_parse_rw_slot_assignment():
     result = parse_and_lex('( a <- 2 |)')
 
-    assert result == Object(slots=rw_slot("a", Number(2)))
+    assert result == Object(slots=_rw_slot("a", Number(2)))
 
 
 def test_parse_kwd_slot_assignment():
@@ -491,7 +471,7 @@ def test_recursive_obj_definition():
                     ]
                 )
             },
-            rw_slot("b", Send(Self(), Message("nil")))
+            _rw_slot("b", Send(Self(), Message("nil")))
         ),
         code=[Send(Self(), Message("nil"))]
     )
@@ -535,10 +515,10 @@ def test_block_slots():
     # assert result == Block(slots={"asd": None})
 
     result = parse_and_lex('[| asd <- 2 |]')
-    assert result == Block(slots=rw_slot("asd", Number(2)))
+    assert result == Block(slots=_rw_slot("asd", Number(2)))
 
     result = parse_and_lex('[| asd <- 2. |]')
-    assert result == Block(slots=rw_slot("asd", Number(2)))
+    assert result == Block(slots=_rw_slot("asd", Number(2)))
 
     result = parse_and_lex('[asd <- 2. bsd <- 4 |]')
     assert result == Block(slots=rw_slots({"asd": Number(2), "bsd": Number(4)}))
