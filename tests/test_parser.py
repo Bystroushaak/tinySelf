@@ -524,11 +524,6 @@ def test_object_with_parents():
     )
 
 
-def test_return_from_object():
-    raise NotImplementedError()
-
-
-
 # Blocks ######################################################################
 def test_empty_block():
     result = parse_and_lex('[]')
