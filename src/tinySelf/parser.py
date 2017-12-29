@@ -488,3 +488,7 @@ def return_parser(p):
 
 
 parser = pg.build()
+
+
+def parse_and_lex(i):
+    return parser.parse(lexer.lex(i))
