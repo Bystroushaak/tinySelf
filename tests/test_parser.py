@@ -3,9 +3,8 @@
 #
 # Interpreter version: python 2.7
 #
-from tinySelf.lexer import lexer
-from tinySelf.parser import parser
 from tinySelf.parser import _rw_slot
+from tinySelf.parser import parse_and_lex
 
 from tinySelf.ast_tokens import Send
 from tinySelf.ast_tokens import Self
@@ -18,10 +17,6 @@ from tinySelf.ast_tokens import Cascade
 from tinySelf.ast_tokens import Message
 from tinySelf.ast_tokens import BinaryMessage
 from tinySelf.ast_tokens import KeywordMessage
-
-
-def parse_and_lex(i):
-    return parser.parse(lexer.lex(i))
 
 
 def join_dicts(*args):
