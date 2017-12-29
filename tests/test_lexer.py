@@ -56,6 +56,11 @@ def test_identifier():
         Token('IDENTIFIER', 'ID2'),
     ]
 
+    assert list(lexer.lex('p*')) == [
+        Token('IDENTIFIER', 'p*'),
+    ]
+
+
 
 def test_argument():
     assert list(lexer.lex(':argument')) == [

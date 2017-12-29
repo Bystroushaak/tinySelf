@@ -18,10 +18,11 @@ class Self(BaseBox):
 
 
 class Object(BaseBox):
-    def __init__(self, slots=None, params=None, code=None):
+    def __init__(self, slots=None, params=None, code=None, parents=None):
         self.slots = slots
         self.params = params
         self.code = code
+        self.parents = parents
 
         # mutable parameters strikes again
         if not slots:
@@ -30,6 +31,8 @@ class Object(BaseBox):
             self.params = []
         if not code:
             self.code = []
+        if not parents:
+            self.parents = {}
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \

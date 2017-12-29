@@ -332,19 +332,27 @@ def empty_object(p):
     return Object()
 
 
-def parse_slots_and_params(slots):
+def parse_slots_params_parents(slots):
+    """
+    Iterate thru a list of slots and sort them to `slots` (dict), `parameters`
+    (list) and `parents` (dict).
+    """
     slot_names = []
     param_names = []
+    parent_names = []
     for name in slots.keys():
         if name.startswith(":"):
             param_names.append(name)
+        elif name.endswith("*"):
+            parent_names.append(name)
         else:
             slot_names.append(name)
 
     params = [k[1:] for k in param_names]
+    parents = {k[1:]: slots[k] for k in parent_names}
     slots = {k: slots[k] for k in slot_names}
 
-    return slots, params
+    return slots, params, parents
 
 
 def remove_obj_tokens_from_beginning(p):
@@ -370,9 +378,9 @@ def object_with_just_code(p):
 def object_with_slots(p):
     p = remove_obj_tokens_from_beginning(p)
 
-    slots, params = parse_slots_and_params(p[0])
+    slots, params, parents = parse_slots_params_parents(p[0])
 
-    return Object(slots=slots, params=params)
+    return Object(slots=slots, params=params, parents=parents)
 
 
 # Object with code
@@ -397,9 +405,9 @@ def code_definitions(p):
 def object_with_slots_and_code(p):
     p = remove_obj_tokens_from_beginning(p)
 
-    slots, params = parse_slots_and_params(p[0])
+    slots, params, parents = parse_slots_params_parents(p[0])
 
-    return Object(slots=slots, params=params, code=p[2])
+    return Object(slots=slots, params=params, code=p[2], parents=parents)
 
 
 # TODO: remove later?
@@ -444,7 +452,7 @@ def remove_block_tokens_from_beginning(p):
 def block_with_slots(p):
     p = remove_block_tokens_from_beginning(p)
 
-    slots, params = parse_slots_and_params(p[0])
+    slots, params, _ = parse_slots_params_parents(p[0])
 
     return Block(slots=slots, params=params)
 
@@ -454,7 +462,7 @@ def block_with_slots(p):
 def block_with_slots_and_code(p):
     p = remove_block_tokens_from_beginning(p)
 
-    slots, params = parse_slots_and_params(p[0])
+    slots, params, _ = parse_slots_params_parents(p[0])
 
     return Block(slots=slots, params=params, code=p[2])
 
