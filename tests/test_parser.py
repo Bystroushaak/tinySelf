@@ -510,8 +510,22 @@ def test_object_without_slots():
     )
 
 
-# def test_return_from_object():
-    # pass
+def test_object_with_parents():
+    result = parse_and_lex('(| p* = traits | a printLine)')
+
+    assert result == Object(
+        parents={"p": Send(Self(), Message("traits"))},
+        code=[
+            Send(
+                Send(Self(), Message("a")),
+                Message("printLine")
+            )
+        ]
+    )
+
+
+def test_return_from_object():
+    raise NotImplementedError()
 
 
 

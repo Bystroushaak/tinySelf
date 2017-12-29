@@ -4,9 +4,6 @@ https://github.com/joshsharp/python-braid/blob/master/parser.py
 when-changed -s -r src/tinySelf/*.py -r tests/*.py -c ./run_tests.sh -s
 
 
-Parents
-
-Block parent auto-settings.
 
 Comments.
 
@@ -16,9 +13,13 @@ Annotation objects
 
 Slots as ordered dicts.
 
+Block parent auto-settings.
+    In full AST?
+
 
 
 Done:
+    Parents
     Read only slots
     Blocks
     Keyword self.
