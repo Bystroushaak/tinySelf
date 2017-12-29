@@ -218,15 +218,23 @@ def slot_definition(p):
     return {p[0]: p[2]}
 
 
-@pg.production('slot_definition : slot_name RW_ASSIGNMENT expression')
-def slot_definition_rw(p):
-    r_slot_name = p[0]
-    w_slot_name = p[0] + ":"
+def _to_assignment_name(name):
+    return name + ":"
+
+
+def _rw_slot(name, value):
+    r_slot_name = name
+    w_slot_name = _to_assignment_name(name)
 
     return {
-        r_slot_name: p[2],
+        r_slot_name: value,
         w_slot_name: AssignmentPrimitive(),
     }
+
+
+@pg.production('slot_definition : slot_name RW_ASSIGNMENT expression')
+def slot_definition_rw(p):
+    return _rw_slot(name=p[0], value=p[2])
 
 
 # Arguments
