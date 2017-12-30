@@ -673,3 +673,29 @@ def test_self_kw():
             Send(Self(), Message("xe"))
         ]
     )
+
+
+# Parens for priority #########################################################
+def test_parens_for_priority():
+    result = parse_and_lex('(|| 1 > (2 minus) ifTrue: [] )')
+
+    assert result == Object(
+        code=[
+            Send(
+                obj=Number(1),
+                msg=BinaryMessage(
+                    name='>',
+                    parameter=Send(
+                        obj=Send(
+                            obj=Number(2),
+                            msg=Message('minus')
+                        ),
+                        msg=KeywordMessage(
+                            name='ifTrue:',
+                            parameters=[Block()]
+                        )
+                    )
+                )
+            )
+        ]
+    )
