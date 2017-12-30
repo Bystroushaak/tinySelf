@@ -43,9 +43,23 @@ class Object(BaseBox):
     def __ne__(self, obj):
         return not self.__eq__(obj)
 
+    def __repr__(self):
+        return "Object(slots=%r, params=%r, code=%r, parents=%r)" % (
+            self.slots,
+            self.params,
+            self.code,
+            self.parents,
+        )
+
 
 class Block(Object):
-    pass
+    def __repr__(self):
+        return "Block(slots=%r, params=%r, code=%r, parents=%r)" % (
+            self.slots,
+            self.params,
+            self.code,
+            self.parents,
+        )
 
 
 class Number(BaseBox):  # TODO: remove
@@ -93,7 +107,7 @@ class Message(BaseBox):
         return not self.__eq__(obj)
 
     def __repr__(self):
-        return "Message(%s)" % self.name
+        return "Message(%r)" % self.name
 
 
 class KeywordMessage(BaseBox):
@@ -110,7 +124,7 @@ class KeywordMessage(BaseBox):
         return not self.__eq__(obj)
 
     def __repr__(self):
-        return "KeywordMessage(%r, %r)" % (self.name, self.parameters)
+        return "KeywordMessage(name=%r, parameters=%r)" % (self.name, self.parameters)
 
 
 class BinaryMessage(BaseBox):
@@ -125,6 +139,9 @@ class BinaryMessage(BaseBox):
 
     def __ne__(self, obj):
         return not self.__eq__(obj)
+
+    def __repr__(self):
+        return "BinaryMessage(name=%r, parameter=%r)" % (self.name, self.parameter)
 
 
 class Send(BaseBox):
@@ -141,7 +158,7 @@ class Send(BaseBox):
         return not self.__eq__(obj)
 
     def __repr__(self):
-        return "Send(%s, %s)" % (self.obj, self.msg)
+        return "Send(obj=%r, msg=%r)" % (self.obj, self.msg)
 
 
 class Cascade(BaseBox):
