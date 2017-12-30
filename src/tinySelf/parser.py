@@ -63,36 +63,55 @@ def self_parser(p):
 
 
 # Number ######################################################################
-@pg.production('expression : NUMBER')
+@pg.production('numbers : NUMBER')
 def expression_number(p):
     return Number(int(p[0].getstr()))
 
 
 # Strings #####################################################################
-@pg.production('expression : SINGLE_Q_STRING')
-@pg.production('expression : DOUBLE_Q_STRING')
+@pg.production('strings : SINGLE_Q_STRING')
+@pg.production('strings : DOUBLE_Q_STRING')
 def expression_string(p):
     return String(p[0].getstr()[1:-1])
 
 
+# TODO: remove later?
+@pg.production('expression : strings')
+@pg.production('expression : numbers')
+def expression_keyword_msg(p):
+    return p[0]
+
+
 # Unary messages ##############################################################
-@pg.production('expression : IDENTIFIER')
+@pg.production('unary_message : IDENTIFIER')
 def unary_message(p):
     return Send(obj=Self(), msg=Message(p[0].getstr()))
 
 
-@pg.production('expression : expression IDENTIFIER')
+@pg.production('unary_message : expression IDENTIFIER')
 def unary_message_to_expression(p):
     return Send(obj=p[0], msg=Message(p[1].getstr()))
 
 
+# TODO: remove later?
+@pg.production('expression : unary_message')
+def expression_keyword_msg(p):
+    return p[0]
+
+
 # Binary messages #############################################################
-@pg.production('expression : expression OPERATOR expression')
-@pg.production('expression : expression ASSIGNMENT expression')
+@pg.production('binary_message : expression OPERATOR expression')
+@pg.production('binary_message : expression ASSIGNMENT expression')
 def binary_message_to_expression(p):
     assert len(p) == 3, "Bad number of operands for %s!" % p[1]
 
     return Send(p[0], BinaryMessage(p[1].getstr(), p[2]))
+
+
+# TODO: remove later?
+@pg.production('expression : binary_message')
+def expression_keyword_msg(p):
+    return p[0]
 
 
 # Keyword messages ############################################################
@@ -172,12 +191,12 @@ def parse_cascade_messages(msgs):
     out = []
     for msg in msgs:
         if hasattr(msg, "obj") and msg.obj == Self():
-            if isinstance(msg, Send):
-                msg = msg.msg
-
             if isinstance(msg, Cascade):
                 out.extend(msg.msgs)
                 continue
+
+            if isinstance(msg, Send):
+                msg = msg.msg
 
         out.append(msg)
 
@@ -432,13 +451,13 @@ def empty_block(p):
     return Block()
 
 
-@pg.production('obj : BLOCK_START code BLOCK_END')
+@pg.production('block : BLOCK_START code BLOCK_END')
 def object_with_empty_slots_and_code(p):
     return Block(code=p[1])
 
 
 # @pg.production('obj : BLOCK_START SEPARATOR code BLOCK_END')  # doesn't work - why?
-@pg.production('obj : BLOCK_START SEPARATOR SEPARATOR code BLOCK_END')
+@pg.production('block : BLOCK_START SEPARATOR SEPARATOR code BLOCK_END')
 def object_with_empty_slots_and_code(p):
     p = remove_block_tokens_from_beginning(p)
 
@@ -485,6 +504,20 @@ def expression_block(p):
 @pg.production('expression : RETURN expression')
 def return_parser(p):
     return Return(p[1])
+
+
+# Paren priority ##############################################################
+@pg.production('expression : OBJ_START strings OBJ_END')
+@pg.production('expression : OBJ_START numbers OBJ_END')
+@pg.production('expression : OBJ_START unary_message OBJ_END')
+@pg.production('expression : OBJ_START binary_message OBJ_END')
+@pg.production('expression : OBJ_START keyword_msg OBJ_END')
+@pg.production('expression : OBJ_START cascade OBJ_END')
+def paren_priority(p):
+    if len(p) == 2:
+        return Object()
+
+    return p[1]
 
 
 parser = pg.build()
