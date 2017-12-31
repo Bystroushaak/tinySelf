@@ -16,6 +16,10 @@ Slots as ordered dicts.
 Block parent auto-settings.
     In full AST?
 
+Split the parser tests into multiple files.
+
+
+
 
 
 Done:

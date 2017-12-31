@@ -73,6 +73,33 @@ def test_parse_send_to_object():
     assert result.msg.name == "b"
 
 
+def test_parse_multiple_sends():
+    result = parse_and_lex('a b c d e f g')
+
+    assert result == Send(
+        obj=Send(
+            obj=Send(
+                obj=Send(
+                    obj=Send(
+                        obj=Send(
+                            obj=Send(
+                                obj=Self(),
+                                msg=Message('a')
+                            ),
+                            msg=Message('b')
+                        ),
+                        msg=Message('c')
+                    ),
+                    msg=Message('d')
+                ),
+                msg=Message('e')
+            ),
+            msg=Message('f')
+        ),
+        msg=Message('g')
+    )
+
+
 def test_parse_binary_message():
     result = parse_and_lex('1 + 1')
 
@@ -682,20 +709,38 @@ def test_parens_for_priority():
     assert result == Object(
         code=[
             Send(
-                obj=Number(1),
-                msg=BinaryMessage(
-                    name='>',
-                    parameter=Send(
-                        obj=Send(
-                            obj=Number(2),
-                            msg=Message('minus')
-                        ),
-                        msg=KeywordMessage(
-                            name='ifTrue:',
-                            parameters=[Block()]
-                        )
+                obj=Send(
+                    obj=Number(1),
+                    msg=BinaryMessage(
+                        name='>',
+                        parameter=Send(obj=Number(2), msg=Message('minus'))
                     )
+                ),
+                msg=KeywordMessage(
+                    name='ifTrue:',
+                    parameters=[Block()]
                 )
             )
-        ]
+        ],
     )
+
+    # # and now without parens
+    # result = parse_and_lex('(|| 1 > 2 minus ifTrue: [] )')
+
+    # assert result == Object(
+    #     code=[
+    #         Send(
+    #             obj=Send(
+    #                 obj=Number(1),
+    #                 msg=BinaryMessage(
+    #                     name='>',
+    #                     parameter=Send(obj=Number(2), msg=Message('minus'))
+    #                 )
+    #             ),
+    #             msg=KeywordMessage(
+    #                 name='ifTrue:',
+    #                 parameters=[Block()]
+    #             )
+    #         )
+    #     ],
+    # )
