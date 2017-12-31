@@ -5,7 +5,6 @@
 #
 from rply import ParserGenerator
 from rply.token import Token
-from rply.token import BaseBox
 
 from lexer import lexer
 
@@ -49,9 +48,9 @@ pg = ParserGenerator(
         "SELF",
     ),
     precedence=(
-        ("left", ["IDENTIFIER"]),
-        ("left", ["OPERATOR"]),
+        ("right", ["IDENTIFIER"]),
         ("right", ["FIRST_KW", "KEYWORD"]),
+        ("right", ["OPERATOR"]),
     )
 )
 
@@ -78,7 +77,7 @@ def expression_string(p):
 # TODO: remove later?
 @pg.production('expression : strings')
 @pg.production('expression : numbers')
-def expression_keyword_msg(p):
+def expression_strings_numbers(p):
     return p[0]
 
 
@@ -89,13 +88,14 @@ def unary_message(p):
 
 
 @pg.production('unary_message : expression IDENTIFIER')
+@pg.production('unary_message : unary_message IDENTIFIER')
 def unary_message_to_expression(p):
     return Send(obj=p[0], msg=Message(p[1].getstr()))
 
 
 # TODO: remove later?
 @pg.production('expression : unary_message')
-def expression_keyword_msg(p):
+def expression_unary_msg(p):
     return p[0]
 
 
@@ -110,7 +110,7 @@ def binary_message_to_expression(p):
 
 # TODO: remove later?
 @pg.production('expression : binary_message')
-def expression_keyword_msg(p):
+def expression_binary_message(p):
     return p[0]
 
 
@@ -205,7 +205,16 @@ def parse_cascade_messages(msgs):
 
 @pg.production('cascade : expression CASCADE expression')
 def cascade(p):
-    return Cascade(obj=Self(), msgs=parse_cascade_messages([p[0], p[2]]))
+    f = p[0]
+    s = p[2]
+
+    if isinstance(f, Send) and isinstance(f.obj, Send) and f.obj.obj == Self():
+        return Cascade(
+            obj=f.obj,
+            msgs=parse_cascade_messages([f.msg, s])
+        )
+
+    return Cascade(obj=Self(), msgs=parse_cascade_messages([f, s]))
 
 
 @pg.production('cascade : expression expression CASCADE expression')
@@ -507,12 +516,7 @@ def return_parser(p):
 
 
 # Paren priority ##############################################################
-@pg.production('expression : OBJ_START strings OBJ_END')
-@pg.production('expression : OBJ_START numbers OBJ_END')
-@pg.production('expression : OBJ_START unary_message OBJ_END')
-@pg.production('expression : OBJ_START binary_message OBJ_END')
-@pg.production('expression : OBJ_START keyword_msg OBJ_END')
-@pg.production('expression : OBJ_START cascade OBJ_END')
+@pg.production('expression : OBJ_START expression OBJ_END')
 def paren_priority(p):
     if len(p) == 2:
         return Object()
