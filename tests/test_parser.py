@@ -40,8 +40,7 @@ def rw_slots(slot_dict):
 def test_parse_number():
     result = parse_and_lex('1')
 
-    assert isinstance(result, Number)
-    assert result.value == 1
+    assert result == Number(1)
 
 
 def test_self():
@@ -51,26 +50,22 @@ def test_self():
 def test_parse_send():
     result = parse_and_lex('asd')
 
-    assert isinstance(result, Send)
-    assert isinstance(result.obj, Self)
-    assert isinstance(result.msg, Message)
-
-    assert result.obj == Self()
-    assert result.msg.name == "asd"
+    assert result == Send(
+        obj=Self(),
+        msg=Message('asd')
+    )
 
 
 def test_parse_send_to_object():
     result = parse_and_lex('a b')
 
-    assert isinstance(result, Send)
-    assert isinstance(result.obj, Send)
-    assert isinstance(result.msg, Message)
-    assert isinstance(result.msg, Message)
-    assert isinstance(result.obj.obj, Self)
-
-    assert result.obj.obj == Self()
-    assert result.obj.msg.name == "a"
-    assert result.msg.name == "b"
+    assert result == Send(
+        obj=Send(
+            obj=Self(),
+            msg=Message('a')
+        ),
+        msg=Message('b')
+    )
 
 
 def test_parse_multiple_sends():
@@ -103,75 +98,77 @@ def test_parse_multiple_sends():
 def test_parse_binary_message():
     result = parse_and_lex('1 + 1')
 
-    assert isinstance(result, Send)
-    assert isinstance(result.obj, Number)
-    assert isinstance(result.msg, BinaryMessage)
-    assert isinstance(result.msg.parameter, Number)
-
-    assert result.obj.value == 1
-    assert result.msg.name == "+"
-    assert result.msg.parameter.value == 1
+    assert result == Send(
+        obj=Number(1),
+        msg=BinaryMessage(
+            name='+',
+            parameter=Number(1)
+        )
+    )
 
 
 def test_parse_keyword_message():
     result = parse_and_lex('set: 1')
 
-    assert isinstance(result, Send)
-    assert isinstance(result.obj, Self)
-    assert isinstance(result.msg, KeywordMessage)
-    assert isinstance(result.msg.parameters, list)
-
-    assert result.obj == Self()
-    assert result.msg.name == "set:"
-    assert result.msg.parameters[0].value == 1
+    assert result == Send(
+        obj=Self(),
+        msg=KeywordMessage(
+            name='set:',
+            parameters=[Number(1)]
+        )
+    )
 
 
 def test_parse_keyword_message_with_parameters():
     result = parse_and_lex('set: 1 And: 2 Also: 3 So: 4')
 
-    assert isinstance(result, Send)
-    assert isinstance(result.obj, Self)
-    assert isinstance(result.msg, KeywordMessage)
-    assert isinstance(result.msg.parameters, list)
-
-    assert result.obj == Self()
-    assert result.msg.name == "set:And:Also:So:"
-    assert result.msg.parameters[0].value == 1
-    assert result.msg.parameters[1].value == 2
-    assert result.msg.parameters[2].value == 3
-    assert result.msg.parameters[3].value == 4
+    assert result == Send(
+        obj=Self(),
+        msg=KeywordMessage(
+            name='set:And:Also:So:',
+            parameters=[
+                Number(1),
+                Number(2),
+                Number(3),
+                Number(4)
+            ]
+        )
+    )
 
 
 def test_parse_keyword_message_to_obj_with_parameters():
     result = parse_and_lex('asd set: 1')
 
-    assert isinstance(result, Send)
-    assert isinstance(result.obj, Send)
-    assert isinstance(result.obj.obj, Self)
-    assert isinstance(result.msg, KeywordMessage)
-
-    assert result.obj.obj == Self()
-    assert result.obj.msg.name == "asd"
-    assert result.msg.name == "set:"
-    assert result.msg.parameters[0].value == 1
+    assert result == Send(
+        obj=Send(
+            obj=Self(),
+            msg=Message('asd')
+        ),
+        msg=KeywordMessage(
+            name='set:',
+            parameters=[Number(1)]
+        )
+    )
 
 
 def test_parse_keyword_message_to_obj_with_multiple_parameters():
     result = parse_and_lex('asd set: 1 And: 2 Also: 3 So: 4')
 
-    assert isinstance(result, Send)
-    assert isinstance(result.obj, Send)
-    assert isinstance(result.obj.obj, Self)
-    assert isinstance(result.msg, KeywordMessage)
-    assert isinstance(result.msg.parameters, list)
-
-    assert result.obj.obj == Self()
-    assert result.obj.msg.name == "asd"
-    assert result.msg.name == "set:And:Also:So:"
-    assert result.msg.parameters[0].value == 1
-    assert result.msg.parameters[1].value == 2
-    assert result.msg.parameters[2].value == 3
-    assert result.msg.parameters[3].value == 4
+    assert result == Send(
+        obj=Send(
+            obj=Self(),
+            msg=Message('asd')
+        ),
+        msg=KeywordMessage(
+            name='set:And:Also:So:',
+            parameters=[
+                Number(1),
+                Number(2),
+                Number(3),
+                Number(4)
+            ]
+        )
+    )
 
 
 def test_parse_string():
