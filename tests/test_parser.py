@@ -261,6 +261,12 @@ def test_multiple_cascades():
     )
 
 
+def test_parse_chained_messages():
+    result = parse_and_lex('2 minus minus')
+    result = parse_and_lex('2 minus ifTrue: []')
+    result = parse_and_lex('ifTrue: [] not not')
+
+
 # Objects #####################################################################
 def test_parse_object():
     result = parse_and_lex('()')
