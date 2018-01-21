@@ -109,20 +109,7 @@ def test_operator():
     ]
 
     assert list(lexer.lex('!@$%&*-+~/?<>,')) == [
-        Token('OPERATOR', '!'),
-        Token('OPERATOR', '@'),
-        Token('OPERATOR', '$'),
-        Token('OPERATOR', '%'),
-        Token('OPERATOR', '&'),
-        Token('OPERATOR', '*'),
-        Token('OPERATOR', '-'),
-        Token('OPERATOR', '+'),
-        Token('OPERATOR', '~'),
-        Token('OPERATOR', '/'),
-        Token('OPERATOR', '?'),
-        Token('OPERATOR', '<'),
-        Token('OPERATOR', '>'),
-        Token('OPERATOR', ','),
+        Token('OPERATOR', '!@$%&*-+~/?<>,')
     ]
 
     assert list(lexer.lex('! @ $ % & * - + ~ / ? < > ,')) == [
@@ -142,6 +129,13 @@ def test_operator():
         Token('OPERATOR', ','),
     ]
 
+    assert list(lexer.lex('==')) == [
+        Token('OPERATOR', '==')
+    ]
+
+    assert list(lexer.lex('===')) == [
+        Token('OPERATOR', '===')
+    ]
 
 def test_return():
     assert list(lexer.lex('^')) == [
