@@ -44,22 +44,22 @@ class Object(BaseBox):
         return not self.__eq__(obj)
 
     def __repr__(self):
-        return "Object(slots=%r, params=%r, code=%r, parents=%r)" % (
-            self.slots,
-            self.params,
-            self.code,
-            self.parents,
-        )
+        parameters = []
+
+        if self.slots:
+            parameters.append("slots=%r" % self.slots)
+        if self.params:
+            parameters.append("params=%r" % self.params)
+        if self.code:
+            parameters.append("code=%r" % self.code)
+        if self.parents:
+            parameters.append("parents=%r" % self.parents)
+
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(parameters))
 
 
 class Block(Object):
-    def __repr__(self):
-        return "Block(slots=%r, params=%r, code=%r, parents=%r)" % (
-            self.slots,
-            self.params,
-            self.code,
-            self.parents,
-        )
+    pass
 
 
 class Number(BaseBox):  # TODO: remove
@@ -175,7 +175,10 @@ class Cascade(BaseBox):
         return not self.__eq__(obj)
 
     def __repr__(self):
-        return "Cascade(%s, %s" % (repr(self.obj), repr([x for x in self.msgs]))
+        return "Cascade(obj=%s, msgs=%s)" % (
+            repr(self.obj),
+            repr([x for x in self.msgs])
+        )
 
 
 class Return(BaseBox):
