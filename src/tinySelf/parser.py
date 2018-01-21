@@ -540,6 +540,23 @@ def paren_priority(p):
     return p[1]
 
 
+# Comments ####################################################################
+@pg.production('expression : COMMENT expression')
+def parse_comment(p):
+    return p[1]
+
+
+@pg.production('expression : expression COMMENT')
+def parse_comment(p):
+    return p[0]
+
+
+@pg.production('expression : COMMENT')
+def parse_comment(p):
+    return []
+
+
+# Parser initialization #######################################################
 parser = pg.build()
 
 

@@ -772,7 +772,6 @@ def test_parens_for_priority():
         )
     ])
 
-
     # and now without parens
     result = parse_and_lex('(|| 1 > 2 xex: 1 ifTrue: [] )')
 
@@ -796,3 +795,33 @@ def test_parens_for_priority():
         )
     ])
 
+
+# Comments ####################################################################
+def test_parse_comment():
+    result = parse_and_lex('(|| self) # xe')
+
+    assert result == Object(
+        code=[
+            Self()
+        ]
+    )
+
+
+def test_parse_multiline_comment():
+    result = parse_and_lex('''
+    # this is example
+    # of the multiline comment
+        (|| self) # xe
+    ''')
+
+    assert result == Object(
+        code=[
+            Self()
+        ]
+    )
+
+
+def test_parse_just_comment():
+    result = parse_and_lex('# comment')
+
+    assert result == []
