@@ -5,24 +5,22 @@ when-changed -s -r src/tinySelf/*.py -r tests/*.py -c ./run_tests.sh -s
 
 
 
-Comments.
-
-Parens for priorities
-
 Annotation objects
 
 Slots as ordered dicts.
 
-Block parent auto-settings.
+Block parent auto-set.
     In full AST?
 
 Split the parser tests into multiple files.
 
-
+Name the object by the slot where it is saved (if it is only in one place) or by some property?
 
 
 
 Done:
+    Comments.
+    Parens for priorities
     Parents
     Read only slots
     Blocks
