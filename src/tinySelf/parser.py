@@ -88,11 +88,7 @@ def unary_message(p):
 
 
 @pg.production('unary_message : expression IDENTIFIER')
-@pg.production('unary_message : unary_message IDENTIFIER')
 def unary_message_to_expression(p):
-    if isinstance(p[1], (Send, Cascade)):
-        return Send(obj=p[0], msg=p[1])
-
     return Send(obj=p[0], msg=Message(p[1].getstr()))
 
 
@@ -106,12 +102,12 @@ def binary_message_to_expression(p):
 
 
 # Keyword messages ############################################################
-@pg.production('expression : FIRST_KW expression')
+@pg.production('keyword_msg : FIRST_KW expression')
 def keyword_message(p):
     return Send(obj=Self(), msg=KeywordMessage(p[0].getstr(), [p[1]]))
 
 
-@pg.production('expression : expression FIRST_KW expression')
+@pg.production('keyword_msg : expression FIRST_KW expression')
 def keyword_message_to_obj(p):
     return Send(obj=p[0], msg=KeywordMessage(p[1].getstr(), [p[2]]))
 
@@ -151,6 +147,26 @@ def keyword_message_with_parameters(p):
     )
 
 
+@pg.production('keyword_msg : FIRST_KW expression kwd')
+def keyword_message_to_self_with_parameters(p):
+    signature = [p[0]]
+    parameters = [p[1]]
+
+    for cnt, token in enumerate(p[2]):
+        if cnt % 2 == 0:
+            signature.append(token)
+        else:
+            parameters.append(token)
+
+    return Send(
+        obj=Self(),
+        msg=KeywordMessage(
+            name="".join(token.getstr() for token in signature),
+            parameters=parameters
+        )
+    )
+
+
 @pg.production('keyword_msg : expression FIRST_KW expression kwd')
 def keyword_message_to_obj_with_parameters(p):
     signature = [p[1]]
@@ -171,23 +187,15 @@ def keyword_message_to_obj_with_parameters(p):
     )
 
 
-# Message precedence ##########################################################
-# TODO: remove later?
-@pg.production('expression : unary_message')
-@pg.production('expression : binary_message')
-@pg.production('expression : keyword_msg')
-def expression_binary_message(p):
+@pg.production('message : unary_message')
+@pg.production('message : binary_message')
+@pg.production('message : keyword_msg')
+def all_kinds_of_messages_are_message(p):
     return p[0]
 
-
-@pg.production('expression : expression keyword_msg')
-@pg.production('expression : expression unary_message')
-@pg.production('expression : expression binary_message')
-def message_priority(p):
-    if isinstance(p[1], Send):
-        return Send(p[0], p[1].msg)
-
-    return Send(p[0], p[1])
+@pg.production('expression : message')
+def expression_is_message(p):
+    return p[0]
 
 
 # Cascades ####################################################################
@@ -207,12 +215,12 @@ def parse_cascade_messages(msgs):
     return out
 
 
-@pg.production('cascade : expression CASCADE expression')
+@pg.production('cascade : message CASCADE message')
 def cascade(p):
     f = p[0]
     s = p[2]
 
-    if isinstance(f, Send) and isinstance(f.obj, Send) and f.obj.obj == Self():
+    if isinstance(f, Send):
         return Cascade(
             obj=f.obj,
             msgs=parse_cascade_messages([f.msg, s])
@@ -221,11 +229,15 @@ def cascade(p):
     return Cascade(obj=Self(), msgs=parse_cascade_messages([f, s]))
 
 
-@pg.production('cascade : expression expression CASCADE expression')
+@pg.production('cascade : message CASCADE cascade')
 def cascades(p):
-    msgs = parse_cascade_messages([p[1], p[3]])
+    if isinstance(p[0], Send):
+        return Cascade(
+            obj=p[0].obj,
+            msgs=[p[0].msg] + p[2].msgs
+        )
 
-    return Cascade(obj=p[0], msgs=msgs)
+    return Cascade(obj=p[0], msgs=p[2].msgs)
 
 
 # TODO: remove later?
@@ -520,7 +532,7 @@ def return_parser(p):
 
 
 # Paren priority ##############################################################
-@pg.production('expression : OBJ_START expression OBJ_END')
+@pg.production('expression : OBJ_START message OBJ_END')
 def paren_priority(p):
     if len(p) == 2:
         return Object()
