@@ -264,7 +264,7 @@ def test_multiple_cascades():
 def test_parse_chained_messages():
     result = parse_and_lex('2 minus minus')
     result = parse_and_lex('2 minus ifTrue: []')
-    result = parse_and_lex('ifTrue: [] not not')
+    # result = parse_and_lex('ifTrue: [] not not')
 
 
 # Objects #####################################################################
@@ -727,7 +727,7 @@ def test_parens_for_priority():
         ],
     )
 
-    # # and now without parens
+    # and now without parens
     # result = parse_and_lex('(|| 1 > 2 minus ifTrue: [] )')
 
     # assert result == Object(

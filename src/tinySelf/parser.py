@@ -90,13 +90,10 @@ def unary_message(p):
 @pg.production('unary_message : expression IDENTIFIER')
 @pg.production('unary_message : unary_message IDENTIFIER')
 def unary_message_to_expression(p):
+    if isinstance(p[1], (Send, Cascade)):
+        return Send(obj=p[0], msg=p[1])
+
     return Send(obj=p[0], msg=Message(p[1].getstr()))
-
-
-# TODO: remove later?
-@pg.production('expression : unary_message')
-def expression_unary_msg(p):
-    return p[0]
 
 
 # Binary messages #############################################################
@@ -106,12 +103,6 @@ def binary_message_to_expression(p):
     assert len(p) == 3, "Bad number of operands for %s!" % p[1]
 
     return Send(p[0], BinaryMessage(p[1].getstr(), p[2]))
-
-
-# TODO: remove later?
-@pg.production('expression : binary_message')
-def expression_binary_message(p):
-    return p[0]
 
 
 # Keyword messages ############################################################
@@ -180,10 +171,23 @@ def keyword_message_to_obj_with_parameters(p):
     )
 
 
+# Message precedence ##########################################################
 # TODO: remove later?
+@pg.production('expression : unary_message')
+@pg.production('expression : binary_message')
 @pg.production('expression : keyword_msg')
-def expression_keyword_msg(p):
+def expression_binary_message(p):
     return p[0]
+
+
+@pg.production('expression : expression keyword_msg')
+@pg.production('expression : expression unary_message')
+@pg.production('expression : expression binary_message')
+def message_priority(p):
+    if isinstance(p[1], Send):
+        return Send(p[0], p[1].msg)
+
+    return Send(p[0], p[1])
 
 
 # Cascades ####################################################################
