@@ -184,6 +184,53 @@ def test_parse_string():
     assert result.value == ""
 
 
+def test_parse_chained_messages():
+    result = parse_and_lex('2 minus minus')
+
+    assert result == Send(
+        obj=Send(
+            obj=Number(2),
+            msg=Message('minus'),
+        ),
+        msg=Message('minus')
+    )
+
+
+def test_parse_chained_messages_kw():
+    result = parse_and_lex('2 minus ifTrue: []')
+
+    assert result == Send(
+        obj=Send(
+            obj=Number(2),
+            msg=Message('minus')
+        ),
+        msg=KeywordMessage(
+            name='ifTrue:',
+            parameters=[
+                Block()
+            ]
+        )
+    )
+
+
+def test_parse_chained_kw_and_unary_msgs():
+    result = parse_and_lex('ifTrue: [] not not')
+
+    assert result == Send(
+        obj=Send(
+            obj=Send(
+                obj=Self(),
+                msg=KeywordMessage(
+                    name='ifTrue:',
+                    parameters=[Block()]
+                )
+            ),
+            msg=Message('not')
+        ),
+        msg=Message('not')
+    )
+
+
 def test_parse_cascade_to_self():
     result = parse_and_lex('a; b')
 
@@ -259,12 +306,6 @@ def test_multiple_cascades():
             Message("c"),
         ]
     )
-
-
-def test_parse_chained_messages():
-    result = parse_and_lex('2 minus minus')
-    result = parse_and_lex('2 minus ifTrue: []')
-    # result = parse_and_lex('ifTrue: [] not not')
 
 
 # Objects #####################################################################
@@ -707,43 +748,51 @@ def test_self_kw():
 
 # Parens for priority #########################################################
 def test_parens_for_priority():
-    result = parse_and_lex('(|| 1 > (2 minus) ifTrue: [] )')
+    result = parse_and_lex('(|| 1 > (2 xex: 1) ifTrue: [] )')
 
-    assert result == Object(
-        code=[
-            Send(
-                obj=Send(
-                    obj=Number(1),
-                    msg=BinaryMessage(
-                        name='>',
-                        parameter=Send(obj=Number(2), msg=Message('minus'))
+    assert result == Object(code=[
+        Send(
+            obj=Send(
+                obj=Number(1),
+                msg=BinaryMessage(
+                    name='>',
+                    parameter=Send(
+                        obj=Number(2),
+                        msg=KeywordMessage(
+                            name='xex:',
+                            parameters=[Number(1)]
+                        )
                     )
-                ),
-                msg=KeywordMessage(
-                    name='ifTrue:',
-                    parameters=[Block()]
                 )
+            ),
+            msg=KeywordMessage(
+                name='ifTrue:',
+                parameters=[Block()]
             )
-        ],
-    )
+        )
+    ])
+
 
     # and now without parens
-    # result = parse_and_lex('(|| 1 > 2 minus ifTrue: [] )')
+    result = parse_and_lex('(|| 1 > 2 xex: 1 ifTrue: [] )')
 
-    # assert result == Object(
-    #     code=[
-    #         Send(
-    #             obj=Send(
-    #                 obj=Number(1),
-    #                 msg=BinaryMessage(
-    #                     name='>',
-    #                     parameter=Send(obj=Number(2), msg=Message('minus'))
-    #                 )
-    #             ),
-    #             msg=KeywordMessage(
-    #                 name='ifTrue:',
-    #                 parameters=[Block()]
-    #             )
-    #         )
-    #     ],
-    # )
+    assert result == Object(code=[
+        Send(
+            obj=Send(
+                obj=Number(1),
+                msg=BinaryMessage(name='>', parameter=Number(2))
+            ),
+            msg=KeywordMessage(
+                name='xex:',
+                parameters=[
+                    Send(
+                        obj=Number(1),
+                        msg=KeywordMessage(
+                            name='ifTrue:', parameters=[Block()]
+                        )
+                    )
+                ]
+            )
+        )
+    ])
+
