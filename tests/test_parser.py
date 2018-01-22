@@ -40,38 +40,38 @@ def rw_slots(slot_dict):
 def test_parse_number():
     result = parse_and_lex('1')
 
-    assert result == Number(1)
+    assert result == [Number(1)]
 
 
-def test_self():
+def test_self_eq():
     assert Self() == Self()
 
 
 def test_parse_send():
     result = parse_and_lex('asd')
 
-    assert result == Send(
+    assert result == [Send(
         obj=Self(),
         msg=Message('asd')
-    )
+    )]
 
 
 def test_parse_send_to_object():
     result = parse_and_lex('a b')
 
-    assert result == Send(
+    assert result == [Send(
         obj=Send(
             obj=Self(),
             msg=Message('a')
         ),
         msg=Message('b')
-    )
+    )]
 
 
 def test_parse_multiple_sends():
     result = parse_and_lex('a b c d e f g')
 
-    assert result == Send(
+    assert result == [Send(
         obj=Send(
             obj=Send(
                 obj=Send(
@@ -92,37 +92,37 @@ def test_parse_multiple_sends():
             msg=Message('f')
         ),
         msg=Message('g')
-    )
+    )]
 
 
 def test_parse_binary_message():
     result = parse_and_lex('1 + 1')
 
-    assert result == Send(
+    assert result == [Send(
         obj=Number(1),
         msg=BinaryMessage(
             name='+',
             parameter=Number(1)
         )
-    )
+    )]
 
 
 def test_parse_keyword_message():
     result = parse_and_lex('set: 1')
 
-    assert result == Send(
+    assert result == [Send(
         obj=Self(),
         msg=KeywordMessage(
             name='set:',
             parameters=[Number(1)]
         )
-    )
+    )]
 
 
 def test_parse_keyword_message_with_parameters():
     result = parse_and_lex('set: 1 And: 2 Also: 3 So: 4')
 
-    assert result == Send(
+    assert result == [Send(
         obj=Self(),
         msg=KeywordMessage(
             name='set:And:Also:So:',
@@ -133,13 +133,13 @@ def test_parse_keyword_message_with_parameters():
                 Number(4)
             ]
         )
-    )
+    )]
 
 
 def test_parse_keyword_message_to_obj_with_parameters():
     result = parse_and_lex('asd set: 1')
 
-    assert result == Send(
+    assert result == [Send(
         obj=Send(
             obj=Self(),
             msg=Message('asd')
@@ -148,13 +148,13 @@ def test_parse_keyword_message_to_obj_with_parameters():
             name='set:',
             parameters=[Number(1)]
         )
-    )
+    )]
 
 
 def test_parse_keyword_message_to_obj_with_multiple_parameters():
     result = parse_and_lex('asd set: 1 And: 2 Also: 3 So: 4')
 
-    assert result == Send(
+    assert result == [Send(
         obj=Send(
             obj=Self(),
             msg=Message('asd')
@@ -168,38 +168,38 @@ def test_parse_keyword_message_to_obj_with_multiple_parameters():
                 Number(4)
             ]
         )
-    )
+    )]
 
 
 def test_parse_string():
     result = parse_and_lex('"asd"')
 
-    assert isinstance(result, String)
-    assert result.value == "asd"
+    assert isinstance(result[0], String)
+    assert result[0].value == "asd"
 
     result = parse_and_lex("'asd'")
-    assert result.value == "asd"
+    assert result[0].value == "asd"
 
     result = parse_and_lex('""')
-    assert result.value == ""
+    assert result[0].value == ""
 
 
 def test_parse_chained_messages():
     result = parse_and_lex('2 minus minus')
 
-    assert result == Send(
+    assert result == [Send(
         obj=Send(
             obj=Number(2),
             msg=Message('minus'),
         ),
         msg=Message('minus')
-    )
+    )]
 
 
 def test_parse_chained_messages_kw():
     result = parse_and_lex('2 minus ifTrue: []')
 
-    assert result == Send(
+    assert result == [Send(
         obj=Send(
             obj=Number(2),
             msg=Message('minus')
@@ -210,13 +210,13 @@ def test_parse_chained_messages_kw():
                 Block()
             ]
         )
-    )
+    )]
 
 
 def test_parse_chained_kw_and_unary_msgs():
     result = parse_and_lex('ifTrue: [] not not')
 
-    assert result == Send(
+    assert result == [Send(
         obj=Send(
             obj=Send(
                 obj=Self(),
@@ -228,74 +228,74 @@ def test_parse_chained_kw_and_unary_msgs():
             msg=Message('not')
         ),
         msg=Message('not')
-    )
+    )]
 
 
 def test_parse_cascade_to_self():
     result = parse_and_lex('a; b')
 
-    assert result == Cascade(
+    assert result == [Cascade(
         obj=Self(),
         msgs=[
             Message("a"),
             Message("b"),
         ]
-    )
+    )]
 
 
 def test_parse_cascade_kw_to_self():
     result = parse_and_lex('a: 1; b')
 
-    assert result == Cascade(
+    assert result == [Cascade(
         obj=Self(),
         msgs=[
             KeywordMessage("a:", [Number(1)]),
             Message("b"),
         ]
-    )
+    )]
 
 
 def test_parse_cascade():
     result = parse_and_lex('a b; c')
 
-    assert result == Cascade(
+    assert result == [Cascade(
         obj=Send(Self(), Message("a")),
         msgs=[
             Message("b"),
             Message("c"),
         ]
-    )
+    )]
 
 
 def test_parse_cascade_kw():
     result = parse_and_lex('s a: 1 B: 2; b')
 
-    assert result == Cascade(
+    assert result == [Cascade(
         obj=Send(Self(), Message("s")),
         msgs=[
             KeywordMessage("a:B:", [Number(1), Number(2)]),
             Message("b"),
         ]
-    )
+    )]
 
 
 def test_parse_cascade_to_kw():
     result = parse_and_lex('x: 1 Y: 2; a: 1 B: 2; b')
 
-    assert result == Cascade(
+    assert result == [Cascade(
         obj=Self(),
         msgs=[
             KeywordMessage("x:Y:", [Number(1), Number(2)]),
             KeywordMessage("a:B:", [Number(1), Number(2)]),
             Message("b"),
         ]
-    )
+    )]
 
 
 def test_multiple_cascades():
     result = parse_and_lex('obj a; b; c')
 
-    assert result == Cascade(
+    assert result == [Cascade(
         obj=Send(
             Self(),
             Message("obj")
@@ -305,106 +305,106 @@ def test_multiple_cascades():
             Message("b"),
             Message("c"),
         ]
-    )
+    )]
 
 
 # Objects #####################################################################
 def test_parse_object():
     result = parse_and_lex('()')
 
-    assert isinstance(result, Object)
-    assert result.slots == {}
-    assert result.code == []
+    assert isinstance(result[0], Object)
+    assert result[0].slots == {}
+    assert result[0].code == []
 
 
 def test_parse_object_with_spaces():
     result = parse_and_lex('(    )')
 
-    assert isinstance(result, Object)
-    assert result.slots == {}
-    assert result.code == []
+    assert isinstance(result[0], Object)
+    assert result[0].slots == {}
+    assert result[0].code == []
 
 
 def test_parse_object_with_empty_slots():
     result = parse_and_lex('(||)')
 
-    assert isinstance(result, Object)
-    assert result.slots == {}
-    assert result.code == []
+    assert isinstance(result[0], Object)
+    assert result[0].slots == {}
+    assert result[0].code == []
 
 
 def test_parse_object_with_nil_slot():
     result = parse_and_lex('(| asd |)')
-    assert result == Object(slots={"asd": None})
+    assert result == [Object(slots={"asd": None})]
 
     result = parse_and_lex('(| asd. |)')
-    assert result == Object(slots={"asd": None})
+    assert result == [Object(slots={"asd": None})]
 
     result = parse_and_lex('(asd |)')
-    assert result == Object(slots={"asd": None})
+    assert result == [Object(slots={"asd": None})]
 
     result = parse_and_lex('( asd. |)')
-    assert result == Object(slots={"asd": None})
+    assert result == [Object(slots={"asd": None})]
 
 
 def test_parse_object_with_multiple_nil_slots():
     result = parse_and_lex('(| asd. bsd |)')
-    assert result == Object(slots={"asd": None, "bsd": None})
+    assert result == [Object(slots={"asd": None, "bsd": None})]
 
     result = parse_and_lex('(| asd. bsd. |)')
-    assert result == Object(slots={"asd": None, "bsd": None})
+    assert result == [Object(slots={"asd": None, "bsd": None})]
 
     result = parse_and_lex('(asd. bsd. |)')
-    assert result == Object(slots={"asd": None, "bsd": None})
+    assert result == [Object(slots={"asd": None, "bsd": None})]
 
 
 def test_parse_slot_assignment():
     result = parse_and_lex('(| asd <- 2 |)')
-    assert result == Object(slots=_rw_slot("asd", Number(2)))
+    assert result == [Object(slots=_rw_slot("asd", Number(2)))]
 
     result = parse_and_lex('(| asd <- 2. |)')
-    assert result == Object(slots=_rw_slot("asd", Number(2)))
+    assert result == [Object(slots=_rw_slot("asd", Number(2)))]
 
 
 def test_parse_multiple_slot_assignment():
     result = parse_and_lex('(asd <- 2. bsd <- 4 |)')
-    assert result == Object(slots=rw_slots({"asd": Number(2), "bsd": Number(4)}))
+    assert result == [Object(slots=rw_slots({"asd": Number(2), "bsd": Number(4)}))]
 
     result = parse_and_lex('(| asd <- 2. bsd <- 4. |)')
-    assert result == Object(slots=rw_slots({"asd": Number(2), "bsd": Number(4)}))
+    assert result == [Object(slots=rw_slots({"asd": Number(2), "bsd": Number(4)}))]
 
 
 def test_parse_rw_slot_assignment():
     result = parse_and_lex('( a <- 2 |)')
 
-    assert result == Object(slots=_rw_slot("a", Number(2)))
+    assert result == [Object(slots=_rw_slot("a", Number(2)))]
 
 
 def test_parse_kwd_slot_assignment():
     result = parse_and_lex('(| asd: a = () |)')
-    assert result == Object(slots={"asd:": Object(params=["a"])})
+    assert result == [Object(slots={"asd:": Object(params=["a"])})]
 
     result = parse_and_lex('(| asd: a = (). |)')
-    assert result == Object(slots={"asd:": Object(params=["a"])})
+    assert result == [Object(slots={"asd:": Object(params=["a"])})]
 
 
 def test_parse_kwd_slots_assignment():
     result = parse_and_lex('(| asd: a Bsd: b = () |)')
-    assert result == Object(slots={"asd:Bsd:": Object(params=["a", "b"])})
+    assert result == [Object(slots={"asd:Bsd:": Object(params=["a", "b"])})]
 
     result = parse_and_lex('(asd: a Bsd: b = (). |)')
-    assert result == Object(slots={"asd:Bsd:": Object(params=["a", "b"])})
+    assert result == [Object(slots={"asd:Bsd:": Object(params=["a", "b"])})]
 
 
 def test_parse_multiple_slots_assignments():
     result = parse_and_lex('(| asd: a Bsd: b = (). a: p = () |)')
 
-    assert result == Object(
+    assert result == [Object(
         slots={
             "asd:Bsd:": Object(params=["a", "b"]),
             "a:": Object(params=["p"]),
         }
-    )
+    )]
 
 
 def test_parse_error_in_msg_slot_value_assignment():
@@ -418,20 +418,20 @@ def test_parse_error_in_msg_slot_value_assignment():
 
 def test_parse_op_slot_assignment():
     result = parse_and_lex('(| + b = () |)')
-    assert result == Object(slots={"+": Object(params=["b"])})
+    assert result == [Object(slots={"+": Object(params=["b"])})]
 
     result = parse_and_lex('(+ b = (). |)')
-    assert result == Object(slots={"+": Object(params=["b"])})
+    assert result == [Object(slots={"+": Object(params=["b"])})]
 
 
 def test_parse_multiple_op_slot_assignments():
     result = parse_and_lex('(| + b = (). - a = () |)')
-    assert result == Object(
+    assert result == [Object(
         slots={
             "+": Object(params=["b"]),
             "-": Object(params=["a"]),
         }
-    )
+    )]
 
 
 def test_parse_slot_definition_with_combination_of_slots():
@@ -445,7 +445,8 @@ def test_parse_slot_definition_with_combination_of_slots():
             = a = ().
         |)
     """)
-    assert result == Object(
+
+    assert result == [Object(
         slots={
             "a": None,
             "asd:Bsd:": Object(params=["a", "b"]),
@@ -454,24 +455,24 @@ def test_parse_slot_definition_with_combination_of_slots():
             "-": Object(params=["a"]),
             "=": Object(params=["a"]),
         }
-    )
+    )]
 
 
 def test_argument_parser():
     result = parse_and_lex('(| :a |)')
-    assert result == Object(params=["a"])
+    assert result == [Object(params=["a"])]
 
     result = parse_and_lex('(| :a. |)')
-    assert result == Object(params=["a"])
+    assert result == [Object(params=["a"])]
 
     result = parse_and_lex('(| :a. :b |)')
-    assert result == Object(params=["a", "b"])
+    assert result == [Object(params=["a", "b"])]
 
 
 def test_obj_with_code():
     result = parse_and_lex('(| a | a printLine)')
 
-    assert result == Object(
+    assert result == [Object(
         slots={"a": None},
         code=[
             Send(
@@ -479,13 +480,13 @@ def test_obj_with_code():
                 Message("printLine")
             )
         ]
-    )
+    )]
 
 
 def test_obj_with_code_with_dot():
     result = parse_and_lex('(| a | a printLine.)')
 
-    assert result == Object(
+    assert result == [Object(
         slots={"a": None},
         code=[
             Send(
@@ -493,13 +494,13 @@ def test_obj_with_code_with_dot():
                 Message("printLine")
             )
         ]
-    )
+    )]
 
 
 def test_obj_with_code_statements():
     result = parse_and_lex('(| a | a printLine. a print. test)')
 
-    assert result == Object(
+    assert result == [Object(
         slots={"a": None},
         code=[
             Send(
@@ -512,7 +513,7 @@ def test_obj_with_code_statements():
             ),
             Send(Self(), Message("test"))
         ]
-    )
+    )]
 
 
 def test_recursive_obj_definition():
@@ -523,7 +524,7 @@ def test_recursive_obj_definition():
         | nil.)
     """)
 
-    assert result == Object(
+    assert result == [Object(
         slots=join_dicts(
             {
                 "a": Object(
@@ -540,26 +541,26 @@ def test_recursive_obj_definition():
             _rw_slot("b", Send(Self(), Message("nil")))
         ),
         code=[Send(Self(), Message("nil"))]
-    )
+    )]
 
 
 def test_object_without_slots():
     result = parse_and_lex('(|| a printLine)')
 
-    assert result == Object(
+    assert result == [Object(
         code=[
             Send(
                 Send(Self(), Message("a")),
                 Message("printLine")
             )
         ]
-    )
+    )]
 
 
 def test_object_with_parents():
     result = parse_and_lex('(| p* = traits | a printLine)')
 
-    assert result == Object(
+    assert result == [Object(
         parents={"p": Send(Self(), Message("traits"))},
         code=[
             Send(
@@ -567,13 +568,13 @@ def test_object_with_parents():
                 Message("printLine")
             )
         ]
-    )
+    )]
 
 
 # Blocks ######################################################################
 def test_empty_block():
     result = parse_and_lex('[]')
-    assert result == Block()
+    assert result == [Block()]
 
 
 def test_block_slots():
@@ -581,63 +582,63 @@ def test_block_slots():
     # assert result == Block(slots={"asd": None})
 
     result = parse_and_lex('[| asd <- 2 |]')
-    assert result == Block(slots=_rw_slot("asd", Number(2)))
+    assert result == [Block(slots=_rw_slot("asd", Number(2)))]
 
     result = parse_and_lex('[| asd <- 2. |]')
-    assert result == Block(slots=_rw_slot("asd", Number(2)))
+    assert result == [Block(slots=_rw_slot("asd", Number(2)))]
 
     result = parse_and_lex('[asd <- 2. bsd <- 4 |]')
-    assert result == Block(slots=rw_slots({"asd": Number(2), "bsd": Number(4)}))
+    assert result == [Block(slots=rw_slots({"asd": Number(2), "bsd": Number(4)}))]
 
     result = parse_and_lex('[| asd <- 2. bsd <- 4. |]')
-    assert result == Block(slots=rw_slots({"asd": Number(2), "bsd": Number(4)}))
+    assert result == [Block(slots=rw_slots({"asd": Number(2), "bsd": Number(4)}))]
 
     result = parse_and_lex('[| asd: a = () |]')
-    assert result == Block(slots={"asd:": Object(params=["a"])})
+    assert result == [Block(slots={"asd:": Object(params=["a"])})]
 
     result = parse_and_lex('[| asd: a = (). |]')
-    assert result == Block(slots={"asd:": Object(params=["a"])})
+    assert result == [Block(slots={"asd:": Object(params=["a"])})]
 
     result = parse_and_lex('[| asd: a Bsd: b = () |]')
-    assert result == Block(slots={"asd:Bsd:": Object(params=["a", "b"])})
+    assert result == [Block(slots={"asd:Bsd:": Object(params=["a", "b"])})]
 
     result = parse_and_lex('[| :a |]')
-    assert result == Block(params=["a"])
+    assert result == [Block(params=["a"])]
 
     result = parse_and_lex('[| :a. |]')
-    assert result == Block(params=["a"])
+    assert result == [Block(params=["a"])]
 
     result = parse_and_lex('[| :a. :b |]')
-    assert result == Block(params=["a", "b"])
+    assert result == [Block(params=["a", "b"])]
 
     result = parse_and_lex('[:a |]')
-    assert result == Block(params=["a"])
+    assert result == [Block(params=["a"])]
 
     result = parse_and_lex('[ :a. |]')
-    assert result == Block(params=["a"])
+    assert result == [Block(params=["a"])]
 
     result = parse_and_lex('[:a. :b |]')
-    assert result == Block(params=["a", "b"])
+    assert result == [Block(params=["a", "b"])]
 
     result = parse_and_lex('[| + b = () |]')
-    assert result == Block(slots={"+": Object(params=["b"])})
+    assert result == [Block(slots={"+": Object(params=["b"])})]
 
     result = parse_and_lex('[+ b = (). |]')
-    assert result == Block(slots={"+": Object(params=["b"])})
+    assert result == [Block(slots={"+": Object(params=["b"])})]
 
     result = parse_and_lex('[| + b = (). - a = () |]')
-    assert result == Block(
+    assert result == [Block(
         slots={
             "+": Object(params=["b"]),
             "-": Object(params=["a"]),
         }
-    )
+    )]
 
 
 def test_block_empty_slots_and_code():
     result = parse_and_lex('[|| a printLine. a print. test]')
 
-    assert result == Block(
+    assert result == [Block(
         code=[
             Send(
                 Send(Self(), Message("a")),
@@ -649,13 +650,13 @@ def test_block_empty_slots_and_code():
             ),
             Send(Self(), Message("test"))
         ]
-    )
+    )]
 
 
 def test_block_with_code_statements():
     result = parse_and_lex('[| a. :b | a printLine. a print. test]')
 
-    assert result == Block(
+    assert result == [Block(
         slots={"a": None},
         params=["b"],
         code=[
@@ -669,13 +670,13 @@ def test_block_with_code_statements():
             ),
             Send(Self(), Message("test"))
         ]
-    )
+    )]
 
 
 def test_block_with_just_code():
     result = parse_and_lex('[ a printLine. a print. test]')
 
-    assert result == Block(
+    assert result == [Block(
         code=[
             Send(
                 Send(Self(), Message("a")),
@@ -687,14 +688,14 @@ def test_block_with_just_code():
             ),
             Send(Self(), Message("test"))
         ]
-    )
+    )]
 
 
 # Return ######################################################################
 def test_return_in_block():
     result = parse_and_lex('[ a printLine. a print. ^test]')
 
-    assert result == Block(
+    assert result == [Block(
         code=[
             Send(
                 Send(Self(), Message("a")),
@@ -706,13 +707,13 @@ def test_return_in_block():
             ),
             Return(Send(Self(), Message("test")))
         ]
-    )
+    )]
 
 
 def test_return_in_object():
     result = parse_and_lex('(|| a printLine. a print. ^test)')
 
-    assert result == Object(
+    assert result == [Object(
         code=[
             Send(
                 Send(Self(), Message("a")),
@@ -724,33 +725,33 @@ def test_return_in_object():
             ),
             Return(Send(Self(), Message("test")))
         ]
-    )
+    )]
 
 
 # Self ########################################################################
 def test_self_kw():
     result = parse_and_lex('(|| self)')
 
-    assert result == Object(
+    assert result == [Object(
         code=[
             Self()
         ]
-    )
+    )]
 
     result = parse_and_lex('(|| self xe)')
 
-    assert result == Object(
+    assert result == [Object(
         code=[
             Send(Self(), Message("xe"))
         ]
-    )
+    )]
 
 
 # Parens for priority #########################################################
 def test_parens_for_priority():
     result = parse_and_lex('(|| 1 > (2 xex: 1) ifTrue: [] )')
 
-    assert result == Object(code=[
+    assert result == [Object(code=[
         Send(
             obj=Send(
                 obj=Number(1),
@@ -770,12 +771,12 @@ def test_parens_for_priority():
                 parameters=[Block()]
             )
         )
-    ])
+    ])]
 
     # and now without parens
     result = parse_and_lex('(|| 1 > 2 xex: 1 ifTrue: [] )')
 
-    assert result == Object(code=[
+    assert result == [Object(code=[
         Send(
             obj=Send(
                 obj=Number(1),
@@ -793,18 +794,14 @@ def test_parens_for_priority():
                 ]
             )
         )
-    ])
+    ])]
 
 
 # Comments ####################################################################
 def test_parse_comment():
     result = parse_and_lex('(|| self) # xe')
 
-    assert result == Object(
-        code=[
-            Self()
-        ]
-    )
+    assert result == [Object(code=[Self()])]
 
 
 def test_parse_multiline_comment():
@@ -814,14 +811,25 @@ def test_parse_multiline_comment():
         (|| self) # xe
     ''')
 
-    assert result == Object(
-        code=[
-            Self()
-        ]
-    )
+    assert result == [Object(code=[Self()])]
 
 
 def test_parse_just_comment():
     result = parse_and_lex('# comment')
 
     assert result == []
+
+
+# Multiple statements are code ################################################
+def test_multiple_statements_make_code():
+    result = parse_and_lex('''
+        xe.
+        (|| self).
+        1'''
+    )
+
+    assert result == [
+        Send(obj=Self(), msg=Message('xe')),
+        Object(code=[Self()]),
+        Number(1)
+    ]
