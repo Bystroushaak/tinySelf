@@ -1,5 +1,7 @@
 https://rply.readthedocs.io/en/latest/
 https://github.com/joshsharp/python-braid/blob/master/parser.py
+https://refi64.com/posts/the-magic-of-rpython.html
+http://blog.tim-smith.us/2016/10/small-language-in-rpython/
 
 when-changed -s -r src/tinySelf/*.py -r tests/*.py -c ./run_tests.sh -s
 
