@@ -38,7 +38,8 @@ class Object(BaseBox):
         return isinstance(obj, self.__class__) and \
                self.slots == obj.slots and \
                self.params == obj.params and \
-               self.code == obj.code
+               self.code == obj.code and \
+               self.parents == obj.parents
 
     def __ne__(self, obj):
         return not self.__eq__(obj)
