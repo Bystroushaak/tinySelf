@@ -55,6 +55,24 @@ pg = ParserGenerator(
 )
 
 
+
+# Multiple statements make code ###############################################
+@pg.production('root : expression')
+def at_the_top_of_the_root_is_just_expression(p):
+    return [p[0]]
+
+
+@pg.production('root : expression END_OF_EXPR')
+@pg.production('root : expression END_OF_EXPR root')
+def multiple_expressions_make_code(p):
+    out = [p[0]]
+
+    if len(p) > 2:
+        out.extend(p[2])
+
+    return out
+
+
 # Self keyword ################################################################
 @pg.production('expression : SELF')
 def self_parser(p):
@@ -400,8 +418,8 @@ def parse_slots_params_parents(slots):
         else:
             slot_names.append(name)
 
-    params = [k[1:] for k in param_names]
-    parents = {k[1:]: slots[k] for k in parent_names}
+    params = [k[1:] for k in param_names]  # strip : from the beginning
+    parents = {k[:-1]: slots[k] for k in parent_names}  # strip * from the end
     slots = {k: slots[k] for k in slot_names}
 
     return slots, params, parents
@@ -553,7 +571,7 @@ def parse_comment(p):
 
 @pg.production('expression : COMMENT')
 def parse_comment(p):
-    return []
+    return None
 
 
 # Parser initialization #######################################################
@@ -561,4 +579,7 @@ parser = pg.build()
 
 
 def parse_and_lex(i):
-    return parser.parse(lexer.lex(i))
+    return [
+        x for x in parser.parse(lexer.lex(i))
+        if x is not None
+    ]
