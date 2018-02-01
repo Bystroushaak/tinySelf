@@ -31,8 +31,7 @@ pg = ParserGenerator(
         "NUMBER",
         "OBJ_START", "OBJ_END",
         "BLOCK_START", "BLOCK_END",
-        "SINGLE_Q_STRING",
-        "DOUBLE_Q_STRING",
+        "SINGLE_Q_STRING", "DOUBLE_Q_STRING",
         "KEYWORD",
         "FIRST_KW",
         "ARGUMENT",
@@ -578,7 +577,7 @@ def parse_comment(p):
 parser = pg.build()
 
 
-def parse_and_lex(i):
+def lex_and_parse(i):
     return [
         x for x in parser.parse(lexer.lex(i))
         if x is not None
