@@ -6,6 +6,7 @@
 from tinySelf.parser import _rw_slot
 from tinySelf.parser import lex_and_parse
 
+from tinySelf.ast_tokens import Nil
 from tinySelf.ast_tokens import Send
 from tinySelf.ast_tokens import Self
 from tinySelf.ast_tokens import Block
@@ -335,27 +336,27 @@ def test_parse_object_with_empty_slots():
 
 def test_parse_object_with_nil_slot():
     result = lex_and_parse('(| asd |)')
-    assert result == [Object(slots={"asd": None})]
+    assert result == [Object(slots={"asd": Nil()})]
 
     result = lex_and_parse('(| asd. |)')
-    assert result == [Object(slots={"asd": None})]
+    assert result == [Object(slots={"asd": Nil()})]
 
     result = lex_and_parse('(asd |)')
-    assert result == [Object(slots={"asd": None})]
+    assert result == [Object(slots={"asd": Nil()})]
 
     result = lex_and_parse('( asd. |)')
-    assert result == [Object(slots={"asd": None})]
+    assert result == [Object(slots={"asd": Nil()})]
 
 
 def test_parse_object_with_multiple_nil_slots():
     result = lex_and_parse('(| asd. bsd |)')
-    assert result == [Object(slots={"asd": None, "bsd": None})]
+    assert result == [Object(slots={"asd": Nil(), "bsd": Nil()})]
 
     result = lex_and_parse('(| asd. bsd. |)')
-    assert result == [Object(slots={"asd": None, "bsd": None})]
+    assert result == [Object(slots={"asd": Nil(), "bsd": Nil()})]
 
     result = lex_and_parse('(asd. bsd. |)')
-    assert result == [Object(slots={"asd": None, "bsd": None})]
+    assert result == [Object(slots={"asd": Nil(), "bsd": Nil()})]
 
 
 def test_parse_slot_assignment():
@@ -448,7 +449,7 @@ def test_parse_slot_definition_with_combination_of_slots():
 
     assert result == [Object(
         slots={
-            "a": None,
+            "a": Nil(),
             "asd:Bsd:": Object(params=["a", "b"]),
             "asd:": Object(params=["b"]),
             "+": Object(params=["b"]),
@@ -473,7 +474,7 @@ def test_obj_with_code():
     result = lex_and_parse('(| a | a printLine)')
 
     assert result == [Object(
-        slots={"a": None},
+        slots={"a": Nil()},
         code=[
             Send(
                 Send(Self(), Message("a")),
@@ -487,7 +488,7 @@ def test_obj_with_code_with_dot():
     result = lex_and_parse('(| a | a printLine.)')
 
     assert result == [Object(
-        slots={"a": None},
+        slots={"a": Nil()},
         code=[
             Send(
                 Send(Self(), Message("a")),
@@ -501,7 +502,7 @@ def test_obj_with_code_statements():
     result = lex_and_parse('(| a | a printLine. a print. test)')
 
     assert result == [Object(
-        slots={"a": None},
+        slots={"a": Nil()},
         code=[
             Send(
                 Send(Self(), Message("a")),
@@ -528,7 +529,7 @@ def test_recursive_obj_definition():
         slots=join_dicts(
             {
                 "a": Object(
-                    slots={"var": None},
+                    slots={"var": Nil()},
                     code=[
                         Send(
                             Send(Self(), Message("var")),
@@ -657,7 +658,7 @@ def test_block_with_code_statements():
     result = lex_and_parse('[| a. :b | a printLine. a print. test]')
 
     assert result == [Block(
-        slots={"a": None},
+        slots={"a": Nil()},
         params=["b"],
         code=[
             Send(
