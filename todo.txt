@@ -1,10 +1,26 @@
 https://rply.readthedocs.io/en/latest/
 https://github.com/joshsharp/python-braid/blob/master/parser.py
-https://refi64.com/posts/the-magic-of-rpython.html
 http://blog.tim-smith.us/2016/10/small-language-in-rpython/
 
-when-changed -s -r src/tinySelf/*.py -r tests/*.py -c ./run_tests.sh -s
+https://refi64.com/posts/the-magic-of-rpython.html
 
+https://github.com/Julian/BuildingAnInterpreter/blob/step-7/07-Compiler.rst
+https://github.com/Julian/BuildingAnInterpreter/branches/stale
+http://rpython.readthedocs.io/en/latest/rlib.html
+https://github.com/darius/tinyhiss
+https://som-st.github.io/
+https://github.com/SOM-st/PySOM
+https://github.com/SOM-st/RPySOM
+http://stefan-marr.de/2014/02/how-to-get-a-jit-compiler-for-free-implementing-som-smalltalk-with-rpython-and-truffle/
+https://link.springer.com/chapter/10.1007/978-3-540-89275-5_7
+
+   ☐ http://tratt.net/laurie/blog/entries/fast_enough_vms_in_fast_enough_time.html
+   ☐ https://rpython.readthedocs.io/en/latest/getting-started.html
+   ☐ https://rpython.readthedocs.io/en/latest/rlib.html#objectmodel
+
+
+when-changed -s -r src/tinySelf/*.py -r tests/*.py -c ./run_tests.sh -s
+python -m py.test tests/test_parser.py::test_parse_send -s
 
 
 Annotation objects
