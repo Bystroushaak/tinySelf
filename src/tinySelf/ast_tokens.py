@@ -18,15 +18,6 @@ class Root(BaseBox):
         else:
             self.ast.extend(tree)
 
-    def add(self, tree):
-        if not tree:
-            return
-
-        if isinstance(tree, Root):
-            self.ast.extend(tree.ast)
-        else:
-            self.ast.extend(tree)
-
 
 class Self(BaseBox):
     def __eq__(self, obj):
