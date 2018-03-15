@@ -3,7 +3,29 @@
 #
 # Interpreter version: python 2.7
 #
+# from collections import OrderedDict
+
 from rply.token import BaseBox
+
+
+class Root(BaseBox):
+    def __init__(self, tree=[]):
+        self.ast = []
+
+        # I cant call .add() directly for some reason under rpython
+        if isinstance(tree, Root):
+            self.ast.extend(tree.ast)
+        else:
+            self.ast.extend(tree)
+
+    def add(self, tree):
+        if not tree:
+            return
+
+        if isinstance(tree, Root):
+            self.ast.extend(tree.ast)
+        else:
+            self.ast.extend(tree)
 
 
 class Self(BaseBox):
@@ -17,22 +39,30 @@ class Self(BaseBox):
         return "Self()"
 
 
+class Nil(Self):
+    def __repr__(self):
+        return "Nil()"
+
+
 class Object(BaseBox):
     def __init__(self, slots=None, params=None, code=None, parents=None):
-        self.slots = slots
-        self.params = params
-        self.code = code
-        self.parents = parents
+        self.slots = {}
+        self.params = []
+        self.code = []
+        self.parents = {}
 
-        # mutable parameters strikes again
-        if not slots:
-            self.slots = {}
-        if not params:
-            self.params = []
-        if not code:
-            self.code = []
-        if not parents:
-            self.parents = {}
+        if slots is not None:
+            assert isinstance(slots, {})
+            self.slots.update(slots)
+        if params is not None:
+            assert isinstance(params, list)
+            self.params.extend(params)
+        if code is not None:
+            assert isinstance(code, list)
+            self.code.extend(code)
+        if parents is not None:
+            assert isinstance(parents, {})
+            self.parents.update(parents)
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
