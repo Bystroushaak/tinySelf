@@ -94,7 +94,7 @@ def multiple_expressions_make_code(p):
     if len(p) > 2:
         root = p[2]
         assert isinstance(root, Root)
-        code.add(root.ast)
+        code.ast.extend(root.ast)
 
     return code
 
