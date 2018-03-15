@@ -5,8 +5,11 @@
 #
 from rply import ParserGenerator
 from rply.token import Token
+from rply.token import BaseBox
 
 from lexer import lexer
+
+from ast_tokens import Root
 
 from ast_tokens import Object
 from ast_tokens import Block
@@ -21,6 +24,7 @@ from ast_tokens import BinaryMessage
 from ast_tokens import Send
 from ast_tokens import Cascade
 
+from ast_tokens import Nil
 from ast_tokens import Self
 from ast_tokens import Return
 from ast_tokens import AssignmentPrimitive
@@ -54,22 +58,45 @@ pg = ParserGenerator(
 )
 
 
+# data types used because of rPython ##########################################
+class StrContainer(BaseBox):
+    def __init__(self, str):
+        self.str = str
+
+
+class DictContainer(BaseBox):
+    def __init__(self, dict):
+        self.dict = dict
+
+
+class ListContainer(BaseBox):
+    def __init__(self, list):
+        self.list = list
+
+
+class KwSlotContainer(BaseBox):
+    def __init__(self, slot_name, parameters):
+        self.slot_name = slot_name
+        self.parameters = parameters
+
 
 # Multiple statements make code ###############################################
 @pg.production('root : expression')
 def at_the_top_of_the_root_is_just_expression(p):
-    return [p[0]]
+    return Root([p[0]])
 
 
 @pg.production('root : expression END_OF_EXPR')
 @pg.production('root : expression END_OF_EXPR root')
 def multiple_expressions_make_code(p):
-    out = [p[0]]
+    code = Root([p[0]])
 
     if len(p) > 2:
-        out.extend(p[2])
+        root = p[2]
+        assert isinstance(root, Root)
+        code.add(root.ast)
 
-    return out
+    return code
 
 
 # Self keyword ################################################################
@@ -88,7 +115,12 @@ def expression_number(p):
 @pg.production('strings : SINGLE_Q_STRING')
 @pg.production('strings : DOUBLE_Q_STRING')
 def expression_string(p):
-    return String(p[0].getstr()[1:-1])
+    full_string = p[0].getstr()  # with ""
+
+    # [translation:ERROR] TyperError: slice stop must be proved non-negative
+    assert len(full_string) >= 2
+
+    return String(full_string[1:-1])  # without ""
 
 
 # TODO: remove later?
@@ -131,7 +163,7 @@ def keyword_message_to_obj(p):
 
 @pg.production('kwd : KEYWORD expression')
 def keyword(p):
-    return p
+    return Root(p)
 
 
 @pg.production('kwd : KEYWORD expression kwd')
@@ -141,24 +173,28 @@ def keyword_multiple(p):
     for group in p[2:]:
         tokens.extend(group)
 
-    return tokens
+    return Root(tokens)
 
 
 @pg.production('keyword_msg : FIRST_KW expression kwd')
 def keyword_message_with_parameters(p):
-    signature = [p[0]]
+    signature = [p[0].getstr()]
     parameters = [p[1]]
 
-    for cnt, token in enumerate(p[2]):
+    # rpython hack - it doesn't allow me to return list, so I am using Root
+    kwd = p[2]
+    assert isinstance(kwd, Root)
+
+    for cnt, token in enumerate(kwd.ast):
         if cnt % 2 == 0:
-            signature.append(token)
+            signature.append(token.getstr())
         else:
             parameters.append(token)
 
     return Send(
         obj=Self(),
         msg=KeywordMessage(
-            name="".join(token.getstr() for token in signature),
+            name="".join(signature),
             parameters=parameters
         )
     )
@@ -166,19 +202,23 @@ def keyword_message_with_parameters(p):
 
 @pg.production('keyword_msg : FIRST_KW expression kwd')
 def keyword_message_to_self_with_parameters(p):
-    signature = [p[0]]
+    signature = [p[0].getstr()]
     parameters = [p[1]]
 
-    for cnt, token in enumerate(p[2]):
+    # rpython hack - it doesn't allow me to return list, so I am using Root
+    kwd = p[2]
+    assert isinstance(kwd, Root)
+
+    for cnt, token in enumerate(kwd.ast):
         if cnt % 2 == 0:
-            signature.append(token)
+            signature.append(token.getstr())
         else:
             parameters.append(token)
 
     return Send(
         obj=Self(),
         msg=KeywordMessage(
-            name="".join(token.getstr() for token in signature),
+            name="".join(signature),
             parameters=parameters
         )
     )
@@ -186,19 +226,23 @@ def keyword_message_to_self_with_parameters(p):
 
 @pg.production('keyword_msg : expression FIRST_KW expression kwd')
 def keyword_message_to_obj_with_parameters(p):
-    signature = [p[1]]
+    signature = [p[1].getstr()]
     parameters = [p[2]]
 
-    for cnt, token in enumerate(p[3]):
+    # rpython hack - it doesn't allow me to return list, so I am using Root
+    kwd = p[3]
+    assert isinstance(kwd, Root)
+
+    for cnt, token in enumerate(kwd.ast):
         if cnt % 2 == 0:
-            signature.append(token)
+            signature.append(token.getstr())
         else:
             parameters.append(token)
 
     return Send(
         obj=p[0],
         msg=KeywordMessage(
-            name="".join(token.getstr() for token in signature),
+            name="".join(signature),
             parameters=parameters
         )
     )
@@ -210,21 +254,22 @@ def keyword_message_to_obj_with_parameters(p):
 def all_kinds_of_messages_are_message(p):
     return p[0]
 
+
 @pg.production('expression : message')
 def expression_is_message(p):
     return p[0]
 
 
-# Cascades ####################################################################
+# # Cascades ####################################################################
 def parse_cascade_messages(msgs):
     out = []
     for msg in msgs:
-        if hasattr(msg, "obj") and msg.obj == Self():
-            if isinstance(msg, Cascade):
+        if (isinstance(msg, Cascade) or isinstance(msg, Send)):
+            if isinstance(msg, Cascade) and msg.obj == Self():
                 out.extend(msg.msgs)
                 continue
 
-            if isinstance(msg, Send):
+            if isinstance(msg, Send) and msg.obj == Self():
                 msg = msg.msg
 
         out.append(msg)
@@ -248,13 +293,17 @@ def cascade(p):
 
 @pg.production('cascade : message CASCADE cascade')
 def cascades(p):
-    if isinstance(p[0], Send):
-        return Cascade(
-            obj=p[0].obj,
-            msgs=[p[0].msg] + p[2].msgs
-        )
+    first = p[0]
+    cascade = p[2]
+    assert isinstance(cascade, Cascade)
 
-    return Cascade(obj=p[0], msgs=p[2].msgs)
+    if isinstance(first, Send):
+        assert isinstance(first, Send)
+        msgs = [first.msg] + cascade.msgs
+
+        return Cascade(obj=first.obj, msgs=msgs)
+
+    return Cascade(obj=first, msgs=cascade.msgs)
 
 
 # TODO: remove later?
@@ -264,22 +313,52 @@ def expression_cascade(p):
 
 
 # Slot definition #############################################################
+def _value_from_token(token):
+    # rpython ballast
+    assert isinstance(token, Token)
+    assert token is not None
+
+    value = token.value
+
+    assert value is not None
+    assert isinstance(value, str)
+
+    return value
+
+
 @pg.production('slot_name : IDENTIFIER')
 def slot_names(p):
-    return p[0].value
+    return StrContainer(_value_from_token(p[0]))
+
+
+def _str_from_strcontainer(str_container_obj):
+    assert str_container_obj is not None
+    assert isinstance(str_container_obj, StrContainer)
+
+    string = str_container_obj.str
+    assert string is not None
+    assert isinstance(string, str)
+
+    return string
 
 
 @pg.production('slot_definition : slot_name')
 def nil_slot_definition(p):
-    return {p[0]: None}
+    slot_name = _str_from_strcontainer(p[0])
+
+    return DictContainer({slot_name: Nil()})
 
 
 @pg.production('slot_definition : slot_name ASSIGNMENT expression')
 def slot_definition(p):
-    return {p[0]: p[2]}
+    slot_name = _str_from_strcontainer(p[0])
+
+    return DictContainer({slot_name: p[2]})
 
 
 def _to_assignment_name(name):
+    assert isinstance(name, str)
+
     return name + ":"
 
 
@@ -295,19 +374,23 @@ def _rw_slot(name, value):
 
 @pg.production('slot_definition : slot_name RW_ASSIGNMENT expression')
 def slot_definition_rw(p):
-    return _rw_slot(name=p[0], value=p[2])
+    slot_name = _str_from_strcontainer(p[0])
+
+    return DictContainer(_rw_slot(name=slot_name, value=p[2]))
 
 
 # Arguments
 @pg.production('slot_definition : ARGUMENT')
 def nil_argument_definition(p):
-    return {p[0].value: None}
+    slot_name = _value_from_token(p[0])
+
+    return DictContainer({slot_name: Nil()})
 
 
 # Keywords
 @pg.production('slot_kwd : KEYWORD IDENTIFIER')
 def slot_name_kwd_one(p):
-    return p
+    return ListContainer(p)
 
 
 @pg.production('slot_kwd : KEYWORD IDENTIFIER slot_kwd')
@@ -317,45 +400,70 @@ def slot_name_kwd_multiple(p):
     for group in p[2:]:
         tokens.extend(group)
 
-    return tokens
+    return ListContainer(tokens)
 
 
 @pg.production('kw_slot_name : FIRST_KW IDENTIFIER')
 def slot_name_kwd(p):
     """
-    Returns (slotname, parameter_list)
+    Args:
+        p[0] (Token): Slot name.
+        p[1] (Token): Parameter.
+
+    Returns:
+        KwSlotContainer
     """
-    return p[0].value, [p[1].value]
+    return KwSlotContainer(
+        slot_name=_value_from_token(p[0]),
+        parameters=[_value_from_token(p[1])]
+    )
 
 
 @pg.production('kw_slot_name : FIRST_KW IDENTIFIER slot_kwd')
 def slot_names_kwds(p):
     """
-    Returns (slotname, parameter_list)
+    Args:
+        p[0] (Token): Slot name.
+        p[1] (Token): Parameter.
+        p[2:] (list): List of ListContainers with tokens.
+
+    Returns:
+        KwSlotContainer
     """
-    signature = [p[0]]
-    parameters = [p[1]]
+    signature = [_value_from_token(p[0])]
+    parameters = [_value_from_token(p[1])]
 
-    for cnt, token in enumerate(p[2]):
+    # unpack list of ListContainers to one list
+    tokens_in_list_containers = p[2]
+    assert isinstance(tokens_in_list_containers, list)
+
+    tokens = []
+    for token_list in tokens_in_list_containers:
+        tokens.extend(token_list.list)
+
+    for cnt, token in enumerate(tokens):
         if cnt % 2 == 0:
-            signature.append(token)
+            signature.append(_value_from_token(token))
         else:
-            parameters.append(token)
+            parameters.append(_value_from_token(token))
 
-    return "".join(x.value for x in signature), {x.value for x in parameters}
+    return KwSlotContainer(
+        slot_name="".join(signature),
+        parameters=parameters
+    )
 
 
 @pg.production('slot_definition : kw_slot_name ASSIGNMENT expression')
 def kw_slot_definition(p):
-    assert isinstance(p[2], Object), "Only objects are assignable to kw slots!"
-
-    slot_name = p[0][0]
-    parameters = p[0][1]
-
+    slot_info = p[0]
     obj = p[2]
-    obj.params.extend(parameters)
 
-    return {slot_name: obj}
+    assert isinstance(slot_info, KwSlotContainer)
+    assert isinstance(obj, Object)
+
+    obj.params.extend(slot_info.parameters)
+
+    return DictContainer({slot_info.slot_name: obj})
 
 
 # Operators
@@ -365,20 +473,23 @@ def slot_name_op(p):
     """
     Returns (slotname, parameter_list)
     """
-    return p[0].value, [p[1].value]
+    return KwSlotContainer(
+        slot_name=_value_from_token(p[0]),
+        parameters=[_value_from_token(p[1])]
+    )
 
 
 @pg.production('slot_definition : op_slot_name ASSIGNMENT expression')
 def operator_slot_definition(p):
-    assert isinstance(p[2], Object), "Only objects are assignable to op slots!"
-
-    slot_name = p[0][0]
-    parameters = p[0][1]
-
+    slot_info = p[0]
     obj = p[2]
-    obj.params.extend(parameters)
 
-    return {slot_name: obj}
+    assert isinstance(slot_info, KwSlotContainer)
+    assert isinstance(obj, Object)
+
+    obj.params.extend(slot_info.parameters)
+
+    return DictContainer({slot_info.slot_name: obj})
 
 
 # Allow list of dot-separated of slot definitions.
@@ -386,9 +497,13 @@ def operator_slot_definition(p):
 @pg.production('slot_definition : slot_definition END_OF_EXPR slot_definition')
 def slots_definition(p):
     out = p[0]
+    assert isinstance(out, DictContainer)
 
     if len(p) >= 3:
-        out.update(p[2])
+        other_definitions = p[2]
+        assert isinstance(other_definitions, DictContainer)
+
+        out.dict.update(other_definitions.dict)
 
     return out
 
@@ -406,32 +521,45 @@ def parse_slots_params_parents(slots):
     Iterate thru a list of slots and sort them to `slots` (dict), `parameters`
     (list) and `parents` (dict).
     """
-    slot_names = []
-    param_names = []
-    parent_names = []
-    for name in slots.keys():
+    def strip_colon_from_start(item):
+        return item[1:]
+
+    def strip_star_from_end(item):
+        return item[:-1]
+
+    assert isinstance(slots, {})
+
+    params = []
+    parents = {}
+    only_slots = {}
+    for name, value in slots.items():
         if name.startswith(":"):
-            param_names.append(name)
+            params.append(strip_colon_from_start(name))
         elif name.endswith("*"):
-            parent_names.append(name)
+            parents[strip_star_from_end(name)] = value
         else:
-            slot_names.append(name)
+            only_slots[name] = value
 
-    params = [k[1:] for k in param_names]  # strip : from the beginning
-    parents = {k[:-1]: slots[k] for k in parent_names}  # strip * from the end
-    slots = {k: slots[k] for k in slot_names}
-
-    return slots, params, parents
+    return only_slots, params, parents
 
 
-def remove_obj_tokens_from_beginning(p):
-    while isinstance(p[0], Token) and p[0].name == "OBJ_START":
-        p.pop(0)
+def remove_tokens_from_beginning(token_list, token_names):
+    def is_token_and_has_name(item, name):
+        if not isinstance(item, Token):
+            return False
 
-    while isinstance(p[0], Token) and p[0].name == "SEPARATOR":
-        p.pop(0)
+        assert isinstance(item, Token)  # for rPython
+        return item.name == name
 
-    return p
+    for token_name in token_names:
+        while is_token_and_has_name(token_list[0], token_name):
+            token_list.pop(0)
+
+    return token_list
+
+
+def remove_obj_tokens_from_beginning(token_list):
+    return remove_tokens_from_beginning(token_list, ["OBJ_START", "SEPARATOR"])
 
 
 # @pg.production('obj : OBJ_START SEPARATOR code OBJ_END')  # doesn't work - why?
@@ -439,7 +567,10 @@ def remove_obj_tokens_from_beginning(p):
 def object_with_just_code(p):
     p = remove_obj_tokens_from_beginning(p)
 
-    return Object(code=p[0])
+    code_container = p[0]
+    assert isinstance(code_container, ListContainer)  # rpython type hint
+
+    return Object(code=code_container.list)
 
 
 @pg.production('obj : OBJ_START slot_definition SEPARATOR OBJ_END')
@@ -447,7 +578,10 @@ def object_with_just_code(p):
 def object_with_slots(p):
     p = remove_obj_tokens_from_beginning(p)
 
-    slots, params, parents = parse_slots_params_parents(p[0])
+    slot_dict = p[0]
+    assert isinstance(slot_dict, DictContainer)
+
+    slots, params, parents = parse_slots_params_parents(slot_dict.dict)
 
     return Object(slots=slots, params=params, parents=parents)
 
@@ -455,7 +589,7 @@ def object_with_slots(p):
 # Object with code
 @pg.production('code : expression')
 def code_definition(p):
-    return p
+    return ListContainer(p)
 
 
 @pg.production('code : expression END_OF_EXPR')
@@ -464,9 +598,12 @@ def code_definitions(p):
     out = [p[0]]
 
     if len(p) > 2:
-        out.extend(p[2])
+        code = p[2]
+        assert isinstance(code, ListContainer)
 
-    return out
+        out.extend(code.list)
+
+    return ListContainer(out)
 
 
 @pg.production('obj : OBJ_START slot_definition SEPARATOR code OBJ_END')
@@ -474,9 +611,19 @@ def code_definitions(p):
 def object_with_slots_and_code(p):
     p = remove_obj_tokens_from_beginning(p)
 
-    slots, params, parents = parse_slots_params_parents(p[0])
+    slot_dict = p[0]
+    assert isinstance(slot_dict, DictContainer)
+    slots, params, parents = parse_slots_params_parents(slot_dict.dict)
 
-    return Object(slots=slots, params=params, code=p[2], parents=parents)
+    code_container = p[2]
+    assert isinstance(code_container, ListContainer)
+
+    return Object(
+        slots=slots,
+        params=params,
+        code=code_container.list,
+        parents=parents
+    )
 
 
 # TODO: remove later?
@@ -485,7 +632,7 @@ def expression_object(p):
     return p[0]
 
 
-# Block definition ############################################################
+# # Block definition ############################################################
 @pg.production('block : BLOCK_START BLOCK_END')
 @pg.production('block : BLOCK_START SEPARATOR BLOCK_END')
 @pg.production('block : BLOCK_START SEPARATOR SEPARATOR BLOCK_END')
@@ -495,7 +642,14 @@ def empty_block(p):
 
 @pg.production('block : BLOCK_START code BLOCK_END')
 def object_with_empty_slots_and_code(p):
-    return Block(code=p[1])
+    code_container = p[1]
+    assert isinstance(code_container, ListContainer)  # rpython type hint
+
+    return Block(code=code_container.list)
+
+
+def remove_block_tokens_from_beginning(token_list):
+    return remove_tokens_from_beginning(token_list, ["BLOCK_START", "SEPARATOR"])
 
 
 # @pg.production('obj : BLOCK_START SEPARATOR code BLOCK_END')  # doesn't work - why?
@@ -503,17 +657,10 @@ def object_with_empty_slots_and_code(p):
 def object_with_empty_slots_and_code(p):
     p = remove_block_tokens_from_beginning(p)
 
-    return Block(code=p[0])
+    code_container = p[0]
+    assert isinstance(code_container, ListContainer)
 
-
-def remove_block_tokens_from_beginning(p):
-    while isinstance(p[0], Token) and p[0].name == "BLOCK_START":
-        p.pop(0)
-
-    while isinstance(p[0], Token) and p[0].name == "SEPARATOR":
-        p.pop(0)
-
-    return p
+    return Block(code=code_container.list)
 
 
 @pg.production('block : BLOCK_START slot_definition SEPARATOR BLOCK_END')
@@ -521,7 +668,10 @@ def remove_block_tokens_from_beginning(p):
 def block_with_slots(p):
     p = remove_block_tokens_from_beginning(p)
 
-    slots, params, _ = parse_slots_params_parents(p[0])
+    slot_dict = p[0]
+    assert isinstance(slot_dict, DictContainer)
+
+    slots, params, _ = parse_slots_params_parents(slot_dict.dict)
 
     return Block(slots=slots, params=params)
 
@@ -531,9 +681,14 @@ def block_with_slots(p):
 def block_with_slots_and_code(p):
     p = remove_block_tokens_from_beginning(p)
 
-    slots, params, _ = parse_slots_params_parents(p[0])
+    slot_dict = p[0]
+    assert isinstance(slot_dict, DictContainer)
+    slots, params, _ = parse_slots_params_parents(slot_dict.dict)
 
-    return Block(slots=slots, params=params, code=p[2])
+    code_container = p[2]
+    assert isinstance(code_container, ListContainer)
+
+    return Block(slots=slots, params=params, code=code_container.list)
 
 
 # TODO: remove later?
@@ -568,9 +723,13 @@ def parse_comment(p):
     return p[0]
 
 
+class NoneRPython(BaseBox):
+    pass
+
+
 @pg.production('expression : COMMENT')
 def parse_comment(p):
-    return None
+    return NoneRPython()
 
 
 # Parser initialization #######################################################
@@ -578,7 +737,30 @@ parser = pg.build()
 
 
 def lex_and_parse(i):
-    return [
-        x for x in parser.parse(lexer.lex(i))
-        if x is not None
-    ]
+    tree = parser.parse(lexer.lex(i))
+    assert isinstance(tree, Root)
+
+    out = []
+    for x in tree.ast:
+        assert isinstance(x, BaseBox)
+
+        if isinstance(x, NoneRPython):
+            continue
+
+        if isinstance(x, Root):
+            for ast_item in x.ast:
+                assert isinstance(ast_item, BaseBox)
+
+                if isinstance(x, NoneRPython):
+                    continue
+
+                out.append(ast_item)
+        else:
+            out.append(x)
+
+    return tree
+
+    # return [
+    #     x for x in parser.parse(lexer.lex(i))
+    #     if x is not None
+    # ]
