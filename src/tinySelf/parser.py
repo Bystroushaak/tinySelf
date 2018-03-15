@@ -739,25 +739,7 @@ def lex_and_parse(i):
     tree = parser.parse(lexer.lex(i))
     assert isinstance(tree, Root)
 
-    out = []
-    for x in tree.ast:
-        assert isinstance(x, BaseBox)
-
-        if isinstance(x, RemoveThis):
-            continue
-
-        if isinstance(x, Root):
-            for ast_item in x.ast:
-                assert isinstance(ast_item, BaseBox)
-
-                if not isinstance(x, RemoveThis):
-                    out.append(ast_item)
-        else:
-            out.append(x)
-
-    return out
-
-    # return [
-    #     x for x in parser.parse(lexer.lex(i))
-    #     if x is not None
-    # ]
+    return [
+        x for x in tree.ast
+        if not isinstance(x, RemoveThis)
+    ]
