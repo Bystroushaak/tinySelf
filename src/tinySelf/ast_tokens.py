@@ -52,16 +52,12 @@ class Object(BaseBox):
         self.parents = {}
 
         if slots is not None:
-            assert isinstance(slots, {})
             self.slots.update(slots)
         if params is not None:
-            assert isinstance(params, list)
             self.params.extend(params)
         if code is not None:
-            assert isinstance(code, list)
             self.code.extend(code)
         if parents is not None:
-            assert isinstance(parents, {})
             self.parents.update(parents)
 
     def __eq__(self, obj):

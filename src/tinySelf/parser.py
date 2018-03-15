@@ -118,9 +118,13 @@ def expression_string(p):
     full_string = p[0].getstr()  # with ""
 
     # [translation:ERROR] TyperError: slice stop must be proved non-negative
-    assert len(full_string) >= 2
+    end_of_string = len(full_string) - 1
+    last_char_without_quote = end_of_string - 1
 
-    return String(full_string[1:-1])  # without ""
+    assert len(full_string) >= 2
+    assert last_char_without_quote > 0
+
+    return String(full_string[1:last_char_without_quote])  # without ""
 
 
 # TODO: remove later?
@@ -145,7 +149,8 @@ def unary_message_to_expression(p):
 @pg.production('binary_message : expression OPERATOR expression')
 @pg.production('binary_message : expression ASSIGNMENT expression')
 def binary_message_to_expression(p):
-    assert len(p) == 3, "Bad number of operands for %s!" % p[1]
+    if len(p) != 3:
+        raise ValueError("Bad number of operands for %s!" % p[1])
 
     return Send(p[0], BinaryMessage(p[1].getstr(), p[2]))
 
@@ -163,17 +168,19 @@ def keyword_message_to_obj(p):
 
 @pg.production('kwd : KEYWORD expression')
 def keyword(p):
-    return Root(p)
+    return ListContainer(p)
 
 
 @pg.production('kwd : KEYWORD expression kwd')
 def keyword_multiple(p):
-    # flatten the nested lists
     tokens = [p[0], p[1]]
-    for group in p[2:]:
-        tokens.extend(group)
 
-    return Root(tokens)
+    # flatten the nested lists
+    kwd = p[2]
+    assert isinstance(kwd, ListContainer)
+    tokens.extend(kwd.list)
+
+    return ListContainer(tokens)
 
 
 @pg.production('keyword_msg : FIRST_KW expression kwd')
@@ -181,11 +188,10 @@ def keyword_message_with_parameters(p):
     signature = [p[0].getstr()]
     parameters = [p[1]]
 
-    # rpython hack - it doesn't allow me to return list, so I am using Root
     kwd = p[2]
-    assert isinstance(kwd, Root)
+    assert isinstance(kwd, ListContainer)
 
-    for cnt, token in enumerate(kwd.ast):
+    for cnt, token in enumerate(kwd.list):
         if cnt % 2 == 0:
             signature.append(token.getstr())
         else:
@@ -205,11 +211,10 @@ def keyword_message_to_self_with_parameters(p):
     signature = [p[0].getstr()]
     parameters = [p[1]]
 
-    # rpython hack - it doesn't allow me to return list, so I am using Root
     kwd = p[2]
-    assert isinstance(kwd, Root)
+    assert isinstance(kwd, ListContainer)
 
-    for cnt, token in enumerate(kwd.ast):
+    for cnt, token in enumerate(kwd.list):
         if cnt % 2 == 0:
             signature.append(token.getstr())
         else:
@@ -229,11 +234,10 @@ def keyword_message_to_obj_with_parameters(p):
     signature = [p[1].getstr()]
     parameters = [p[2]]
 
-    # rpython hack - it doesn't allow me to return list, so I am using Root
     kwd = p[3]
-    assert isinstance(kwd, Root)
+    assert isinstance(kwd, ListContainer)
 
-    for cnt, token in enumerate(kwd.ast):
+    for cnt, token in enumerate(kwd.list):
         if cnt % 2 == 0:
             signature.append(token.getstr())
         else:
@@ -312,7 +316,7 @@ def expression_cascade(p):
     return p[0]
 
 
-# Slot definition #############################################################
+# # Slot definition #############################################################
 def _value_from_token(token):
     # rpython ballast
     assert isinstance(token, Token)
@@ -397,8 +401,10 @@ def slot_name_kwd_one(p):
 def slot_name_kwd_multiple(p):
     # flatten the nested lists
     tokens = [p[0], p[1]]
-    for group in p[2:]:
-        tokens.extend(group)
+
+    slot_kwd = p[2]
+    assert isinstance(slot_kwd, ListContainer)
+    tokens.extend(slot_kwd.list)
 
     return ListContainer(tokens)
 
@@ -527,8 +533,6 @@ def parse_slots_params_parents(slots):
     def strip_star_from_end(item):
         return item[:-1]
 
-    assert isinstance(slots, {})
-
     params = []
     parents = {}
     only_slots = {}
@@ -568,7 +572,7 @@ def object_with_just_code(p):
     p = remove_obj_tokens_from_beginning(p)
 
     code_container = p[0]
-    assert isinstance(code_container, ListContainer)  # rpython type hint
+    assert isinstance(code_container, ListContainer)
 
     return Object(code=code_container.list)
 
@@ -632,7 +636,7 @@ def expression_object(p):
     return p[0]
 
 
-# # Block definition ############################################################
+# Block definition ############################################################
 @pg.production('block : BLOCK_START BLOCK_END')
 @pg.production('block : BLOCK_START SEPARATOR BLOCK_END')
 @pg.production('block : BLOCK_START SEPARATOR SEPARATOR BLOCK_END')
