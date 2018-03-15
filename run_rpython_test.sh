@@ -5,7 +5,7 @@
 
 expect <<EOL
 set timeout 10000
-spawn $HOME/Plocha/tests/pypy/rpython/bin/rpython --gc=minimark --opt=0 src/tinySelf/target.py
+spawn $HOME/Plocha/tests/pypy/rpython/bin/rpython src/tinySelf/target.py
 
 expect {
     "(Pdb+) "

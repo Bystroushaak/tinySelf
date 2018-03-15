@@ -119,12 +119,11 @@ def expression_string(p):
 
     # [translation:ERROR] TyperError: slice stop must be proved non-negative
     end_of_string = len(full_string) - 1
-    last_char_without_quote = end_of_string - 1
 
     assert len(full_string) >= 2
-    assert last_char_without_quote > 0
+    assert end_of_string >= 1
 
-    return String(full_string[1:last_char_without_quote])  # without ""
+    return String(full_string[1:end_of_string])  # without ""
 
 
 # TODO: remove later?
@@ -441,13 +440,9 @@ def slot_names_kwds(p):
 
     # unpack list of ListContainers to one list
     tokens_in_list_containers = p[2]
-    assert isinstance(tokens_in_list_containers, list)
+    assert isinstance(tokens_in_list_containers, ListContainer)
 
-    tokens = []
-    for token_list in tokens_in_list_containers:
-        tokens.extend(token_list.list)
-
-    for cnt, token in enumerate(tokens):
+    for cnt, token in enumerate(tokens_in_list_containers.list):
         if cnt % 2 == 0:
             signature.append(_value_from_token(token))
         else:
@@ -727,13 +722,13 @@ def parse_comment(p):
     return p[0]
 
 
-class NoneRPython(BaseBox):
+class RemoveThis(BaseBox):
     pass
 
 
 @pg.production('expression : COMMENT')
 def parse_comment(p):
-    return NoneRPython()
+    return RemoveThis()
 
 
 # Parser initialization #######################################################
@@ -748,21 +743,19 @@ def lex_and_parse(i):
     for x in tree.ast:
         assert isinstance(x, BaseBox)
 
-        if isinstance(x, NoneRPython):
+        if isinstance(x, RemoveThis):
             continue
 
         if isinstance(x, Root):
             for ast_item in x.ast:
                 assert isinstance(ast_item, BaseBox)
 
-                if isinstance(x, NoneRPython):
-                    continue
-
-                out.append(ast_item)
+                if not isinstance(x, RemoveThis):
+                    out.append(ast_item)
         else:
             out.append(x)
 
-    return tree
+    return out
 
     # return [
     #     x for x in parser.parse(lexer.lex(i))
