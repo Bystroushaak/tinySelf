@@ -3,6 +3,8 @@
 #
 # Interpreter version: python 2.7
 #
+from collections import OrderedDict
+
 from rply import ParserGenerator
 from rply.token import Token
 from rply.token import BaseBox
@@ -67,6 +69,22 @@ class StrContainer(BaseBox):
 class DictContainer(BaseBox):
     def __init__(self, dict):
         self.dict = dict
+
+
+class OrderedDictContainer(BaseBox):
+    def __init__(self, d):
+        self.dict = d
+
+    @staticmethod
+    def from_kw(key, val):
+        """
+        You can not use default OrderedDict's constructor under rPython,
+        because you can't have objects of different types in one list / tuple.
+        """
+        out = OrderedDict()
+        out[key] = val
+
+        return OrderedDictContainer(out)
 
 
 class ListContainer(BaseBox):
@@ -349,14 +367,14 @@ def _str_from_strcontainer(str_container_obj):
 def nil_slot_definition(p):
     slot_name = _str_from_strcontainer(p[0])
 
-    return DictContainer({slot_name: Nil()})
+    return OrderedDictContainer.from_kw(slot_name, Nil())
 
 
 @pg.production('slot_definition : slot_name ASSIGNMENT expression')
 def slot_definition(p):
     slot_name = _str_from_strcontainer(p[0])
 
-    return DictContainer({slot_name: p[2]})
+    return OrderedDictContainer.from_kw(slot_name, p[2])
 
 
 def _to_assignment_name(name):
@@ -369,17 +387,18 @@ def _rw_slot(name, value):
     r_slot_name = name
     w_slot_name = _to_assignment_name(name)
 
-    return {
-        r_slot_name: value,
-        w_slot_name: AssignmentPrimitive(),
-    }
+    out = OrderedDict()
+    out[r_slot_name] = value
+    out[w_slot_name] = AssignmentPrimitive()
+
+    return out
 
 
 @pg.production('slot_definition : slot_name RW_ASSIGNMENT expression')
 def slot_definition_rw(p):
     slot_name = _str_from_strcontainer(p[0])
 
-    return DictContainer(_rw_slot(name=slot_name, value=p[2]))
+    return OrderedDictContainer(_rw_slot(name=slot_name, value=p[2]))
 
 
 # Arguments
@@ -387,7 +406,7 @@ def slot_definition_rw(p):
 def nil_argument_definition(p):
     slot_name = _value_from_token(p[0])
 
-    return DictContainer({slot_name: Nil()})
+    return OrderedDictContainer.from_kw(slot_name, Nil())
 
 
 # Keywords
@@ -464,7 +483,7 @@ def kw_slot_definition(p):
 
     obj.params.extend(slot_info.parameters)
 
-    return DictContainer({slot_info.slot_name: obj})
+    return OrderedDictContainer.from_kw(slot_info.slot_name, obj)
 
 
 # Operators
@@ -490,7 +509,7 @@ def operator_slot_definition(p):
 
     obj.params.extend(slot_info.parameters)
 
-    return DictContainer({slot_info.slot_name: obj})
+    return OrderedDictContainer.from_kw(slot_info.slot_name, obj)
 
 
 # Allow list of dot-separated of slot definitions.
@@ -498,11 +517,11 @@ def operator_slot_definition(p):
 @pg.production('slot_definition : slot_definition END_OF_EXPR slot_definition')
 def slots_definition(p):
     out = p[0]
-    assert isinstance(out, DictContainer)
+    assert isinstance(out, OrderedDictContainer)
 
     if len(p) >= 3:
         other_definitions = p[2]
-        assert isinstance(other_definitions, DictContainer)
+        assert isinstance(other_definitions, OrderedDictContainer)
 
         out.dict.update(other_definitions.dict)
 
@@ -578,7 +597,7 @@ def object_with_slots(p):
     p = remove_obj_tokens_from_beginning(p)
 
     slot_dict = p[0]
-    assert isinstance(slot_dict, DictContainer)
+    assert isinstance(slot_dict, OrderedDictContainer)
 
     slots, params, parents = parse_slots_params_parents(slot_dict.dict)
 
@@ -611,7 +630,7 @@ def object_with_slots_and_code(p):
     p = remove_obj_tokens_from_beginning(p)
 
     slot_dict = p[0]
-    assert isinstance(slot_dict, DictContainer)
+    assert isinstance(slot_dict, OrderedDictContainer)
     slots, params, parents = parse_slots_params_parents(slot_dict.dict)
 
     code_container = p[2]
@@ -668,7 +687,7 @@ def block_with_slots(p):
     p = remove_block_tokens_from_beginning(p)
 
     slot_dict = p[0]
-    assert isinstance(slot_dict, DictContainer)
+    assert isinstance(slot_dict, OrderedDictContainer)
 
     slots, params, _ = parse_slots_params_parents(slot_dict.dict)
 
@@ -681,7 +700,7 @@ def block_with_slots_and_code(p):
     p = remove_block_tokens_from_beginning(p)
 
     slot_dict = p[0]
-    assert isinstance(slot_dict, DictContainer)
+    assert isinstance(slot_dict, OrderedDictContainer)
     slots, params, _ = parse_slots_params_parents(slot_dict.dict)
 
     code_container = p[2]
