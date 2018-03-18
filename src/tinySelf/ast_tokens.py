@@ -10,13 +10,7 @@ from rply.token import BaseBox
 
 class Root(BaseBox):
     def __init__(self, tree=[]):
-        self.ast = []
-
-        # I cant call .add() directly for some reason under rpython
-        if isinstance(tree, Root):
-            self.ast.extend(tree.ast)
-        else:
-            self.ast.extend(tree)
+        self.ast = tree
 
 
 class Self(BaseBox):
