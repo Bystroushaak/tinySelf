@@ -19,13 +19,26 @@ https://link.springer.com/chapter/10.1007/978-3-540-89275-5_7
    ☐ https://rpython.readthedocs.io/en/latest/rlib.html#objectmodel
 
 
+Opened tabs:
+    https://link.springer.com/chapter/10.1007/978-3-540-89275-5_7
+    http://stefan-marr.de/2014/02/how-to-get-a-jit-compiler-for-free-implementing-som-smalltalk-with-rpython-and-truffle/
+    https://github.com/SOM-st/RPySOM
+    https://github.com/SOM-st/PySOM
+    https://som-st.github.io/
+    https://github.com/darius/tinyhiss
+    https://github.com/joshsharp/python-braid/blob/master/ast.py
+    https://github.com/Julian/BuildingAnInterpreter/blob/step-7/07-Compiler.rst
+    http://rpython.readthedocs.io/en/latest/rlib.html
+    https://refi64.com/posts/the-magic-of-rpython.html
+    https://github.com/reingart/pypy/blob/master/rpython/rlib/objectmodel.py
+
+
 when-changed -s -r src/tinySelf/*.py -r tests/*.py -c ./run_tests.sh -s
 python -m py.test tests/test_parser.py::test_parse_send -s
 
 
 Annotation objects
 
-Slots as ordered dicts.
 
 Block parent auto-set.
     In full AST?
@@ -37,6 +50,7 @@ Name the object by the slot where it is saved (if it is only in one place) or by
 
 
 Done:
+    Slots as ordered dicts.
     Comments.
     Parens for priorities
     Parents
