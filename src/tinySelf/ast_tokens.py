@@ -12,6 +12,9 @@ class Root(BaseBox):
     def __init__(self, tree=[]):
         self.ast = tree
 
+    def __repr__(self):
+        return "\n".join([repr(x) for x in self.ast])
+
 
 class Self(BaseBox):
     def __eq__(self, obj):
