@@ -20,7 +20,7 @@ done
 
 # export $PATH="/home/bystrousak/Plocha/tests/pypy/:$PATH"
 if $exit_from_pdb; then
-    echo "exit" | $HOME/Plocha/tests/pypy/rpython/bin/rpython src/tinySelf/target.py
+    echo "exit" | $HOME/Plocha/tests/pypy/rpython/bin/rpython --output tSelf src/tinySelf/target.py
 else
-    $HOME/Plocha/tests/pypy/rpython/bin/rpython src/tinySelf/target.py
+    $HOME/Plocha/tests/pypy/rpython/bin/rpython --output tSelf src/tinySelf/target.py
 fi
