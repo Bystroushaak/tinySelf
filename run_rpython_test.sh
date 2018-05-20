@@ -31,7 +31,7 @@ done
 
 RPYTHON_PARAMS="--output $OUTPUT_FN $TARGET_FN"
 if $dont_optimize; then
-    RPYTHON_PARAMS="--opt=1 --gc=minimark $RPYTHON_PARAMS"
+    RPYTHON_PARAMS="--opt=1 --gc=incminimark $RPYTHON_PARAMS"
 fi
 
 
