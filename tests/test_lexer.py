@@ -5,7 +5,7 @@
 #
 from rply import Token
 
-from tinySelf.lexer import lexer
+from tinySelf.parser.lexer import lexer
 
 
 def test_single_q_string():
