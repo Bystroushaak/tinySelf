@@ -3,21 +3,21 @@
 #
 # Interpreter version: python 2.7
 #
-from tinySelf.parser import _rw_slot
 from tinySelf.parser import lex_and_parse
+from tinySelf.parser.parser import _rw_slot
 
-from tinySelf.ast_tokens import Nil
-from tinySelf.ast_tokens import Send
-from tinySelf.ast_tokens import Self
-from tinySelf.ast_tokens import Block
-from tinySelf.ast_tokens import Object
-from tinySelf.ast_tokens import Number
-from tinySelf.ast_tokens import String
-from tinySelf.ast_tokens import Return
-from tinySelf.ast_tokens import Cascade
-from tinySelf.ast_tokens import Message
-from tinySelf.ast_tokens import BinaryMessage
-from tinySelf.ast_tokens import KeywordMessage
+from tinySelf.parser.ast_tokens import Nil
+from tinySelf.parser.ast_tokens import Send
+from tinySelf.parser.ast_tokens import Self
+from tinySelf.parser.ast_tokens import Block
+from tinySelf.parser.ast_tokens import Object
+from tinySelf.parser.ast_tokens import Number
+from tinySelf.parser.ast_tokens import String
+from tinySelf.parser.ast_tokens import Return
+from tinySelf.parser.ast_tokens import Cascade
+from tinySelf.parser.ast_tokens import Message
+from tinySelf.parser.ast_tokens import BinaryMessage
+from tinySelf.parser.ast_tokens import KeywordMessage
 
 
 def join_dicts(*args):
