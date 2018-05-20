@@ -8,12 +8,31 @@
 from rply.token import BaseBox
 
 
+def _repr_list(l):
+    results = []
+    for x in l:
+        assert isinstance(x, BaseBox)
+        results.append(x.__str__())
+
+    return "[" + ", ".join(results) + "]"
+
+
+def _repr_dict(d):
+    results = []
+    for k, v in d.iteritems():
+        assert isinstance(k, str)
+        assert isinstance(v, BaseBox)
+        results.append("%s: %s" % (k, v.__str__()))
+
+    return "{" + ", ".join(results) + "}"
+
+
 class Root(BaseBox):
     def __init__(self, tree=[]):
         self.ast = tree
 
-    def __repr__(self):
-        return "\n".join([repr(x) for x in self.ast])
+    def __str__(self):
+        return "\n".join([x.__str__() for x in self.ast])
 
 
 class Self(BaseBox):
@@ -23,12 +42,12 @@ class Self(BaseBox):
     def __ne__(self, obj):
         return not self.__eq__(obj)
 
-    def __repr__(self):
+    def __str__(self):
         return "Self()"
 
 
 class Nil(Self):
-    def __repr__(self):
+    def __str__(self):
         return "Nil()"
 
 
@@ -58,17 +77,19 @@ class Object(BaseBox):
     def __ne__(self, obj):
         return not self.__eq__(obj)
 
-    def __repr__(self):
+    def __str__(self):
         parameters = []
 
         if self.slots:
-            parameters.append("slots=%r" % self.slots)
+            parameters.append("slots=" + _repr_dict(self.slots))
         if self.params:
-            parameters.append("params=%r" % self.params)
+            assert isinstance(self.params[0], BaseBox)
+            parameters.append("params=" + _repr_list(self.params))
         if self.code:
-            parameters.append("code=%r" % self.code)
+            assert isinstance(self.code[0], BaseBox)
+            parameters.append("code=" + _repr_list(self.code))
         if self.parents:
-            parameters.append("parents=%r" % self.parents)
+            parameters.append("parents=" + _repr_dict(self.parents))
 
         return "%s(%s)" % (self.__class__.__name__, ", ".join(parameters))
 
@@ -91,7 +112,7 @@ class Number(BaseBox):  # TODO: remove
     def __ne__(self, obj):
         return not self.__eq__(obj)
 
-    def __repr__(self):
+    def __str__(self):
         return "Number(%s)" % self.value
 
 
@@ -109,6 +130,9 @@ class String(BaseBox):  # TODO: remove?
     def __ne__(self, obj):
         return not self.__eq__(obj)
 
+    def __str__(self):
+        return "'%s'" % self.value  # TODO: escaping
+
 
 class Message(BaseBox):
     def __init__(self, name):
@@ -121,8 +145,8 @@ class Message(BaseBox):
     def __ne__(self, obj):
         return not self.__eq__(obj)
 
-    def __repr__(self):
-        return "Message(%r)" % self.name
+    def __str__(self):
+        return "Message(%s)" % self.name
 
 
 class KeywordMessage(BaseBox):
@@ -138,8 +162,13 @@ class KeywordMessage(BaseBox):
     def __ne__(self, obj):
         return not self.__eq__(obj)
 
-    def __repr__(self):
-        return "KeywordMessage(name=%r, parameters=%r)" % (self.name, self.parameters)
+    def __str__(self):
+        params = "[]"
+        if self.parameters:
+            assert isinstance(self.parameters[0], BaseBox)
+            params = _repr_list(self.parameters)
+
+        return "KeywordMessage(name=%s, parameters=%s)" % (self.name, params)
 
 
 class BinaryMessage(BaseBox):
@@ -155,8 +184,11 @@ class BinaryMessage(BaseBox):
     def __ne__(self, obj):
         return not self.__eq__(obj)
 
-    def __repr__(self):
-        return "BinaryMessage(name=%r, parameter=%r)" % (self.name, self.parameter)
+    def __str__(self):
+        return "BinaryMessage(name=%s, parameter=%s)" % (
+            self.name,
+            self.parameter.__str__()
+        )
 
 
 class Send(BaseBox):
@@ -172,8 +204,11 @@ class Send(BaseBox):
     def __ne__(self, obj):
         return not self.__eq__(obj)
 
-    def __repr__(self):
-        return "Send(obj=%r, msg=%r)" % (self.obj, self.msg)
+    def __str__(self):
+        return "Send(obj=%s, msg=%s)" % (
+            self.obj.__str__(),
+            self.msg.__str__()
+        )
 
 
 class Cascade(BaseBox):
@@ -189,11 +224,12 @@ class Cascade(BaseBox):
     def __ne__(self, obj):
         return not self.__eq__(obj)
 
-    def __repr__(self):
-        return "Cascade(obj=%s, msgs=%s)" % (
-            repr(self.obj),
-            repr([x for x in self.msgs])
-        )
+    def __str__(self):
+        msgs = "[]"
+        if self.msgs:
+            msgs = _repr_list(self.msgs)
+
+        return "Cascade(obj=%s, msgs=%s)" % (self.obj.__str__(), msgs)
 
 
 class Return(BaseBox):
@@ -206,6 +242,9 @@ class Return(BaseBox):
 
     def __ne__(self, obj):
         return not self.__eq__(obj)
+
+    def __str__(self):
+        return "Return(%s)" % self.value.__str__()
 
 
 class AssignmentPrimitive(BaseBox):

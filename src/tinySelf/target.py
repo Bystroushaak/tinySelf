@@ -25,7 +25,8 @@ def run_interactive():
             return 0
 
         try:
-            print lex_and_parse(line)
+            for expr in lex_and_parse(line):
+                print expr.__str__()
         except ParsingError as e:
             ewriteln("Parse error.")
             if e.message:
@@ -40,7 +41,8 @@ def run_script(path):
 
     with open(path) as f:
         try:
-            print lex_and_parse(f.read())
+            for expr in lex_and_parse(f.read()):
+                print expr.__str__()
         except ParsingError as e:
             ewriteln("Parse error.")
             if e.message:
