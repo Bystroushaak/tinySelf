@@ -1,8 +1,4 @@
-#! /usr/bin/env pypy
 # -*- coding: utf-8 -*-
-#
-# Interpreter version: pypy 2.7
-#
 from rply import LexerGenerator
 
 

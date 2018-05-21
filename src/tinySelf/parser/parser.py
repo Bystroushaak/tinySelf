@@ -1,8 +1,4 @@
-#! /usr/bin/env pypy
 # -*- coding: utf-8 -*-
-#
-# Interpreter version: python 2.7
-#
 from collections import OrderedDict
 
 from rply import ParserGenerator
