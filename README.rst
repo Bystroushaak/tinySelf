@@ -35,7 +35,7 @@ Get newest version of the rpython, which is part of the pypy project repository:
 
     hg clone https://bitbucket.org/pypy/pypy
 
-(If you already have repository cloned, just run ``hg pull``.)
+(If you already have the repository cloned, just run ``hg pull``.)
 
 rply
 ++++
@@ -50,6 +50,6 @@ Newest version of the rply (parser):
 requirements.txt
 ++++++++++++++++
 
-Stuff from the ``requirements.txt``:
+Stuff from the ``requirements.txt``::
 
     pip install --user -r requirements.txt
