@@ -54,13 +54,14 @@ if __name__ == '__main__':
             "compilation."
         )
     )
+    default_level = 1
     parser.add_argument(
         "-o",
         "--optimize",
-        default=1,
+        default=default_level,
         metavar="LEVEL",
         type=int,
-        help="Level of optimization. Default 0."
+        help="Level of optimization. Default %d." % default_level
     )
     default_name = "tSelf"
     parser.add_argument(
