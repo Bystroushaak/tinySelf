@@ -1,17 +1,16 @@
 #! /usr/bin/env python2
 # -*- coding: utf-8 -*-
-#
-# Interpreter version: python 2.7
-#
 import os
 import os.path
 
 from rply import ParsingError
 from rpython.jit.codewriter.policy import JitPolicy
+from rpython.rlib.compilerinfo import get_compiler_info
 
 from r_io import writeln
 from r_io import ewriteln
 from r_io import stdin_readline
+from version import VERSION
 
 from parser import lex_and_parse
 
@@ -20,7 +19,7 @@ def run_interactive():
     while True:
         line = stdin_readline(":> ")
 
-        if len(line) == 0 or line == "exit":
+        if len(line) == 0 or line.strip() == "exit":
             writeln()
             return 0
 
@@ -59,7 +58,7 @@ def run_script(path):
 
 def print_help(fn):
     ewriteln("Usage:")
-    ewriteln("\t%s [-h] -s FN, --snapshot FN, SCRIPT_PATH" % fn)
+    ewriteln("\t%s [-h, -v] -s FN / SCRIPT_PATH" % fn)
     ewriteln("")
     # ewriteln("\t-s FN, --snapshot FN")
     # ewriteln("\t\tRun memory snapshot `FN`.")
@@ -69,6 +68,9 @@ def print_help(fn):
     ewriteln("")
     ewriteln("\t-h, --help")
     ewriteln("\t\tShow this help.")
+    ewriteln("")
+    ewriteln("\t-v, --version")
+    ewriteln("\t\tShow version and compiler information.")
     ewriteln("")
     ewriteln("\tSCRIPT_PATH")
     ewriteln("\t\tRun script `SCRIPT_PATH`.")
@@ -104,6 +106,10 @@ def parse_args(argv):
     elif len(argv) == 2:
         if argv[1] in ["-h", "--help"]:
             print_help(argv[0])
+            return 0
+        if argv[1] in ["-v", "--version"]:
+            print "tSelf", VERSION
+            print get_compiler_info()
             return 0
         elif not os.path.exists(argv[1]):
             ewriteln("Unrecognized option `%s`!" % argv[1])
