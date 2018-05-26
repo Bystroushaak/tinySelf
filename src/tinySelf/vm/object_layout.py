@@ -1,7 +1,89 @@
 # -*- coding: utf-8 -*-
-ADD = 0
-DELETE = 1
-INSERT = 2
+class Object(object):
+    def __init__(self, obj_map=None):
+        if obj_map is None:
+            obj_map = ObjectMap()
+
+        self.map = obj_map
+        self.parents = []
+
+        self.slots_references = []
+
+    def clone(self):
+        o = Object(obj_map=self.map)
+        o.slots_references = self.slots_references[:]
+        return o
+
+    def set_slot(self, slot_name, value):
+        slot_index = self.map.get(slot_name, None)
+
+        if slot_index is None:
+            return False
+
+        self.slots_references[slot_index] = value
+        return True
+
+    def get_slot(self, slot_name):
+        slot_index = self.map.get(slot_name, None)
+        if slot_index is None:
+            return None
+
+        return self.slots_references[slot_index]
+
+    # meta operations
+    def meta_add_slot(self, slot_name, value):  # TODO: support auto Nil value
+        if slot_name in self.map:
+            return self.set_slot(slot_name, value)
+
+        new_map = self.map.clone()
+        is_slot_added = new_map.add_slot(slot_name, len(self.slots_references))
+
+        if is_slot_added:
+            self.slots_references.append(value)
+            self.map = new_map
+
+        return is_slot_added
+
+    def meta_remove_slot(self, slot_name):
+        if slot_name not in self.map:
+            return False
+
+        new_map = self.map.clone()
+        slot_index = new_map.slots[slot_name]
+        is_slot_removed = new_map.remove_slot(slot_name)
+
+        if is_slot_removed:
+            new_slot_references = [
+                self.slots_references[i]
+                for i in range(len(self.slots_references))
+                if i != slot_index
+            ]
+            self.slots_references = new_slot_references
+            self.map = new_map
+
+        return is_slot_removed
+
+    def meta_insert_slot(self, index, slot_name, value):  # TODO: support auto Nil value
+        if slot_name in self.map.slots:
+            return False
+
+        new_map = self.map.clone()
+        is_slot_inserted = new_map.insert_slot(index, slot_name)
+
+        if is_slot_inserted:
+            new_slots_references = (len(self.slots_references) + 1) * [None]
+            for i in range(len(self.slots_references)):
+                if i == index:
+                    new_slots_references[i] = value
+                elif i < index:
+                    new_slots_references[i] = self.slots_references[i]
+                elif i > index:
+                    new_slots_references[i+1] = self.slots_references[i]
+
+            self.slots_references = new_slots_references
+            self.map = new_map
+
+        return is_slot_inserted
 
 
 class ObjectMap(object):
@@ -10,86 +92,27 @@ class ObjectMap(object):
         # self.parent_slots = parent_slots
         self.slots = {}
 
-        self.new_map = None
-        self.action = None
-        self.action_key = None
-        self.action_operand = None
-
-    def get(self, slot_name):
-        return self.slots.get(slot_name)
-
-    def set(self, slot_name, value):
-        if slot_name in self.slots:
-            self.slots[slot_name] = value
-            return True
-
-        return False
-
-    # meta-modifications
     def clone_map(self):
         new_map = ObjectMap()
-
-        for k, v in self.slots.items():
-            new_map.slots[k] = v
-
+        new_map.slots = self.slots.copy()
         return new_map
 
-    def update_object_to_new_map(self, o):
-        if self.action == ADD:
-            o.slots_references.append(self.action_operand)
-        elif self.action == DELETE:
-            o.slots_references = [
-                x for cnt, x in enumerate(o.slots_references)
-                if cnt != self.action_key
-            ]
-        elif self.action == INSERT:
-            new_slots = []
-            for cnt, x in enumerate(o.slots_references):
-                if cnt == self.action_key:
-                    new_slots.append(self.action_operand)
-
-                new_slots.append(x)
-
-        o.map = self.new_map
-
-    def insert(self, slot_name, value, index):
-        pass
-
-    def add(self, slot_name, value):
-        if slot_name in self.slots:
-            return self.set(slot_name, value)
-
-        self.action = ADD
-        self.action_operand = value
-
-        new_map = self.clone_map()
-        new_map.slots[slot_name] = value
-        self.new_map = new_map
+    # meta-modifications
+    def add_slot(self, slot_name, index):
+        self.slots[slot_name] = index
 
         return True
 
-    def delete(self, slot_name):
-        if slot_name not in self.slots:
-            return False
-
-        self.action = DELETE
-        self.action_key = self.slots.values().find(slot_name)
-
-        new_map = self.clone_map()
-        del new_map.slots[slot_name]
-        self.new_map = new_map
-
+    def delete_slot(self, slot_name):
+        del self.slots.slots[slot_name]
         return True
 
+    def insert(self, slot_name, index):
+        new_slots = {}
+        for cnt, key in enumerate(self.slots.keys()):
+            if cnt == index:
+                new_slots[slot_name] = index
 
-class Object(object):
-    def __init__(self, map=None):
-        self.map = map
-        self.parents = []
+            new_slots[key] = self.slots[key]
 
-        self.slots_references = []
-
-    def clone(self):
-        o = self.map.clone()
-        o.slots_references = self.slots_references[:]
-        return o
+        return True
