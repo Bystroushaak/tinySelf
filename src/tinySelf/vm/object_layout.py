@@ -107,7 +107,7 @@ class ObjectMap(object):
         del self.slots.slots[slot_name]
         return True
 
-    def insert(self, slot_name, index):
+    def insert_slot(self, slot_name, index):
         new_slots = {}
         for cnt, key in enumerate(self.slots.keys()):
             if cnt == index:
