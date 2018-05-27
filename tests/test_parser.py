@@ -1,8 +1,4 @@
-#! /usr/bin/env python2
 # -*- coding: utf-8 -*-
-#
-# Interpreter version: python 2.7
-#
 from tinySelf.parser import lex_and_parse
 from tinySelf.parser.parser import _rw_slot
 
