@@ -728,12 +728,12 @@ def paren_priority(p):
 
 # Comments ####################################################################
 @pg.production('expression : COMMENT expression')
-def parse_comment(p):
+def parse_comment_followed_by_expression(p):
     return p[1]
 
 
 @pg.production('expression : expression COMMENT')
-def parse_comment(p):
+def parse_expression_then_comment(p):
     return p[0]
 
 
