@@ -5,9 +5,9 @@ class Object(object):
             obj_map = ObjectMap()
 
         self.map = obj_map
-        self.parents = []
-
         self.slots_references = []
+        self.code = None
+        self.bytecode = None
 
     def clone(self):
         o = Object(obj_map=self.map)
@@ -91,6 +91,8 @@ class ObjectMap(object):
         # self.parents = set()
         # self.parent_slots = parent_slots
         self.slots = {}
+        self.parent_slots = {}
+        self.arguments = []
 
     def clone_map(self):
         new_map = ObjectMap()
