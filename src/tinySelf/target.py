@@ -10,18 +10,30 @@ from rpython.rlib.compilerinfo import get_compiler_info
 from r_io import writeln
 from r_io import ewriteln
 from r_io import stdin_readline
+
 from version import VERSION
 
 from parser import lex_and_parse
 
+from vm.object_layout import Object
+
 
 def run_interactive():
+    o = Object()
+
     while True:
         line = stdin_readline(":> ")
 
         if len(line) == 0 or line.strip() == "exit":
             writeln()
             return 0
+
+        if line.strip() == "p":
+            writeln("o: " + str(o))
+            writeln("o.slots_references: " + str(o.slots_references))
+            writeln("o.map: " + str(o.map))
+            # writeln("o.map.slots: " + str(o.map.slots))
+            continue
 
         try:
             for expr in lex_and_parse(line):
