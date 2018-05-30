@@ -655,7 +655,7 @@ def empty_block(p):
 
 
 @pg.production('block : BLOCK_START code BLOCK_END')
-def object_with_empty_slots_and_code(p):
+def block_with_code(p):
     code_container = p[1]
     assert isinstance(code_container, ListContainer)  # rpython type hint
 
@@ -668,7 +668,7 @@ def remove_block_tokens_from_beginning(token_list):
 
 # @pg.production('obj : BLOCK_START SEPARATOR code BLOCK_END')  # doesn't work - why?
 @pg.production('block : BLOCK_START SEPARATOR SEPARATOR code BLOCK_END')
-def object_with_empty_slots_and_code(p):
+def block_with_empty_slots_and_code(p):
     p = remove_block_tokens_from_beginning(p)
 
     code_container = p[0]
