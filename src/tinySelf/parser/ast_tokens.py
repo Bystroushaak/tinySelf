@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-# from collections import OrderedDict
+from collections import OrderedDict
 
 from rply.token import BaseBox
+
+from vm.bytecodes import *
 
 
 def _repr_list(l):
@@ -49,10 +51,10 @@ class Nil(Self):
 
 class Object(BaseBox):
     def __init__(self, slots=None, params=None, code=None, parents=None):
-        self.slots = {}
+        self.slots = OrderedDict()
         self.params = []
         self.code = []
-        self.parents = {}
+        self.parents = OrderedDict()
 
         if slots is not None:
             self.slots.update(slots)
