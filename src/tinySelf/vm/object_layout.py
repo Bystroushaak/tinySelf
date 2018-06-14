@@ -6,8 +6,6 @@ class Object(object):
 
         self.map = obj_map
         self.slots_references = []
-        self.code = None
-        self.bytecode = None
 
     def clone(self):
         o = Object(obj_map=self.map)
@@ -78,7 +76,7 @@ class Object(object):
                 elif i < index:
                     new_slots_references[i] = self.slots_references[i]
                 elif i > index:
-                    new_slots_references[i+1] = self.slots_references[i]
+                    new_slots_references[i + 1] = self.slots_references[i]
 
             self.slots_references = new_slots_references
             self.map = new_map
@@ -93,6 +91,9 @@ class ObjectMap(object):
         self.slots = {}
         self.parent_slots = {}
         self.arguments = []
+
+        self.code = None
+        self.bytecode = None
 
     def clone_map(self):
         new_map = ObjectMap()
