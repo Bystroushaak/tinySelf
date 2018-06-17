@@ -25,15 +25,38 @@ def _repr_dict(d):
     return "{" + ", ".join(results) + "}"
 
 
+class CodeContext(object):
+    def __init__(self):
+        self.bytecodes = bytearray()
+        self.literals = []
+
+    def add_literal(self, literal):
+        self.literals.append(literal)
+        return len(self.literals) - 1
+
+    def add_bytecode(self, bytecode):
+        self.bytecodes.append(bytecode)
+
+
 class Root(BaseBox):
     def __init__(self, tree=[]):
         self.ast = tree
+
+    def compile(self):
+        bytecode = bytes("")
+        for item in self.ast:
+            item.compile()
+
+        return bytecode
 
     def __str__(self):
         return "\n".join([x.__str__() for x in self.ast])
 
 
 class Self(BaseBox):
+    def compile(self, context):
+        context.add_bytecode(BYTECODE_PUSHSELF)
+
     def __eq__(self, obj):
         return isinstance(obj, self.__class__)
 
@@ -45,6 +68,11 @@ class Self(BaseBox):
 
 
 class Nil(Self):
+    def compile(self, context):
+        context.add_bytecode(BYTECODE_PUSHLITERAL)
+        context.add_bytecode(LITERAL_TYPE_NIL)
+        context.add_bytecode(0)
+
     def __str__(self):
         return "Nil()"
 
@@ -64,6 +92,9 @@ class Object(BaseBox):
             self.code.extend(code)
         if parents is not None:
             self.parents.update(parents)
+
+    def compile(self, context):
+        pass
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
@@ -93,15 +124,20 @@ class Object(BaseBox):
 
 
 class Block(Object):
-    pass
+    def compile(self, context):
+        pass
 
 
 class Number(BaseBox):  # TODO: remove
     def __init__(self, value):
         self.value = value
 
-    def eval(self):
-        return self.value
+    def compile(self, context):
+        index = context.add_literal(self.value)
+
+        context.add_bytecode(BYTECODE_PUSHLITERAL)
+        context.add_bytecode(LITERAL_TYPE_INT)
+        context.add_bytecode(index)
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
@@ -118,8 +154,12 @@ class String(BaseBox):  # TODO: remove?
     def __init__(self, value):
         self.value = value
 
-    def eval(self):
-        return self.value
+    def compile(self, context):
+        index = context.add_literal(self.value)
+
+        context.add_bytecode(BYTECODE_PUSHLITERAL)
+        context.add_bytecode(LITERAL_TYPE_STR)
+        context.add_bytecode(index)
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
