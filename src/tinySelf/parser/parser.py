@@ -544,8 +544,8 @@ def parse_slots_params_parents(slots):
         return item[:-1]
 
     params = []
-    parents = {}
-    only_slots = {}
+    parents = OrderedDict()
+    only_slots = OrderedDict()
     for name, value in slots.items():
         if name.startswith(":"):
             params.append(strip_colon_from_start(name))

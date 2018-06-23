@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from collections import OrderedDict
+
 from tinySelf.parser import lex_and_parse
 from tinySelf.parser.parser import _rw_slot
 
@@ -17,7 +19,7 @@ from tinySelf.parser.ast_tokens import KeywordMessage
 
 
 def join_dicts(*args):
-    out = {}
+    out = OrderedDict()
     for i in args:
         out.update(i)
 
@@ -27,7 +29,7 @@ def join_dicts(*args):
 def rw_slots(slot_dict):
     slots = (_rw_slot(k, v) for k, v in slot_dict.iteritems())
 
-    out = {}
+    out = OrderedDict()
     for i in slots:
         out.update(i)
 
@@ -346,13 +348,13 @@ def test_parse_object_with_nil_slot():
 
 def test_parse_object_with_multiple_nil_slots():
     result = lex_and_parse('(| asd. bsd |)')
-    assert result == [Object(slots={"asd": Nil(), "bsd": Nil()})]
+    assert result == [Object(slots=OrderedDict((("asd", Nil()), ("bsd", Nil()))))]
 
     result = lex_and_parse('(| asd. bsd. |)')
-    assert result == [Object(slots={"asd": Nil(), "bsd": Nil()})]
+    assert result == [Object(slots=OrderedDict((("asd", Nil()), ("bsd", Nil()))))]
 
     result = lex_and_parse('(asd. bsd. |)')
-    assert result == [Object(slots={"asd": Nil(), "bsd": Nil()})]
+    assert result == [Object(slots=OrderedDict((("asd", Nil()), ("bsd", Nil()))))]
 
 
 def test_parse_slot_assignment():
@@ -365,10 +367,20 @@ def test_parse_slot_assignment():
 
 def test_parse_multiple_slot_assignment():
     result = lex_and_parse('(asd <- 2. bsd <- 4 |)')
-    assert result == [Object(slots=rw_slots({"asd": Number(2), "bsd": Number(4)}))]
+    assert result == [Object(
+        slots=rw_slots(OrderedDict((
+            ("asd", Number(2)),
+            ("bsd", Number(4))
+        )))
+    )]
 
     result = lex_and_parse('(| asd <- 2. bsd <- 4. |)')
-    assert result == [Object(slots=rw_slots({"asd": Number(2), "bsd": Number(4)}))]
+    assert result == [Object(
+        slots=rw_slots(OrderedDict((
+            ("asd", Number(2)),
+            ("bsd", Number(4))
+        )))
+    )]
 
 
 def test_parse_rw_slot_assignment():
@@ -397,10 +409,10 @@ def test_parse_multiple_slots_assignments():
     result = lex_and_parse('(| asd: a Bsd: b = (). a: p = () |)')
 
     assert result == [Object(
-        slots={
-            "asd:Bsd:": Object(params=["a", "b"]),
-            "a:": Object(params=["p"]),
-        }
+        slots=OrderedDict((
+            ("asd:Bsd:", Object(params=["a", "b"])),
+            ("a:", Object(params=["p"])),
+        ))
     )]
 
 
@@ -443,16 +455,16 @@ def test_parse_slot_definition_with_combination_of_slots():
         |)
     """)
 
-    assert result == [Object(
-        slots={
-            "a": Nil(),
-            "asd:Bsd:": Object(params=["a", "b"]),
-            "asd:": Object(params=["b"]),
-            "+": Object(params=["b"]),
-            "-": Object(params=["a"]),
-            "=": Object(params=["a"]),
-        }
-    )]
+    assert result[0] == Object(
+        slots=OrderedDict((
+            ("a", Nil()),
+            ("asd:", Object(params=["b"])),
+            ("asd:Bsd:", Object(params=["a", "b"])),
+            ("+", Object(params=["b"])),
+            ("-", Object(params=["a"])),
+            ("=", Object(params=["a"])),
+        ))
+    )
 
 
 def test_argument_parser():
@@ -585,10 +597,20 @@ def test_block_slots():
     assert result == [Block(slots=_rw_slot("asd", Number(2)))]
 
     result = lex_and_parse('[asd <- 2. bsd <- 4 |]')
-    assert result == [Block(slots=rw_slots({"asd": Number(2), "bsd": Number(4)}))]
+    assert result == [Block(slots=rw_slots(OrderedDict(
+        (
+            ("asd", Number(2)),
+            ("bsd", Number(4)))
+        )
+    ))]
 
     result = lex_and_parse('[| asd <- 2. bsd <- 4. |]')
-    assert result == [Block(slots=rw_slots({"asd": Number(2), "bsd": Number(4)}))]
+    assert result == [Block(slots=rw_slots(OrderedDict(
+        (
+            ("asd", Number(2)),
+            ("bsd", Number(4))
+        )
+    )))]
 
     result = lex_and_parse('[| asd: a = () |]')
     assert result == [Block(slots={"asd:": Object(params=["a"])})]
