@@ -92,6 +92,7 @@ class ObjectMap(object):
         self.parent_slots = {}
         self.arguments = []
 
+        self.ast = []
         self.code = None
         self.bytecode = None
 
