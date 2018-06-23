@@ -7,15 +7,15 @@ from rply import ParsingError
 from rpython.jit.codewriter.policy import JitPolicy
 from rpython.rlib.compilerinfo import get_compiler_info
 
-from r_io import writeln
-from r_io import ewriteln
-from r_io import stdin_readline
+from tinySelf.r_io import writeln
+from tinySelf.r_io import ewriteln
+from tinySelf.r_io import stdin_readline
 
-from version import VERSION
+from tinySelf.version import VERSION
 
-from parser import lex_and_parse
+from tinySelf.parser import lex_and_parse
 
-from vm.object_layout import Object
+from tinySelf.vm.object_layout import Object
 
 
 def run_interactive():

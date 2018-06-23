@@ -11,7 +11,7 @@ import sh
 def compile_project(quit_pdb, optimize, output):
     target_path = os.path.join(
         os.path.dirname(__file__),
-        "src/tinySelf/target.py"
+        "src/target.py"
     )
     args = {
         "opt": optimize,
