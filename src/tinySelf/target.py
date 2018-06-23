@@ -70,14 +70,17 @@ def run_script(path):
 
 def print_help(fn):
     ewriteln("Usage:")
-    ewriteln("\t%s [-h, -v] -s FN / SCRIPT_PATH" % fn)
+    ewriteln("\t%s [-h, -v] [-f] FN / SCRIPT_PATH" % fn)
+    ewriteln("")
+    ewriteln("\t-a FN, --ast FN")
+    ewriteln("\t\tShow AST of the `FN`.")
+    ewriteln("")
+    ewriteln("\t-f FN, --filename FN")
+    ewriteln("\t\tRun `FN` as a tinySelf script.")
     ewriteln("")
     # ewriteln("\t-s FN, --snapshot FN")
     # ewriteln("\t\tRun memory snapshot `FN`.")
     # ewriteln("")
-    ewriteln("\t-a FN, --ast FN")
-    ewriteln("\t\tShow AST of the `FN`.")
-    ewriteln("")
     ewriteln("\t-h, --help")
     ewriteln("\t\tShow this help.")
     ewriteln("")
@@ -104,6 +107,8 @@ def run_command(command, file):
                     ewriteln(e.message)
                 return 1
             return 0
+    elif command in ["-f", "--filename"]:
+        return run_script(file)
     # elif command in ["-s", "--snapshot"]:
     #     return run_script(file)
 
