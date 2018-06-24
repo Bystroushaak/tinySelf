@@ -6,6 +6,11 @@ class Object(object):
 
         self.map = obj_map
         self.slots_references = []
+        self.primitive_code = None
+
+    @property
+    def has_code(self):
+        return bool(self.map.code)
 
     def clone(self):
         o = Object(obj_map=self.map)
