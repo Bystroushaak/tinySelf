@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from collections import OrderedDict
+
+
 class Object(object):
     def __init__(self, obj_map=None):
         if obj_map is None:
@@ -35,7 +38,7 @@ class Object(object):
 
     # meta operations
     def meta_add_slot(self, slot_name, value):  # TODO: support auto Nil value
-        if slot_name in self.map:
+        if slot_name in self.map.slots:
             return self.set_slot(slot_name, value)
 
         new_map = self.map.clone()
@@ -48,7 +51,7 @@ class Object(object):
         return is_slot_added
 
     def meta_remove_slot(self, slot_name):
-        if slot_name not in self.map:
+        if slot_name not in self.map.slots:
             return False
 
         new_map = self.map.clone()
@@ -92,10 +95,10 @@ class Object(object):
 class ObjectMap(object):
     def __init__(self):
         # self.parents = set()
-        # self.parent_slots = parent_slots
-        self.slots = {}
+        # self.parent_slots = parent_slots        self.slots = {}
         self.parent_slots = {}
         self.arguments = []
+        self.slots = OrderedDict()
 
         self.ast = []
         self.code = None
@@ -113,7 +116,7 @@ class ObjectMap(object):
         return True
 
     def delete_slot(self, slot_name):
-        del self.slots.slots[slot_name]
+        del self.slots[slot_name]
         return True
 
     def insert_slot(self, slot_name, index):
