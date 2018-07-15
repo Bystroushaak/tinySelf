@@ -580,6 +580,32 @@ def test_object_with_parents():
     )]
 
 
+def test_objects_with_objects_in_slots():
+    result = lex_and_parse("""(|
+    append: s = (||"Str: ")
+|)""")
+
+    assert result == [Object(
+        slots=OrderedDict([
+            ("append:", Object(params=["s"], code=[String("Str: ")])),
+        ])
+    )]
+
+
+# TODO: update parser to support this (parens with dots / multiple expressions
+#       are considered code objects, not precedence)
+# def test_objects_with_objects_in_slots_defined_just_by_parans():
+#     result = lex_and_parse("""(|
+#     append: s = ("Str: ".)
+# |)""")
+
+#     assert result == [Object(
+#         slots=OrderedDict([
+#             ("append:", Object(params=["s"], code=[String("Str: ")])),
+#         ])
+#     )]
+
+
 # Blocks ######################################################################
 def test_empty_block():
     result = lex_and_parse('[]')

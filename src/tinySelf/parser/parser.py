@@ -534,7 +534,7 @@ def empty_object(p):
 
 def parse_slots_params_parents(slots):
     """
-    Iterate thru a list of slots and sort them to `slots` (dict), `parameters`
+    Iterate over a list of slots and sort them to `slots` (dict), `parameters`
     (list) and `parents` (dict).
     """
     def strip_colon_from_start(item):
