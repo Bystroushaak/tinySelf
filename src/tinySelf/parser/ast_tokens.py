@@ -38,12 +38,12 @@ class Root(BaseBox):
     def __init__(self, tree=[]):
         self.ast = tree
 
-    def compile(self):
+    def compile(self, context):
         bytecode = bytes("")
         for item in self.ast:
-            item.compile()
+            item.compile(context)
 
-        return bytecode
+        return context
 
     def __str__(self):
         return "\n".join([x.__str__() for x in self.ast])
@@ -52,6 +52,8 @@ class Root(BaseBox):
 class Self(BaseBox):
     def compile(self, context):
         context.add_bytecode(BYTECODE_PUSHSELF)
+
+        return context
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__)
@@ -68,6 +70,8 @@ class Nil(Self):
         context.add_bytecode(BYTECODE_PUSHLITERAL)
         context.add_bytecode(LITERAL_TYPE_NIL)
         context.add_bytecode(0)
+
+        return context
 
     def __str__(self):
         return "Nil()"
@@ -90,7 +94,9 @@ class Object(BaseBox):
             self.parents.update(parents)
 
     def compile(self, context):
-        pass
+        # TODO: compile objects
+
+        return context
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
@@ -121,7 +127,9 @@ class Object(BaseBox):
 
 class Block(Object):
     def compile(self, context):
-        pass
+        # TODO: compile blocks
+
+        return context
 
 
 class Number(BaseBox):  # TODO: remove
@@ -129,11 +137,13 @@ class Number(BaseBox):  # TODO: remove
         self.value = value
 
     def compile(self, context):
-        index = context.add_literal(self.value)
+        index = context.add_literal_int(self.value)
 
         context.add_bytecode(BYTECODE_PUSHLITERAL)
         context.add_bytecode(LITERAL_TYPE_INT)
         context.add_bytecode(index)
+
+        return context
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
@@ -151,11 +161,13 @@ class String(BaseBox):  # TODO: remove?
         self.value = value
 
     def compile(self, context):
-        index = context.add_literal(self.value)
+        index = context.add_literal_str(self.value)
 
         context.add_bytecode(BYTECODE_PUSHLITERAL)
         context.add_bytecode(LITERAL_TYPE_STR)
         context.add_bytecode(index)
+
+        return context
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
@@ -172,6 +184,11 @@ class Message(BaseBox):
     def __init__(self, name):
         self.name = name
 
+    def compile(self, context):
+        # TODO: compile messages
+
+        return context
+
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
                self.name == obj.name
@@ -187,6 +204,12 @@ class KeywordMessage(BaseBox):
     def __init__(self, name, parameters):
         self.name = name
         self.parameters = parameters
+
+    def compile(self, context):
+        # TODO: compile keyword messages
+
+        return context
+
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
@@ -210,6 +233,12 @@ class BinaryMessage(BaseBox):
         self.name = name
         self.parameter = parameter
 
+    def compile(self, context):
+        # TODO: compile binary messages
+
+        return context
+
+
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
                self.name == obj.name and \
@@ -229,6 +258,12 @@ class Send(BaseBox):
     def __init__(self, obj, msg):
         self.obj = obj
         self.msg = msg
+
+    def compile(self, context):
+        # TODO: compile sends
+
+        return context
+
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
@@ -250,6 +285,12 @@ class Cascade(BaseBox):
         self.obj = obj
         self.msgs = msgs
 
+    def compile(self, context):
+        # TODO: compile cascades
+
+        return context
+
+
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
                self.obj == obj.obj and \
@@ -269,6 +310,12 @@ class Cascade(BaseBox):
 class Return(BaseBox):
     def __init__(self, value):
         self.value = value
+
+    def compile(self, context):
+        # TODO: compile implicit return
+
+        return context
+
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
