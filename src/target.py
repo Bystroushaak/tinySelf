@@ -16,6 +16,7 @@ from tinySelf.version import VERSION
 from tinySelf.parser import lex_and_parse
 
 from tinySelf.vm.object_layout import Object
+from tinySelf.vm.code_context import CodeContext
 
 
 def run_interactive():
@@ -63,9 +64,7 @@ def run_script(path):
     return 0
 
 
-def compile_file(path):
-    print "Compiling script", path  # TODO: remove
-
+def show_ast(path):
     with open(path) as f:
         try:
             for expr in lex_and_parse(f.read()):
@@ -79,6 +78,25 @@ def compile_file(path):
     return 0
 
 
+def compile_file(path):
+    print "Compiling script", path  # TODO: remove
+    context = CodeContext()
+
+    with open(path) as f:
+        try:
+            for expr in lex_and_parse(f.read()):
+                expr.compile(context)
+        except ParsingError as e:
+            ewriteln("Parse error.")
+            if e.message:
+                ewriteln(e.message)
+            return 1
+
+    print context.to_bytecode()
+
+    return 0
+
+
 # def run_snapshot(path):
 #     print "Running snapshot", path
 #     return 0
@@ -88,14 +106,8 @@ def print_help(fn):
     ewriteln("Usage:")
     ewriteln("\t%s [-h, -v] [-f FN] [-c FN] [-a FN]" % fn)
     ewriteln("")
-    ewriteln("\t-a FN, --ast FN")
-    ewriteln("\t\tShow AST of the `FN`.")
-    ewriteln("")
     ewriteln("\t-f FN, --filename FN")
     ewriteln("\t\tRun `FN` as a tinySelf script.")
-    ewriteln("")
-    ewriteln("\t-c FN, --compile FN")
-    ewriteln("\t\tCompile FN, output bytecode to the stdout.")
     ewriteln("")
     # ewriteln("\t-s FN, --snapshot FN")
     # ewriteln("\t\tRun memory snapshot `FN`.")
@@ -109,29 +121,29 @@ def print_help(fn):
     ewriteln("\tSCRIPT_PATH")
     ewriteln("\t\tRun script `SCRIPT_PATH`.")
     ewriteln("")
+    ewriteln("Debug options:")
+    ewriteln("")
+    ewriteln("\t-c FN, --compile FN")
+    ewriteln("\t\tCompile FN, output bytecode to the stdout.")
+    ewriteln("")
+    ewriteln("\t-a FN, --ast FN")
+    ewriteln("\t\tShow AST of the `FN`.")
+    ewriteln("")
 
 
-def parse_arg_with_file_param(command, file):
-    if not os.path.exists(file):
-        ewriteln("`%s` not found!\n" % file)
+def parse_arg_with_file_param(command, path):
+    if not os.path.exists(path):
+        ewriteln("`%s` not found!\n" % path)
         return 1
 
     if command in ["-a", "--ast"]:
-        with open(file) as f:
-            try:
-                print lex_and_parse(f.read())
-            except ParsingError as e:
-                ewriteln("Parse error.")
-                if e.message:
-                    ewriteln(e.message)
-                return 1
-            return 0
+        return show_ast(path)
     elif command in ["-f", "--filename"]:
-        return run_script(file)
+        return run_script(path)
     elif command in ["-c", "--compile"]:
-        return compile_file(file)
+        return compile_file(path)
     # elif command in ["-s", "--snapshot"]:
-    #     return run_script(file)
+    #     return run_script(path)
 
     ewriteln("Unknown command `%s`!" % command)
     return 1
