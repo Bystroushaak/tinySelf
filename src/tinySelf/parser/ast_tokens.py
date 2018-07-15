@@ -6,11 +6,20 @@ from rply.token import BaseBox
 from tinySelf.vm.bytecodes import *
 
 
-def _repr_list(l):
+def _repr_list_of_baseboxes(l):
     results = []
     for x in l:
         assert isinstance(x, BaseBox)
         results.append(x.__str__())
+
+    return "[" + ", ".join(results) + "]"
+
+
+def _repr_list_of_strs(l):
+    results = []
+    for x in l:
+        assert isinstance(x, str)
+        results.append(x)
 
     return "[" + ", ".join(results) + "]"
 
@@ -99,11 +108,11 @@ class Object(BaseBox):
         if self.slots:
             parameters.append("slots=" + _repr_dict(self.slots))
         if self.params:
-            assert isinstance(self.params[0], BaseBox)
-            parameters.append("params=" + _repr_list(self.params))
+            assert isinstance(self.params[0], str)
+            parameters.append("params=" + _repr_list_of_strs(self.params))
         if self.code:
             assert isinstance(self.code[0], BaseBox)
-            parameters.append("code=" + _repr_list(self.code))
+            parameters.append("code=" + _repr_list_of_baseboxes(self.code))
         if self.parents:
             parameters.append("parents=" + _repr_dict(self.parents))
 
@@ -191,7 +200,7 @@ class KeywordMessage(BaseBox):
         params = "[]"
         if self.parameters:
             assert isinstance(self.parameters[0], BaseBox)
-            params = _repr_list(self.parameters)
+            params = _repr_list_of_baseboxes(self.parameters)
 
         return "KeywordMessage(name=%s, parameters=%s)" % (self.name, params)
 
@@ -252,7 +261,7 @@ class Cascade(BaseBox):
     def __str__(self):
         msgs = "[]"
         if self.msgs:
-            msgs = _repr_list(self.msgs)
+            msgs = _repr_list_of_baseboxes(self.msgs)
 
         return "Cascade(obj=%s, msgs=%s)" % (self.obj.__str__(), msgs)
 
