@@ -39,7 +39,6 @@ class Root(BaseBox):
         self.ast = tree
 
     def compile(self, context):
-        bytecode = bytes("")
         for item in self.ast:
             item.compile(context)
 
@@ -189,6 +188,7 @@ class Message(BaseBox):
 
         context.add_bytecode(BYTECODE_SEND)
         context.add_bytecode(SEND_TYPE_UNARY)
+        context.add_bytecode(0)
 
         return context
 
@@ -249,6 +249,7 @@ class BinaryMessage(BaseBox):
 
         context.add_bytecode(BYTECODE_SEND)
         context.add_bytecode(SEND_TYPE_BINARY)
+        context.add_bytecode(1)
 
         return context
 
@@ -273,11 +274,7 @@ class Send(BaseBox):
         self.msg = msg
 
     def compile(self, context):
-        if self.obj == Self():
-            context.add_bytecode(BYTECODE_PUSHSELF)
-        else:
-            self.obj.compile(context)
-
+        self.obj.compile(context)
         self.msg.compile(context)
 
         return context
@@ -304,11 +301,7 @@ class Cascade(BaseBox):
 
     def compile(self, context):
         for msg in self.msgs:
-            if self.obj == Self():
-                context.add_bytecode(BYTECODE_PUSHSELF)
-            else:
-                self.obj.compile(context)
-
+            self.obj.compile(context)
             msg.compile(context)
 
         return context

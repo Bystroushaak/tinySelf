@@ -59,8 +59,8 @@ class CodeContext(object):
     def to_bytecode(self):
         out = "Literals:\n"
 
-        for i in self.literals:
-            out += "\t%s\n" % i.__str__()
+        for cnt, i in enumerate(self.literals):
+            out += "\t%d) %s\n" % (cnt, i.__str__())
 
         out += "\nBytecode:\n"
 
