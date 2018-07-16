@@ -46,7 +46,7 @@ class CodeContext(object):
         self.bytecodes.append(bytecode)
 
     def add_literal_str_push_bytecode(self, literal):
-        assert isinstance(literal, basestring)
+        assert isinstance(literal, str)
 
         index = self.add_literal_str(literal)
 

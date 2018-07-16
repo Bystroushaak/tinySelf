@@ -245,13 +245,12 @@ class BinaryMessage(BaseBox):
     def compile(self, context):
         context.add_literal_str_push_bytecode(self.name)
 
-        parameter.compile(context)
+        self.parameter.compile(context)
 
         context.add_bytecode(BYTECODE_SEND)
         context.add_bytecode(SEND_TYPE_BINARY)
 
         return context
-
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
@@ -274,10 +273,14 @@ class Send(BaseBox):
         self.msg = msg
 
     def compile(self, context):
-        # TODO: compile sends
+        if self.obj == Self():
+            context.add_bytecode(BYTECODE_PUSHSELF)
+        else:
+            self.obj.compile(context)
+
+        self.msg.compile(context)
 
         return context
-
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
@@ -300,10 +303,15 @@ class Cascade(BaseBox):
         self.msgs = msgs
 
     def compile(self, context):
-        # TODO: compile cascades
+        for msg in self.msgs:
+            if self.obj == Self():
+                context.add_bytecode(BYTECODE_PUSHSELF)
+            else:
+                self.obj.compile(context)
+
+            msg.compile(context)
 
         return context
-
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
@@ -326,10 +334,10 @@ class Return(BaseBox):
         self.value = value
 
     def compile(self, context):
-        # TODO: compile implicit return
+        self.value.compile(context)
+        context.add_bytecode(BYTECODE_RETURNIMPLICIT)
 
         return context
-
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
