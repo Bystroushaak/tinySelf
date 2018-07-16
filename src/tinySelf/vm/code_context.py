@@ -2,6 +2,8 @@
 from rply.token import BaseBox
 from rpython.rlib.types import bytearray
 
+from bytecodes import *
+
 
 class LiteralBox(BaseBox):
     pass
@@ -42,6 +44,17 @@ class CodeContext(object):
 
     def add_bytecode(self, bytecode):
         self.bytecodes.append(bytecode)
+
+    def add_literal_str_push_bytecode(self, literal):
+        assert isinstance(literal, basestring)
+
+        index = self.add_literal_str(literal)
+
+        self.add_bytecode(BYTECODE_PUSHLITERAL)
+        self.add_bytecode(LITERAL_TYPE_STR)
+        self.add_bytecode(index)
+
+        return index
 
     def to_bytecode(self):
         out = "Literals:\n"

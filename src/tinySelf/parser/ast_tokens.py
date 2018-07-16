@@ -185,11 +185,7 @@ class Message(BaseBox):
         self.name = name
 
     def compile(self, context):
-        index = context.add_literal_str(self.name)
-
-        context.add_bytecode(BYTECODE_PUSHLITERAL)
-        context.add_bytecode(LITERAL_TYPE_STR)
-        context.add_bytecode(index)
+        context.add_literal_str_push_bytecode(self.name)
 
         context.add_bytecode(BYTECODE_SEND)
         context.add_bytecode(SEND_TYPE_UNARY)
@@ -213,10 +209,16 @@ class KeywordMessage(BaseBox):
         self.parameters = parameters
 
     def compile(self, context):
-        # TODO: compile keyword messages
+        context.add_literal_str_push_bytecode(self.name)
+
+        for parameter in self.parameters:
+            parameter.compile(context)
+
+        context.add_bytecode(BYTECODE_SEND)
+        context.add_bytecode(SEND_TYPE_KEYWORD)
+        context.add_bytecode(len(self.parameters))
 
         return context
-
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
@@ -241,11 +243,7 @@ class BinaryMessage(BaseBox):
         self.parameter = parameter
 
     def compile(self, context):
-        index = context.add_literal_str(self.name)
-
-        context.add_bytecode(BYTECODE_PUSHLITERAL)
-        context.add_bytecode(LITERAL_TYPE_STR)
-        context.add_bytecode(index)
+        context.add_literal_str_push_bytecode(self.name)
 
         parameter.compile(context)
 
