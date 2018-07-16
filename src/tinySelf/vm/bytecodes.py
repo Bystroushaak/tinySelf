@@ -35,15 +35,15 @@ def disassemble(bytecodes):
 
             number_of_params = bytecodes.pop(0)
 
-            disassembled.append((
+            disassembled.append([
                 "SEND",
                 "type:" + send_type_str,
                 "params:" + str(number_of_params)
-            ))
+            ])
             continue
 
         elif bytecode == BYTECODE_PUSHSELF:
-            disassembled.append(("BYTECODE_PUSHSELF",))
+            disassembled.append(["BYTECODE_PUSHSELF"])
             continue
 
         elif bytecode == BYTECODE_PUSHLITERAL:
@@ -56,15 +56,15 @@ def disassemble(bytecodes):
                 LITERAL_TYPE_STR: "STR",
             }[literal_type]
 
-            disassembled.append((
+            disassembled.append([
                 "PUSH_LITERAL",
                 "type:" + literal_type_str,
                 "index:" + str(literal_index)
-            ))
+            ])
             continue
 
         elif bytecode == BYTECODE_RETURNTOP:
-            disassembled.append(("RETURNTOP",))
+            disassembled.append(["RETURNTOP"])
             continue
 
         # elif bytecode == BYTECODE_RETURNIMPLICIT:
