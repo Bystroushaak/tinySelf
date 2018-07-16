@@ -62,9 +62,23 @@ class CodeContext(object):
         for cnt, i in enumerate(self.literals):
             out += "\t%d) %s\n" % (cnt, i.__str__())
 
-        out += "\nBytecode:\n"
+        out += "\nDisassembled:\n"
 
-        for i in self.bytecodes:
-            out += str(i) + "\n"
+        for instruction in disassemble(self.bytecodes[:]):
+            out += "\t"
+
+            if len(instruction) == 1:
+                out += instruction[0]
+            else:
+                out += instruction[0] + " " + ", ".join(instruction[1:])
+
+            out += "\n"
+
+        out += "\nBytecodes:\n"
+
+        # for i in self.bytecodes:
+        #     out += str(i) + "\n"
+        #     
+        out += str(self.bytecodes)
 
         return out

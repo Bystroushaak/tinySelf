@@ -328,7 +328,8 @@ class Return(BaseBox):
 
     def compile(self, context):
         self.value.compile(context)
-        context.add_bytecode(BYTECODE_RETURNIMPLICIT)
+        # context.add_bytecode(BYTECODE_RETURNIMPLICIT)
+        context.add_bytecode(BYTECODE_RETURTOP)
 
         return context
 

@@ -37,6 +37,13 @@ when-changed -s -r src/tinySelf/*.py -r tests/*.py -c ./run_tests.sh -s
 python -m py.test tests/test_parser.py::test_parse_send -s
 
 
+
+
+
+
+Nil literal always at 0.
+
+
 Annotation objects
 
 
