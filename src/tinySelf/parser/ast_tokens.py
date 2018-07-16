@@ -185,7 +185,14 @@ class Message(BaseBox):
         self.name = name
 
     def compile(self, context):
-        # TODO: compile messages
+        index = context.add_literal_str(self.name)
+
+        context.add_bytecode(BYTECODE_PUSHLITERAL)
+        context.add_bytecode(LITERAL_TYPE_STR)
+        context.add_bytecode(index)
+
+        context.add_bytecode(BYTECODE_SEND)
+        context.add_bytecode(SEND_TYPE_UNARY)
 
         return context
 
@@ -234,7 +241,16 @@ class BinaryMessage(BaseBox):
         self.parameter = parameter
 
     def compile(self, context):
-        # TODO: compile binary messages
+        index = context.add_literal_str(self.name)
+
+        context.add_bytecode(BYTECODE_PUSHLITERAL)
+        context.add_bytecode(LITERAL_TYPE_STR)
+        context.add_bytecode(index)
+
+        parameter.compile(context)
+
+        context.add_bytecode(BYTECODE_SEND)
+        context.add_bytecode(SEND_TYPE_BINARY)
 
         return context
 

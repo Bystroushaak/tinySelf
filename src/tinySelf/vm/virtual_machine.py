@@ -5,6 +5,7 @@ from tinySelf.parser import lex_and_parse
 from tinySelf.vm.primitives import get_primitives
 from tinySelf.vm.code_context import CodeContext
 from tinySelf.vm.object_layout import Object
+from tinySelf.vm.primitives import get_primitives
 
 
 
