@@ -4,6 +4,8 @@ from collections import OrderedDict
 from rply.token import BaseBox
 
 from tinySelf.vm.bytecodes import *
+from tinySelf.vm.code_context import CodeContext
+from tinySelf.vm.object_layout import Object as ObjectRepresentation
 
 
 def _repr_list_of_baseboxes(l):
@@ -93,7 +95,26 @@ class Object(BaseBox):
             self.parents.update(parents)
 
     def compile(self, context):
-        # TODO: compile objects
+        obj = ObjectRepresentation()
+        obj.meta_set_ast([self])
+        obj.meta_set_parameters(self.params)
+
+        index = context.add_literal_obj(obj)
+        context.add_bytecode(BYTECODE_PUSHLITERAL)
+        context.add_bytecode(LITERAL_TYPE_INT)
+        context.add_bytecode(index)
+
+        for name, value in self.slots.iteritems():
+            pass  # TODO: implement
+
+        for name, value in self.parents.iteritems():
+            pass  # TODO: implement
+
+        if self.code:
+            new_context = CodeContext()
+            obj.meta_set_code_context(new_context)
+            for item in self.code:
+                item.compile(new_context)
 
         return context
 
