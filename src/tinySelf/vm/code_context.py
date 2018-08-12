@@ -29,6 +29,12 @@ class ObjBox(LiteralBox):
     def __init__(self, obj):
         self.value = obj
 
+    def __str__(self):
+        if self.value.map.ast is not None:
+            return self.value.map.ast.__str__()
+        
+        return "No obj representation"
+
 
 class CodeContext(object):
     def __init__(self):
