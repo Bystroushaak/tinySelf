@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 
+from rply.token import BaseBox
+
 
 class Object(object):
     def __init__(self, obj_map=None):
@@ -9,11 +11,14 @@ class Object(object):
 
         self.map = obj_map
         self.slots_references = []
-        self.primitive_code = None
 
     @property
     def has_code(self):
-        return bool(self.map.code)
+        return self.map.code_context is not None
+
+    @property
+    def has_primitive_code(self):
+        return self.map.primitive_code is not None
 
     def clone(self):
         o = Object(obj_map=self.map)
@@ -31,10 +36,25 @@ class Object(object):
 
     def get_slot(self, slot_name):
         slot_index = self.map.get(slot_name, None)
-        if slot_index is None:
-            return None
+        if slot_index is not None:
+            return self.slots_references[slot_index]
 
-        return self.slots_references[slot_index]
+        return None
+
+    def get_slot_from_parents(self, slot_name):
+        """
+        """
+        for parent in self.map.parents:
+            if slot_name in parent.map.slots:
+                return parent.get_slot(slot_name)
+
+            result = parent.get_slot_from_parents(slot_name)
+            if result is None:
+                continue
+
+            return result
+
+        return None
 
     # meta operations
     def meta_add_slot(self, slot_name, value):  # TODO: support auto Nil value
@@ -91,18 +111,29 @@ class Object(object):
 
         return is_slot_inserted
 
+    def meta_set_parameters(self, parameters):
+        self.map.parameters = parameters
+
+    def meta_set_ast(self, ast):
+        assert isinstance(ast, BaseBox)
+        self.map.ast = ast
+
+    def meta_set_code_context(self, code_context):
+        self.map.code_context = code_context
+
 
 class ObjectMap(object):
     def __init__(self):
-        # self.parents = set()
-        # self.parent_slots = parent_slots        self.slots = {}
-        self.parent_slots = {}
-        self.arguments = []
-        self.slots = OrderedDict()
+        # self.parent_slots = {}
+        self.parameters = []
 
-        self.ast = []
-        self.code = None
-        self.bytecode = None
+        self.slots = OrderedDict()
+        self.parents = []
+
+        self.ast = None
+        # self.bytecode = None
+        self.code_context = None
+        self.primitive_code = None
 
     def clone_map(self):
         new_map = ObjectMap()
