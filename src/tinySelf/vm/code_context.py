@@ -25,6 +25,11 @@ class StrBox(LiteralBox):
         return self.value
 
 
+class ObjBox(LiteralBox):
+    def __init__(self, obj):
+        self.value = obj
+
+
 class CodeContext(object):
     def __init__(self):
         self.bytecodes = []  # rewrite to bytearray or something like that?
@@ -41,6 +46,9 @@ class CodeContext(object):
 
     def add_literal_int(self, literal):
         return self.add_literal(IntBox(literal))
+
+    def add_literal_obj(self, literal):
+        return self.add_literal(ObjBox(literal))
 
     def add_bytecode(self, bytecode):
         self.bytecodes.append(bytecode)
