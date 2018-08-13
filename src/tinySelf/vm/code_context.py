@@ -71,28 +71,18 @@ class CodeContext(object):
         return index
 
     def to_bytecode(self):
-        out = "Literals:\n"
-
+        out = '{\n"literals": {\n'
         for cnt, i in enumerate(self.literals):
-            out += "\t%d) %s\n" % (cnt, i.__str__())
+            out += '    "%d": "%s",\n' % (cnt, i.__str__())
+        out += '},\n\n'
 
-        out += "\nDisassembled:\n"
-
+        out += '"disassembled": [\n'
+        instructions = []
         for instruction in disassemble(self.bytecodes[:]):
-            out += "\t"
+            instructions.append('    %s' % str(instruction).replace("'", '"'))
+        out += ",\n".join(instructions)
+        out += '\n],\n\n'
 
-            if len(instruction) == 1:
-                out += instruction[0]
-            else:
-                out += instruction[0] + " " + ", ".join(instruction[1:])
-
-            out += "\n"
-
-        out += "\nBytecodes:\n"
-
-        # for i in self.bytecodes:
-        #     out += str(i) + "\n"
-        #     
-        out += str(self.bytecodes)
+        out += '"bytecodes": {\n    %s\n}}' % str(self.bytecodes)
 
         return out
