@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from bytecodes import *
+from primitives import PrimitiveNilObject
 
 
 class Frame(object):
@@ -12,20 +13,25 @@ class Frame(object):
     def pop(self):
         return self.stack.pop()
 
+    def pop_or_nil(self):
+        if self.stack:
+            return self.pop()
+
+        return PrimitiveNilObject()
+
+
 
 class ScopedFrame(Frame):
-    def __init__(self, lexical_scope):
+    def __init__(self, parameters):
         super(ScopedFrame, self).__init__()
-        self.lexical_scopes = [lexical_scope]
 
-    def lexical_scope(self):
-        self.lexical_scopes[-1]
+        self.variables = {}
+        self.parameters = parameters
 
-    def push_scope(self, lexical_scope):
-        self.lexical_scopes.append(lexical_scope)
 
-    def pop_scope(self):
-        return self.lexical_scopes.pop()
+
+# class SingleLevelScopedFrame(Frame):
+    # def __init__(self, parameters)
 
 
 class Interpreter(object):
@@ -57,33 +63,60 @@ class Interpreter(object):
 
             bc_index += 1
 
+    def _put_together_parameters(self, parameter_names, parameters):
+        if len(parameter_names) < len(parameters):
+            raise ValueError("Too many parameters!")
+
+        return {
+            parameter_name: parameters.pop(0)
+            for parameter_name in parameter_names
+        }
+
     def _do_send(self, bc_index, code_obj, frame):
+        """
+        Args:
+            bc_index (int): Index of the bytecode in `code_obj` bytecode list.
+            code_obj (obj): :class:`CodeContext` instance.
+            frame (obj): :class:`Frame` instance.
+
+        Returns:
+            int: Index of next bytecode.
+        """
         message_type = code_obj.get_bytecode(bc_index + 1)
-        number_of_messages = code_obj.get_bytecode(bc_index + 2)
+        number_of_parameters = code_obj.get_bytecode(bc_index + 2)
 
         message = frame.pop()
+        message_name = message.value  # unpack from StrBox
 
-        parameters = []
+        parameters_values = []
         if message_type == SEND_TYPE_BINARY:
-            parameters = [frame.pop()]
+            parameters_values = [frame.pop()]
         elif message_type == SEND_TYPE_KEYWORD:
-            for _ in range(number_of_messages):
-                parameters.append(frame.pop())
+            for _ in range(number_of_parameters):
+                parameters_values.append(frame.pop())
 
         obj = frame.pop()
 
-        value_of_slot = obj.get_slot(message)
+        value_of_slot = obj.get_slot(message_name)
         if value_of_slot is None:
             # TODO: parent lookup
-            pass
+            value_of_slot = obj.get_slot_from_parents(message_name)
         else:
-            value_of_slot = obj.get_slot_from_parents(message)
+            raise ValueError("TODO: not implemented yet (missing slot err)")
 
-        if value_of_slot.has_code():
-            # TODO: support for parameters / arguments
-            self.interpret(value_of_slot.map.code, Frame())
-        elif value_of_slot.has_primitive_code():
-            return_value = value_of_slot.map.primitive_code(*parameters)
+        if value_of_slot.has_code:
+            parameters_dict = self._put_together_parameters(
+                parameter_names=value_of_slot.map.parameters,
+                parameters=parameters_values
+            )
+            sub_frame = ScopedFrame(parameters_dict)
+            self.interpret(value_of_slot.map.code, sub_frame)
+
+            return_value = sub_frame.pop_or_nil()
+
+        elif value_of_slot.has_primitive_code:
+            return_value = value_of_slot.map.primitive_code(*parameters_values)
+
         else:
             return_value = value_of_slot
 
