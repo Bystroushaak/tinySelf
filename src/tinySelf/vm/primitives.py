@@ -44,6 +44,17 @@ class PrimitiveStrObject(Object):
         return PrimitiveStrObject(self.value + obj.value)
 
 
+class PrimitiveNilObjectSingleton(Object):
+    def __init__(self):
+        super(PrimitiveNilObjectSingleton, self).__init__()
+
+_NIL_OBJ = PrimitiveNilObjectSingleton()
+
+def PrimitiveNilObject(*args, **kwargs):
+    return _NIL_OBJ
+
+
+
 # def _primitive_create_mirror(obj):
 #     def list_slots():
 #         for slot_name in obj.map.slots.keys():
@@ -62,6 +73,7 @@ def get_primitives():
     primitives = Object()
     primitives.meta_add_slot("primitiveInt", PrimitiveIntObject)
     primitives.meta_add_slot("primitiveStr", PrimitiveStrObject)
+    primitives.meta_add_slot("primitiveNil", PrimitiveNilObject)
 
     # _add_primitive(primitives, "mirrorOn:", _primitive_create_mirror, ["obj"])
 
