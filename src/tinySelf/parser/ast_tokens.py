@@ -96,12 +96,12 @@ class Object(BaseBox):
 
     def compile(self, context):
         obj = ObjectRepresentation()
-        obj.meta_set_ast([self])
+        obj.meta_set_ast(self)
         obj.meta_set_parameters(self.params)
 
         index = context.add_literal_obj(obj)
         context.add_bytecode(BYTECODE_PUSHLITERAL)
-        context.add_bytecode(LITERAL_TYPE_INT)
+        context.add_bytecode(LITERAL_TYPE_OBJ)
         context.add_bytecode(index)
 
         for name, value in self.slots.iteritems():
