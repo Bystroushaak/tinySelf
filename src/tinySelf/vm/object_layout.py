@@ -129,6 +129,7 @@ class ObjectMap(object):
 
         self.slots = OrderedDict()
         self.parents = []
+        self.visited = False
 
         self.ast = None
         # self.bytecode = None
@@ -147,6 +148,9 @@ class ObjectMap(object):
         return True
 
     def delete_slot(self, slot_name):
+        if not slot_name in self.slots:
+            return False
+
         del self.slots[slot_name]
         return True
 
