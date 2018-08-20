@@ -94,6 +94,14 @@ class Object(BaseBox):
         if parents is not None:
             self.parents.update(parents)
 
+    def _add_slot_shared_code(self, context, name, value):
+        boxed_name = String(name)
+        boxed_name.compile(context)
+
+        value.compile(context)
+
+        context.add_bytecode(BYTECODE_ADD_SLOT)
+
     def compile(self, context):
         obj = ObjectRepresentation()
         obj.meta_set_ast(self)
@@ -105,16 +113,20 @@ class Object(BaseBox):
         context.add_bytecode(index)
 
         for name, value in self.slots.iteritems():
-            pass  # TODO: implement
+            self._add_slot_shared_code(context, name, value)
+            context.add_bytecode(SLOT_NORMAL)
 
         for name, value in self.parents.iteritems():
-            pass  # TODO: implement
+            self._add_slot_shared_code(context, name, value)
+            context.add_bytecode(SLOT_PARENT)
 
         if self.code:
             new_context = CodeContext()
             obj.meta_set_code_context(new_context)
             for item in self.code:
                 item.compile(new_context)
+
+            obj.map.code_context = new_context
 
         return context
 
