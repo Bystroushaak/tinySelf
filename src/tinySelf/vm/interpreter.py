@@ -51,15 +51,17 @@ class Interpreter(object):
             # elif bytecode == BYTECODE_RESEND:
             #     self._do_resend(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_PUSHSELF:
-                self._do_pushSelf(bc_index, code_obj, frame)
+                bc_index = self._do_pushSelf(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_PUSHLITERAL:
-                self._do_pushLiteral(bc_index, code_obj, frame)
+                bc_index = self._do_pushLiteral(bc_index, code_obj, frame)
             # elif bytecode == BYTECODE_POP:
             #     self._do_pop(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_RETURNTOP:
-                self._do_returnTop(bc_index, code_obj, frame)
+                bc_index = self._do_returnTop(bc_index, code_obj, frame)
             # elif bytecode == BYTECODE_RETURNIMPLICIT:
             #     self._do_returnImplicit(bc_index, code_obj, frame)
+            elif bytecode == BYTECODE_ADD_SLOT:
+                bc_index = self._do_add_slot(bc_index, code_obj, frame)
 
             bc_index += 1
 
@@ -144,3 +146,30 @@ class Interpreter(object):
 
     # def _do_returnImplicit(self, bc_index, code_obj, frame):
     #     pass
+
+    def _do_add_slot(self, bc_index, code_obj, frame):
+        boxed_value = frame.pop()
+        boxed_slot_name = frame.pop()
+        boxed_obj = frame.pop()
+
+        slot_type = code_obj.get_bytecode(bc_index + 1)
+        if slot_type == SLOT_NORMAL:
+            result = boxed_obj.value.meta_add_slot(
+                slot_name=boxed_slot_name.value,
+                value=boxed_value.value,
+            )
+        elif slot_type == SLOT_PARENT:
+            result = boxed_obj.value.meta_add_parent(
+                slot_name=boxed_slot_name.value,
+                value=boxed_value.value,
+            )
+        else:
+            raise ValueError("Unknown slot type in ._do_add_slot()!")
+        
+        if not result:
+            raise ValueError("Couldn't add slot!")
+
+        # keep the receiver on the top of the stack
+        frame.push(boxed_obj)
+
+        return bc_index + 1
