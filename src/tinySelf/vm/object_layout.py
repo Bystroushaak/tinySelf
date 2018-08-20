@@ -43,7 +43,9 @@ class Object(object):
 
     def get_slot_from_parents(self, slot_name):
         """
+        Todo: optimize by compilation and version checking.
         """
+        # TODO: rewrite this nonsense
         for parent in self.map.parents:
             if slot_name in parent.map.slots:
                 return parent.get_slot(slot_name)
@@ -111,6 +113,10 @@ class Object(object):
 
         return is_slot_inserted
 
+    def meta_add_parent(self, parent_name, value):
+        self.map.parent_slots[parent_name] = value
+        return True
+
     def meta_set_parameters(self, parameters):
         self.map.parameters = parameters
 
@@ -124,11 +130,11 @@ class Object(object):
 
 class ObjectMap(object):
     def __init__(self):
-        # self.parent_slots = {}
         self.parameters = []
 
         self.slots = OrderedDict()
-        self.parents = []
+        self.parent_slots = OrderedDict()
+
         self.visited = False
 
         self.ast = None
