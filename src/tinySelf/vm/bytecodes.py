@@ -8,6 +8,7 @@ BYTECODE_PUSHLITERAL = 4
 # BYTECODE_POP = 5
 BYTECODE_RETURNTOP = 6
 # BYTECODE_RETURNIMPLICIT = 7
+BYTECODE_ADD_SLOT = 8
 
 LITERAL_TYPE_NIL = 0
 LITERAL_TYPE_INT = 1
@@ -17,6 +18,9 @@ LITERAL_TYPE_OBJ = 3
 SEND_TYPE_UNARY = 0
 SEND_TYPE_BINARY = 1
 SEND_TYPE_KEYWORD = 2
+
+SLOT_NORMAL = 0
+SLOT_PARENT = 1
 
 
 def disassemble(bytecodes):
@@ -67,6 +71,19 @@ def disassemble(bytecodes):
 
         elif bytecode == BYTECODE_RETURNTOP:
             disassembled.append(["RETURNTOP"])
+            continue
+
+        elif bytecode == BYTECODE_ADD_SLOT:
+            slot_type = bytecodes.pop(0)
+            slot_type_str = {
+                SLOT_NORMAL: "SLOT_NORMAL",
+                SLOT_PARENT: "SLOT_PARENT",
+            }[slot_type]
+
+            disassembled.append([
+                "ADD_SLOT",
+                "type:" + slot_type_str,
+            ])
             continue
 
         # elif bytecode == BYTECODE_RETURNIMPLICIT:
