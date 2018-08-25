@@ -54,8 +54,8 @@ class Interpreter(object):
                 bc_index = self._do_pushSelf(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_PUSHLITERAL:
                 bc_index = self._do_pushLiteral(bc_index, code_obj, frame)
-            # elif bytecode == BYTECODE_POP:
-            #     self._do_pop(bc_index, code_obj, frame)
+            elif bytecode == BYTECODE_POP:
+                self._do_pop(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_RETURNTOP:
                 bc_index = self._do_returnTop(bc_index, code_obj, frame)
             # elif bytecode == BYTECODE_RETURNIMPLICIT:
@@ -138,8 +138,10 @@ class Interpreter(object):
     def _do_pushLiteral(self, bc_index, code_obj, frame):
         pass
 
-    # def _do_pop(self, bc_index, code_obj, frame):
-    #     pass
+    def _do_pop(self, bc_index, code_obj, frame):
+        frame.pop()
+
+        return bc_index + 1
 
     def _do_returnTop(self, bc_index, code_obj, frame):
         pass

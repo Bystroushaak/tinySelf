@@ -5,7 +5,7 @@ BYTECODE_SEND = 0
 # BYTECODE_RESEND = 2
 BYTECODE_PUSHSELF = 3
 BYTECODE_PUSHLITERAL = 4
-# BYTECODE_POP = 5
+BYTECODE_POP = 5
 BYTECODE_RETURNTOP = 6
 # BYTECODE_RETURNIMPLICIT = 7
 BYTECODE_ADD_SLOT = 8
@@ -67,6 +67,10 @@ def disassemble(bytecodes):
                 "type:" + literal_type_str,
                 "index:" + str(literal_index)
             ])
+            continue
+
+        elif bytecode == BYTECODE_POP:
+            disassembled.append(["POP"])
             continue
 
         elif bytecode == BYTECODE_RETURNTOP:
