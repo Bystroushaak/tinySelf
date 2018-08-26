@@ -37,9 +37,10 @@ class ObjBox(LiteralBox):
 
 
 class CodeContext(object):
-    def __init__(self):
+    def __init__(self, scope_parent=None):
         self.bytecodes = []  # rewrite to bytearray or something like that?
         self.literals = []
+        self.scope_parent = scope_parent
 
     def add_literal(self, literal):
         assert isinstance(literal, LiteralBox)

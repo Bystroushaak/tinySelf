@@ -121,7 +121,7 @@ class Object(BaseBox):
             context.add_bytecode(SLOT_PARENT)
 
         if self.code:
-            new_context = CodeContext()
+            new_context = CodeContext(scope_parent=obj)
             obj.meta_set_code_context(new_context)
             for item in self.code:
                 item.compile(new_context)

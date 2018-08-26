@@ -21,12 +21,12 @@ class Frame(object):
 
 
 
-class ScopedFrame(Frame):
-    def __init__(self, parameters):
-        super(ScopedFrame, self).__init__()
+# class ScopedFrame(Frame):
+#     def __init__(self, parameters):
+#         super(ScopedFrame, self).__init__()
 
-        self.variables = {}
-        self.parameters = parameters
+#         self.variables = {}
+#         self.parameters = parameters
 
 
 
@@ -44,6 +44,8 @@ class Interpreter(object):
         while True:
             bytecode = code_obj.get_bytecode(bc_index)
 
+            # TODO: sort by the statistical probability of each bytecode
+            # TODO: test lookup list table
             if bytecode == BYTECODE_SEND:
                 bc_index = self._do_send(bc_index, code_obj, frame)
             # elif bytecode == BYTECODE_SELFSEND:
@@ -111,7 +113,8 @@ class Interpreter(object):
                 parameter_names=value_of_slot.map.parameters,
                 parameters=parameters_values
             )
-            sub_frame = ScopedFrame(parameters_dict)
+            sub_frame = Frame()
+            # TODO: parameters dict
             self.interpret(value_of_slot.map.code, sub_frame)
 
             return_value = sub_frame.pop_or_nil()
