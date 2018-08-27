@@ -12,6 +12,7 @@ class LiteralBox(BaseBox):
 class IntBox(LiteralBox):
     def __init__(self, value):
         self.value = value
+        self.literal_type = LITERAL_TYPE_INT
 
     def __str__(self):
         return str(self.value)
@@ -20,6 +21,7 @@ class IntBox(LiteralBox):
 class StrBox(LiteralBox):
     def __init__(self, value):
         self.value = value
+        self.literal_type = LITERAL_TYPE_STR
 
     def __str__(self):
         return self.value
@@ -28,6 +30,7 @@ class StrBox(LiteralBox):
 class ObjBox(LiteralBox):
     def __init__(self, obj):
         self.value = obj
+        self.literal_type = LITERAL_TYPE_OBJ
 
     def __str__(self):
         if self.value.map.ast is not None:

@@ -7,6 +7,9 @@ from tinySelf.vm.code_context import ObjBox
 from tinySelf.vm.object_layout import Object
 
 
+BOXED_NIL = ObjBox(PrimitiveNilObject())
+
+
 class Frame(object):
     def __init__(self):
         self.stack = []
@@ -21,7 +24,7 @@ class Frame(object):
         if self.stack:
             return self.pop()
 
-        return PrimitiveNilObject()
+        return BOXED_NIL
 
 
 
@@ -58,14 +61,14 @@ class Interpreter(object):
             #     self._do_resend(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_PUSHSELF:
                 bc_index = self._do_push_self(bc_index, code_obj, frame)
-            # elif bytecode == BYTECODE_PUSHLITERAL:
-            #     bc_index = self._do_push_literal(bc_index, code_obj, frame)
+            elif bytecode == BYTECODE_PUSHLITERAL:
+                bc_index = self._do_push_literal(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_POP:
                 self._do_pop(bc_index, code_obj, frame)
             # elif bytecode == BYTECODE_RETURNTOP:
-            #     bc_index = self._do_returnTop(bc_index, code_obj, frame)
+            #     bc_index = self._do_return_top(bc_index, code_obj, frame)
             # elif bytecode == BYTECODE_RETURNIMPLICIT:
-            #     self._do_returnImplicit(bc_index, code_obj, frame)
+            #     self._do_return_implicit(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_ADD_SLOT:
                 bc_index = self._do_add_slot(bc_index, code_obj, frame)
 
@@ -97,8 +100,8 @@ class Interpreter(object):
         message_type = code_obj.get_bytecode(bc_index + 1)
         number_of_parameters = code_obj.get_bytecode(bc_index + 2)
 
-        message = frame.pop()
-        message_name = message.value  # unpack from StrBox
+        boxed_message = frame.pop()
+        message_name = boxed_message.value  # unpack from StrBox
 
         parameters_values = []
         if message_type == SEND_TYPE_BINARY:
@@ -140,10 +143,12 @@ class Interpreter(object):
             return_value = sub_frame.pop_or_nil()
 
         elif value_of_slot.has_primitive_code:
-            return_value = value_of_slot.map.primitive_code(*parameters_values)
+            return_value = ObjBox(
+                value_of_slot.map.primitive_code(*parameters_values)
+            )
 
         else:
-            return_value = value_of_slot
+            return_value = ObjBox(value_of_slot)
 
         frame.push(return_value)
 
@@ -161,17 +166,27 @@ class Interpreter(object):
         return bc_index + 1
 
     def _do_push_literal(self, bc_index, code_obj, frame):
-        pass
+        literal_type = code_obj.get_bytecode(bc_index + 1)
+        literal_index = code_obj.get_bytecode(bc_index + 2)
+
+        if literal_type == LITERAL_TYPE_NIL:
+            literal = BOXED_NIL
+        else:
+            literal = code_obj.literals[literal_index]
+
+        frame.push(literal)
+
+        return bc_index + 2
 
     def _do_pop(self, bc_index, code_obj, frame):
         frame.pop()
 
         return bc_index + 1
 
-    # def _do_returnTop(self, bc_index, code_obj, frame):
+    # def _do_return_top(self, bc_index, code_obj, frame):
     #     pass
 
-    # def _do_returnImplicit(self, bc_index, code_obj, frame):
+    # def _do_return_implicit(self, bc_index, code_obj, frame):
     #     pass
 
     def _do_add_slot(self, bc_index, code_obj, frame):
