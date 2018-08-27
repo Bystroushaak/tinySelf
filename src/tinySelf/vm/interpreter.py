@@ -49,7 +49,7 @@ class Interpreter(object):
             bytecode = code_obj.get_bytecode(bc_index)
 
             # TODO: sort by the statistical probability of each bytecode
-            # TODO: test lookup list table
+            # TODO: test lookup list table (lookup by bytecode index)
             if bytecode == BYTECODE_SEND:
                 bc_index = self._do_send(bc_index, code_obj, frame)
             # elif bytecode == BYTECODE_SELFSEND:
@@ -57,13 +57,13 @@ class Interpreter(object):
             # elif bytecode == BYTECODE_RESEND:
             #     self._do_resend(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_PUSHSELF:
-                bc_index = self._do_pushSelf(bc_index, code_obj, frame)
-            elif bytecode == BYTECODE_PUSHLITERAL:
-                bc_index = self._do_pushLiteral(bc_index, code_obj, frame)
+                bc_index = self._do_push_self(bc_index, code_obj, frame)
+            # elif bytecode == BYTECODE_PUSHLITERAL:
+            #     bc_index = self._do_push_literal(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_POP:
                 self._do_pop(bc_index, code_obj, frame)
-            elif bytecode == BYTECODE_RETURNTOP:
-                bc_index = self._do_returnTop(bc_index, code_obj, frame)
+            # elif bytecode == BYTECODE_RETURNTOP:
+            #     bc_index = self._do_returnTop(bc_index, code_obj, frame)
             # elif bytecode == BYTECODE_RETURNIMPLICIT:
             #     self._do_returnImplicit(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_ADD_SLOT:
@@ -155,12 +155,12 @@ class Interpreter(object):
     # def _do_resend(self, bc_index, code_obj, frame):
     #     pass
 
-    def _do_pushSelf(self, bc_index, code_obj, frame):
+    def _do_push_self(self, bc_index, code_obj, frame):
         frame.push(ObjBox(code_obj.scope_parent))
 
         return bc_index + 1
 
-    def _do_pushLiteral(self, bc_index, code_obj, frame):
+    def _do_push_literal(self, bc_index, code_obj, frame):
         pass
 
     def _do_pop(self, bc_index, code_obj, frame):
@@ -168,8 +168,8 @@ class Interpreter(object):
 
         return bc_index + 1
 
-    def _do_returnTop(self, bc_index, code_obj, frame):
-        pass
+    # def _do_returnTop(self, bc_index, code_obj, frame):
+    #     pass
 
     # def _do_returnImplicit(self, bc_index, code_obj, frame):
     #     pass
