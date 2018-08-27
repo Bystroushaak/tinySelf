@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
-from bytecodes import *
-from primitives import PrimitiveNilObject
+from collections import OrderedDict
+
+from tinySelf.vm.bytecodes import *
+from tinySelf.vm.primitives import PrimitiveNilObject
+from tinySelf.vm.object_layout import Object
 
 
 class Frame(object):
@@ -70,11 +73,15 @@ class Interpreter(object):
     def _put_together_parameters(self, parameter_names, parameters):
         if len(parameter_names) < len(parameters):
             raise ValueError("Too many parameters!")
+        
+        if len(parameter_names) > len(parameters):
+            for _ in range(len(parameter_names) - len(parameters)):
+                parameters.append(PrimitiveNilObject())
 
-        return {
-            parameter_name: parameters.pop(0)
+        return [
+            (parameter_name, parameters.pop(0))
             for parameter_name in parameter_names
-        }
+        ]
 
     def _do_send(self, bc_index, code_obj, frame):
         """
@@ -105,18 +112,30 @@ class Interpreter(object):
         if value_of_slot is None:
             # TODO: parent lookup
             value_of_slot = obj.get_slot_from_parents(message_name)
-        else:
+
+        if value_of_slot is None:
             raise ValueError("TODO: not implemented yet (missing slot err)")
 
         if value_of_slot.has_code:
-            parameters_dict = self._put_together_parameters(
-                parameter_names=value_of_slot.map.parameters,
-                parameters=parameters_values
-            )
+            if parameters_values:
+                intermediate_obj = Object()
+                intermediate_obj.meta_add_parent("*", code_obj.scope_parent)
+
+                parameter_pairs = self._put_together_parameters(
+                    parameter_names=value_of_slot.map.parameters,
+                    parameters=parameters_values
+                )
+                for name, value in parameter_pairs:
+                    intermediate_obj.meta_add_slot(name, value)
+
+                obj.scope_parent = intermediate_obj
+            else:
+                obj.scope_parent = code_obj.scope_parent
+
             sub_frame = Frame()
-            # TODO: parameters dict
             self.interpret(value_of_slot.map.code, sub_frame)
 
+            obj.scope_parent = None
             return_value = sub_frame.pop_or_nil()
 
         elif value_of_slot.has_primitive_code:

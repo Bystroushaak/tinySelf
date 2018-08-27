@@ -134,6 +134,7 @@ class ObjectMap(object):
 
         self.slots = OrderedDict()
         self.parent_slots = OrderedDict()
+        self.scope_parent = None
 
         self.visited = False
 
