@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 from tinySelf.vm.bytecodes import *
 from tinySelf.vm.primitives import PrimitiveNilObject
+from tinySelf.vm.code_context import ObjBox
 from tinySelf.vm.object_layout import Object
 
 
@@ -155,7 +156,9 @@ class Interpreter(object):
     #     pass
 
     def _do_pushSelf(self, bc_index, code_obj, frame):
-        pass
+        frame.push(ObjBox(code_obj.scope_parent))
+
+        return bc_index + 1
 
     def _do_pushLiteral(self, bc_index, code_obj, frame):
         pass
