@@ -2,7 +2,11 @@
 from collections import OrderedDict
 
 from tinySelf.vm.bytecodes import *
+
 from tinySelf.vm.primitives import PrimitiveNilObject
+from tinySelf.vm.primitives import PrimitiveIntObject
+from tinySelf.vm.primitives import PrimitiveStrObject
+
 from tinySelf.vm.code_context import ObjBox
 from tinySelf.vm.object_layout import Object
 
@@ -10,6 +14,7 @@ from tinySelf.vm.object_layout import Object
 BOXED_NIL = ObjBox(PrimitiveNilObject())
 
 
+# TODO: benchmark and eventually rewrite to linked list
 class Frame(object):
     def __init__(self):
         self.stack = []
@@ -27,20 +32,6 @@ class Frame(object):
         return BOXED_NIL
 
 
-
-# class ScopedFrame(Frame):
-#     def __init__(self, parameters):
-#         super(ScopedFrame, self).__init__()
-
-#         self.variables = {}
-#         self.parameters = parameters
-
-
-
-# class SingleLevelScopedFrame(Frame):
-    # def __init__(self, parameters)
-
-
 class Interpreter(object):
     def __init__(self, universe):
         self.universe = universe
@@ -52,7 +43,6 @@ class Interpreter(object):
             bytecode = code_obj.get_bytecode(bc_index)
 
             # TODO: sort by the statistical probability of each bytecode
-            # TODO: test lookup list table (lookup by bytecode index)
             if bytecode == BYTECODE_SEND:
                 bc_index = self._do_send(bc_index, code_obj, frame)
             # elif bytecode == BYTECODE_SELFSEND:
@@ -65,8 +55,8 @@ class Interpreter(object):
                 bc_index = self._do_push_literal(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_POP:
                 self._do_pop(bc_index, code_obj, frame)
-            # elif bytecode == BYTECODE_RETURNTOP:
-            #     bc_index = self._do_return_top(bc_index, code_obj, frame)
+            elif bytecode == BYTECODE_RETURNTOP:
+                return frame.pop_or_nil()
             # elif bytecode == BYTECODE_RETURNIMPLICIT:
             #     self._do_return_implicit(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_ADD_SLOT:
@@ -77,7 +67,7 @@ class Interpreter(object):
     def _put_together_parameters(self, parameter_names, parameters):
         if len(parameter_names) < len(parameters):
             raise ValueError("Too many parameters!")
-        
+
         if len(parameter_names) > len(parameters):
             for _ in range(len(parameter_names) - len(parameters)):
                 parameters.append(PrimitiveNilObject())
@@ -137,7 +127,7 @@ class Interpreter(object):
                 obj.scope_parent = code_obj.scope_parent
 
             sub_frame = Frame()
-            self.interpret(value_of_slot.map.code, sub_frame)
+            self.interpret(value_of_slot.map.code_context, sub_frame)
 
             obj.scope_parent = None
             return_value = sub_frame.pop_or_nil()
@@ -165,16 +155,34 @@ class Interpreter(object):
 
         return bc_index + 1
 
+    def _literal_to_obj(self, literal, literal_type):
+        """
+        Convert literal to primitive object.
+        """
+        if literal_type == LITERAL_TYPE_INT:
+            obj = PrimitiveIntObject(literal.value)
+        elif literal_type == LITERAL_TYPE_STR:
+            obj = PrimitiveStrObject(literal.value)
+        elif literal_type == LITERAL_TYPE_OBJ:
+            obj = literal
+        else:
+            raise ValueError("Unknown literal type; %s" % literal_type)
+
+        return ObjBox(obj)
+
     def _do_push_literal(self, bc_index, code_obj, frame):
         literal_type = code_obj.get_bytecode(bc_index + 1)
         literal_index = code_obj.get_bytecode(bc_index + 2)
 
         if literal_type == LITERAL_TYPE_NIL:
-            literal = BOXED_NIL
+            literal_obj = BOXED_NIL
         else:
-            literal = code_obj.literals[literal_index]
+            literal_obj = self._literal_to_obj(
+                code_obj.literals[literal_index],
+                literal_type
+            )
 
-        frame.push(literal)
+        frame.push(literal_obj)
 
         return bc_index + 2
 
@@ -182,9 +190,6 @@ class Interpreter(object):
         frame.pop()
 
         return bc_index + 1
-
-    # def _do_return_top(self, bc_index, code_obj, frame):
-    #     pass
 
     # def _do_return_implicit(self, bc_index, code_obj, frame):
     #     pass
@@ -207,7 +212,7 @@ class Interpreter(object):
             )
         else:
             raise ValueError("Unknown slot type in ._do_add_slot()!")
-        
+
         if not result:
             raise ValueError("Couldn't add slot!")
 
