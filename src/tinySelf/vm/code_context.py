@@ -35,7 +35,7 @@ class ObjBox(LiteralBox):
     def __str__(self):
         if self.value.map.ast is not None:
             return self.value.map.ast.__str__()
-        
+
         return "No obj representation"
 
 
@@ -73,6 +73,12 @@ class CodeContext(object):
         self.add_bytecode(index)
 
         return index
+
+    def get_bytecode(self, index):
+        if index > len(self.bytecodes):
+            return BYTECODE_RETURNTOP
+
+        return self.bytecodes[index]
 
     def to_bytecode(self):
         out = '{\n"literals": {\n'
