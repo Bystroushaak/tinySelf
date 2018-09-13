@@ -77,6 +77,9 @@ class Interpreter(object):
             for parameter_name in parameter_names
         ]
 
+    def _parent_lookup(self, obj, message_name):
+        pass
+
     def _do_send(self, bc_index, code_obj, frame):
         """
         Args:
@@ -111,9 +114,15 @@ class Interpreter(object):
             raise ValueError("TODO: not implemented yet (missing slot err)")
 
         if value_of_slot.has_code:
+            # inject the universe to the unscoped parents
+            if code_obj.scope_parent is None:
+                scope_parent = self.universe
+            else:
+                scope_parent = code_obj.scope_parent
+
             if parameters_values:
                 intermediate_obj = Object()
-                intermediate_obj.meta_add_parent("*", code_obj.scope_parent)
+                intermediate_obj.meta_add_parent("*", scope_parent)
 
                 parameter_pairs = self._put_together_parameters(
                     parameter_names=value_of_slot.map.parameters,
@@ -122,9 +131,9 @@ class Interpreter(object):
                 for name, value in parameter_pairs:
                     intermediate_obj.meta_add_slot(name, value)
 
-                obj.scope_parent = intermediate_obj
+                obj.map.scope_parent = intermediate_obj
             else:
-                obj.scope_parent = code_obj.scope_parent
+                obj.map.scope_parent = scope_parent
 
             sub_frame = Frame()
             self.interpret(value_of_slot.map.code_context, sub_frame)
