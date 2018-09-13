@@ -108,3 +108,4 @@ papers/
 tSelf
 
 *.code-workspace
+.pytest_cache/*
