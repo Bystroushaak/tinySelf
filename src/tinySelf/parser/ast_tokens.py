@@ -94,7 +94,7 @@ class Object(BaseBox):
         if parents is not None:
             self.parents.update(parents)
 
-    def _add_slot(self, context, name, value):
+    def _add_slot_to_bytecode(self, context, name, value):
         boxed_name = String(name)
         boxed_name.compile(context)
 
@@ -113,11 +113,11 @@ class Object(BaseBox):
         context.add_bytecode(index)
 
         for name, value in self.slots.iteritems():
-            self._add_slot(context, name, value)
+            self._add_slot_to_bytecode(context, name, value)
             context.add_bytecode(SLOT_NORMAL)
 
         for name, value in self.parents.iteritems():
-            self._add_slot(context, name, value)
+            self._add_slot_to_bytecode(context, name, value)
             context.add_bytecode(SLOT_PARENT)
 
         if self.code:
