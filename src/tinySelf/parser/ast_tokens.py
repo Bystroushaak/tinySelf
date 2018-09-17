@@ -378,6 +378,13 @@ class Return(BaseBox):
 
 
 class AssignmentPrimitive(BaseBox):
+    def compile(self, context):
+        context.add_bytecode(BYTECODE_PUSHLITERAL)
+        context.add_bytecode(LITERAL_TYPE_ASSIGNMENT)
+        context.add_bytecode(0)
+
+        return context
+
     def __eq__(self, obj):
         return isinstance(obj, self.__class__)
 

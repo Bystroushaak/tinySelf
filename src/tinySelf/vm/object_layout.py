@@ -20,6 +20,10 @@ class Object(object):
     def has_primitive_code(self):
         return self.map.primitive_code is not None
 
+    @property
+    def is_assignment_primitive(self):
+        return False
+
     def clone(self):
         o = Object(obj_map=self.map)
         o.slots_references = self.slots_references[:]

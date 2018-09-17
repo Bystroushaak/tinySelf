@@ -6,12 +6,14 @@ from tinySelf.vm.bytecodes import *
 from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveStrObject
+from tinySelf.vm.primitives import AssignmentPrimitive
 
 from tinySelf.vm.code_context import ObjBox
 from tinySelf.vm.object_layout import Object
 
 
 BOXED_NIL = ObjBox(PrimitiveNilObject())
+BOXED_ASSIGNMENT_PRIMITIVE = ObjBox(AssignmentPrimitive())
 
 
 # TODO: benchmark and eventually rewrite to linked list
@@ -103,7 +105,8 @@ class Interpreter(object):
             for _ in range(number_of_parameters):
                 parameters_values.append(frame.pop())
 
-        obj = frame.pop()
+        obj_box = frame.pop()
+        obj = obj_box.value
 
         value_of_slot = obj.get_slot(message_name)
         if value_of_slot is None:
@@ -114,7 +117,7 @@ class Interpreter(object):
             raise ValueError("TODO: not implemented yet (missing slot err)")
 
         if value_of_slot.has_code:
-            # inject the universe to the unscoped parents
+            # inject the universe to the objects without scope parents
             if code_obj.scope_parent is None:
                 scope_parent = self.universe
             else:
@@ -145,6 +148,16 @@ class Interpreter(object):
             return_value = ObjBox(
                 value_of_slot.map.primitive_code(*parameters_values)
             )
+
+        elif value_of_slot.is_assignment_primitive:
+            if len(parameters_values) != 1:
+                raise ValueError("Too many values to set!")
+
+            assert len(message_name) > 1
+            slot_name = message_name[:-1]
+
+            obj.set_slot(slot_name, parameters_values[0])
+            return bc_index + 2
 
         else:
             return_value = ObjBox(value_of_slot)
@@ -185,6 +198,8 @@ class Interpreter(object):
 
         if literal_type == LITERAL_TYPE_NIL:
             literal_obj = BOXED_NIL
+        elif literal_type == LITERAL_TYPE_ASSIGNMENT:
+            literal_obj = BOXED_ASSIGNMENT_PRIMITIVE
         else:
             literal_obj = self._literal_to_obj(
                 code_obj.literals[literal_index],

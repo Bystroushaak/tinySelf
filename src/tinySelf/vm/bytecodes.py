@@ -14,6 +14,7 @@ LITERAL_TYPE_NIL = 0
 LITERAL_TYPE_INT = 1
 LITERAL_TYPE_STR = 2
 LITERAL_TYPE_OBJ = 3
+LITERAL_TYPE_ASSIGNMENT = 4
 
 SEND_TYPE_UNARY = 0
 SEND_TYPE_BINARY = 1
@@ -60,6 +61,7 @@ def disassemble(bytecodes):
                 LITERAL_TYPE_INT: "INT",
                 LITERAL_TYPE_STR: "STR",
                 LITERAL_TYPE_OBJ: "OBJ",
+                LITERAL_TYPE_ASSIGNMENT: "ASSIGNMENT",
             }[literal_type]
 
             disassembled.append([

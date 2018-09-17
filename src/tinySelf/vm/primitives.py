@@ -48,11 +48,22 @@ class PrimitiveNilObjectSingleton(Object):
     def __init__(self):
         super(PrimitiveNilObjectSingleton, self).__init__()
 
-_NIL_OBJ = PrimitiveNilObjectSingleton()
 
+_NIL_OBJ = PrimitiveNilObjectSingleton()
 def PrimitiveNilObject(*args, **kwargs):
     return _NIL_OBJ
 
+
+class AssignmentPrimitiveSingleton(Object):
+    @property
+    def is_assignment_primitive(self):
+        return True
+
+
+_ASSIGNMENT_PRIMITIVE_OBJ = AssignmentPrimitiveSingleton()
+
+def AssignmentPrimitive(*args, **kwargs):
+    return _ASSIGNMENT_PRIMITIVE_OBJ
 
 
 # def _primitive_create_mirror(obj):
@@ -64,16 +75,12 @@ def PrimitiveNilObject(*args, **kwargs):
 #     mirror_obj.meta_add_slot("mirroredObj", obj)
 
 
-def _primitive_number():
-    pass
-
-
 
 def get_primitives():
     primitives = Object()
     primitives.meta_add_slot("primitiveInt", PrimitiveIntObject)
     primitives.meta_add_slot("primitiveStr", PrimitiveStrObject)
-    primitives.meta_add_slot("primitiveNil", PrimitiveNilObject)
+    primitives.meta_add_slot("primitiveNil", PrimitiveNilObject())
 
     # _add_primitive(primitives, "mirrorOn:", _primitive_create_mirror, ["obj"])
 
