@@ -5,6 +5,12 @@ from tinySelf.vm.interpreter import Frame
 from tinySelf.vm.interpreter import BOXED_NIL
 from tinySelf.vm.interpreter import Interpreter
 
+from tinySelf.vm.code_context import CodeContext
+
+from tinySelf.vm.primitives import get_primitives
+
+from tinySelf.parser import lex_and_parse
+
 
 def test_frame():
     f = Frame()
@@ -24,4 +30,16 @@ def test_frame():
 
 
 def test_interpreter():
-    pass
+    ast = lex_and_parse("""(|
+        a <- 1.
+        print: b = (||
+            (a + 1) print
+        )
+    |) print: 1""")
+
+    context = ast[0].compile(CodeContext())
+
+    frame = Frame()
+    interpreter = Interpreter(universe=get_primitives())
+
+    interpreter.interpret(frame)
