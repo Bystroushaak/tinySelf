@@ -77,6 +77,12 @@ def AssignmentPrimitive(*args, **kwargs):
 
 
 def get_primitives():
+    """
+    Return object with primitive functions mapped to its slots.
+
+    Returns:
+        obj: Instance of tinySelf's Object.
+    """
     primitives = Object()
     primitives.meta_add_slot("primitiveInt", PrimitiveIntObject)
     primitives.meta_add_slot("primitiveStr", PrimitiveStrObject)
