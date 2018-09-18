@@ -147,9 +147,17 @@ class ObjectMap(object):
         self.code_context = None
         self.primitive_code = None
 
-    def clone_map(self):
+    def clone(self):
         new_map = ObjectMap()
+
         new_map.slots = self.slots.copy()
+        new_map.parameters = self.parameters[:]
+        new_map.parent_slots = self.parent_slots.copy()
+        new_map.scope_parent = self.scope_parent
+        new_map.ast = self.ast
+        new_map.code_context = self.code_context  # TODO: deep copy / recompile
+        new_map.primitive_code = self.primitive_code
+
         return new_map
 
     # meta-modifications
