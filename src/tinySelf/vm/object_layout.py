@@ -50,7 +50,7 @@ class Object(object):
         Todo: optimize by compilation and version checking.
         """
         # TODO: rewrite this nonsense
-        for parent in self.map.parents:
+        for parent in self.map.parent_slots:
             if slot_name in parent.map.slots:
                 return parent.get_slot(slot_name)
 
