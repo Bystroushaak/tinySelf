@@ -3,6 +3,7 @@ from rply.token import BaseBox
 from rpython.rlib.types import bytearray
 
 from bytecodes import *
+from object_layout import Object
 
 
 class LiteralBox(BaseBox):
@@ -29,6 +30,8 @@ class StrBox(LiteralBox):
 
 class ObjBox(LiteralBox):
     def __init__(self, obj):
+        assert isinstance(obj, Object)
+
         self.value = obj
         self.literal_type = LITERAL_TYPE_OBJ
 
