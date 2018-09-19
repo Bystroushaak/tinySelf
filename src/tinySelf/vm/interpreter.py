@@ -123,15 +123,15 @@ class Interpreter(object):
         message_type = code_obj.get_bytecode(bc_index + 1)
         number_of_parameters = code_obj.get_bytecode(bc_index + 2)
 
-        boxed_message = frame.pop()
-        message_name = boxed_message.value  # unpack from StrBox
-
         parameters_values = []
         if message_type == SEND_TYPE_BINARY:
             parameters_values = [frame.pop()]
         elif message_type == SEND_TYPE_KEYWORD:
             for _ in range(number_of_parameters):
                 parameters_values.append(frame.pop())
+
+        boxed_message = frame.pop()
+        message_name = boxed_message.value  # unpack from StrBox
 
         obj_box = frame.pop()
         obj = obj_box.value
@@ -235,15 +235,17 @@ class Interpreter(object):
         boxed_slot_name = frame.pop()
         boxed_obj = frame.pop()
 
+        slot_name_prim_str = boxed_slot_name.value
+
         slot_type = code_obj.get_bytecode(bc_index + 1)
         if slot_type == SLOT_NORMAL:
             result = boxed_obj.value.meta_add_slot(
-                slot_name=boxed_slot_name.value,
+                slot_name=slot_name_prim_str.value,
                 value=boxed_value.value,
             )
         elif slot_type == SLOT_PARENT:
             result = boxed_obj.value.meta_add_parent(
-                slot_name=boxed_slot_name.value,
+                slot_name=slot_name_prim_str.value,
                 value=boxed_value.value,
             )
         else:
