@@ -42,4 +42,4 @@ def test_interpreter():
     frame = Frame()
     interpreter = Interpreter(universe=get_primitives())
 
-    interpreter.interpret(frame)
+    interpreter.interpret(context, frame)
