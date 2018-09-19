@@ -30,7 +30,7 @@ class Object(object):
         return o
 
     def set_slot(self, slot_name, value):
-        slot_index = self.map.get(slot_name, None)
+        slot_index = self.map.slots.get(slot_name, None)
 
         if slot_index is None:
             return False
@@ -39,7 +39,7 @@ class Object(object):
         return True
 
     def get_slot(self, slot_name):
-        slot_index = self.map.get(slot_name, None)
+        slot_index = self.map.slots.get(slot_name, None)
         if slot_index is not None:
             return self.slots_references[slot_index]
 
