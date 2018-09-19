@@ -82,6 +82,34 @@ class Interpreter(object):
     def _parent_lookup(self, obj, message_name):
         pass
 
+    def _interpret_obj_with_code(self, code_obj, obj, value_of_slot, parameters_values):
+        # inject the universe to the objects without scope parents
+        if code_obj.scope_parent is None:
+            scope_parent = self.universe
+        else:
+            scope_parent = code_obj.scope_parent
+
+        if parameters_values:
+            intermediate_obj = Object()
+            intermediate_obj.meta_add_parent("*", scope_parent)
+
+            parameter_pairs = self._put_together_parameters(
+                parameter_names=value_of_slot.map.parameters,
+                parameters=parameters_values
+            )
+            for name, value in parameter_pairs:
+                intermediate_obj.meta_add_slot(name, value)
+
+            obj.map.scope_parent = intermediate_obj
+        else:
+            obj.map.scope_parent = scope_parent
+
+        sub_frame = Frame()
+        ret_val = self.interpret(value_of_slot.map.code_context, sub_frame)
+
+        value_of_slot.map.scope_parent = None
+        return ret_val
+
     def _do_send(self, bc_index, code_obj, frame):
         """
         Args:
@@ -117,32 +145,12 @@ class Interpreter(object):
             raise ValueError("TODO: not implemented yet (missing slot err)")
 
         if value_of_slot.has_code:
-            # inject the universe to the objects without scope parents
-            if code_obj.scope_parent is None:
-                scope_parent = self.universe
-            else:
-                scope_parent = code_obj.scope_parent
-
-            if parameters_values:
-                intermediate_obj = Object()
-                intermediate_obj.meta_add_parent("*", scope_parent)
-
-                parameter_pairs = self._put_together_parameters(
-                    parameter_names=value_of_slot.map.parameters,
-                    parameters=parameters_values
-                )
-                for name, value in parameter_pairs:
-                    intermediate_obj.meta_add_slot(name, value)
-
-                obj.map.scope_parent = intermediate_obj
-            else:
-                obj.map.scope_parent = scope_parent
-
-            sub_frame = Frame()
-            self.interpret(value_of_slot.map.code_context, sub_frame)
-
-            obj.scope_parent = None
-            return_value = sub_frame.pop_or_nil()
+            return_value = self._interpret_obj_with_code(
+                code_obj,
+                obj,
+                value_of_slot,
+                parameters_values,
+            )
 
         elif value_of_slot.has_primitive_code:
             return_value = ObjBox(
@@ -156,7 +164,11 @@ class Interpreter(object):
             assert len(message_name) > 1
             slot_name = message_name[:-1]
 
-            obj.set_slot(slot_name, parameters_values[0])
+            ret_val = obj.set_slot(slot_name, parameters_values[0])
+
+            if ret_val is None:
+                raise ValueError("wtf? how can you set slot that isn't there?")
+
             return bc_index + 2
 
         else:
@@ -177,16 +189,16 @@ class Interpreter(object):
 
         return bc_index + 1
 
-    def _literal_to_obj(self, literal, literal_type):
+    def _literal_to_obj(self, boxed_literal, literal_type):
         """
         Convert literal to primitive object.
         """
         if literal_type == LITERAL_TYPE_INT:
-            obj = PrimitiveIntObject(literal.value)
+            obj = PrimitiveIntObject(boxed_literal.value)
         elif literal_type == LITERAL_TYPE_STR:
-            obj = PrimitiveStrObject(literal.value)
+            obj = PrimitiveStrObject(boxed_literal.value)
         elif literal_type == LITERAL_TYPE_OBJ:
-            obj = literal
+            return boxed_literal
         else:
             raise ValueError("Unknown literal type; %s" % literal_type)
 
