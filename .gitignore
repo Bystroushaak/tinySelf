@@ -109,3 +109,4 @@ tSelf
 
 *.code-workspace
 .pytest_cache/*
+.vscode/*
