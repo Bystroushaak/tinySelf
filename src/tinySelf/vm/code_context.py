@@ -2,8 +2,8 @@
 from rply.token import BaseBox
 from rpython.rlib.types import bytearray
 
-from bytecodes import *
-from object_layout import Object
+from tinySelf.vm.bytecodes import *
+from tinySelf.vm.object_layout import Object
 
 
 class LiteralBox(BaseBox):
