@@ -45,21 +45,36 @@ class Object(object):
 
         return None
 
-    def get_slot_from_parents(self, slot_name):
-        """
-        Todo: optimize by compilation and version checking.
-        """
-        # TODO: rewrite this nonsense
-        for parent in self.map.parent_slots:
-            if slot_name in parent.map.slots:
-                return parent.get_slot(slot_name)
+    def parent_lookup(self, slot_name, visited_maps=None):
+        first_level_call = False
+        if visited_maps is None:
+            first_level_call = True
+            visited_maps = set()
 
-            result = parent.get_slot_from_parents(slot_name)
-            if result is None:
+        def unvisit():
+            if not first_level_call:
+                return
+
+            for obj_map in visited_maps:
+                obj_map.visited = False
+
+        for parent in self.map.parent_slots.itervalues():
+            if parent.map.visited:
                 continue
 
-            return result
+            parent.map.visited = True
+            visited_maps.add(parent.map)
 
+            if slot_name in parent.map.slots:
+                unvisit()
+                return parent.get_slot(slot_name)
+
+            result = parent.parent_lookup(slot_name, visited_maps)
+            if result is not None:
+                unvisit()
+                return result
+
+        unvisit()
         return None
 
     # meta operations
@@ -95,25 +110,15 @@ class Object(object):
 
         self.map = new_map
 
-    def meta_insert_slot(self, index, slot_name, value):  # TODO: support auto Nil value
+    def meta_insert_slot(self, slot_index, slot_name, value):  # TODO: support auto Nil value
         if slot_name in self.map.slots:
             self.set_slot(slot_name, value)
 
         new_map = self.map.clone()
-        is_slot_inserted = new_map.insert_slot(index, slot_name)
+        new_map.insert_slot(slot_index, slot_name, len(self.slots_references))
+        self.map = new_map
 
-        if is_slot_inserted:
-            new_slots_references = (len(self.slots_references) + 1) * [None]
-            for i in range(len(self.slots_references)):
-                if i == index:
-                    new_slots_references[i] = value
-                elif i < index:
-                    new_slots_references[i] = self.slots_references[i]
-                elif i > index:
-                    new_slots_references[i + 1] = self.slots_references[i]
-
-            self.slots_references = new_slots_references
-            self.map = new_map
+        self.slots_references.append(value)
 
     def meta_add_parent(self, parent_name, value):
         assert isinstance(value, Object)
@@ -192,7 +197,7 @@ class ObjectMap(object):
         assert isinstance(value, Object)
 
         self.parent_slots[parent_name] = value
-    
+
     def remove_parent(self, parent_name):
         if parent_name not in self.parent_slots:
             return
