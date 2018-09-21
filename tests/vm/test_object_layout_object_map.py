@@ -48,11 +48,13 @@ def test_insert_slot():
 
 
 def test_add_parent():
+    val = Object()
+
     om = ObjectMap()
-    om.add_parent("test", Object())
+    om.add_parent("test", val)
 
     assert "test" in om.parent_slots
-    om.parent_slots["test"] == 1
+    assert om.parent_slots["test"] == val
 
 
 def test_remove_parent():
