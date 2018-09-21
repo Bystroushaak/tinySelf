@@ -1,0 +1,132 @@
+# -*- coding: utf-8 -*-
+from tinySelf.vm.object_layout import Object
+from tinySelf.vm.primitives import PrimitiveStrObject
+
+
+def test_meta_add_slot():
+    val = PrimitiveStrObject("xe")
+
+    o = Object()
+    assert not o.slots_references
+
+    o.meta_add_slot("test", val)
+    assert o.slots_references[0] == val
+
+
+def test_set_slot():
+    o = Object()
+
+    o.meta_add_slot("test", PrimitiveStrObject("xe"))
+    assert o.set_slot("test", PrimitiveStrObject("xax"))
+    assert not o.set_slot("bad_slot", PrimitiveStrObject("x"))
+
+
+def test_get_slot():
+    o = Object()
+
+    val = PrimitiveStrObject("xe")
+    o.meta_add_slot("test", val)
+    assert o.get_slot("test") is val
+
+
+def test_get_slot_missing():
+    assert Object().get_slot("crap") is None
+
+
+def test_meta_remove_slot():
+    o = Object()
+    assert not o.slots_references
+
+    o.meta_add_slot("test", Object())
+    assert o.slots_references
+    assert "test" in o.map.slots
+
+    o.meta_remove_slot("test")
+    assert not o.slots_references
+    assert "test" not in o.map.slots
+
+
+def test_meta_remove_missing_slot():
+    o = Object()
+
+    o.meta_add_slot("test", Object())
+    assert not o.meta_remove_slot("x")
+
+
+def test_meta_remove_slot_shift_map_pointers():
+    first = PrimitiveStrObject("first")
+    second = PrimitiveStrObject("second")
+
+    o = Object()
+    assert not o.slots_references
+
+    o.meta_add_slot("first", first)
+    o.meta_add_slot("second", second)
+
+    assert o.get_slot("first") is first
+    assert o.get_slot("second") is second
+
+    o.meta_remove_slot("first")
+
+    assert len(o.slots_references) == 1
+    assert len(o.map.slots) == 1
+    assert o.map.slots["second"] == 0
+
+    assert o.get_slot("first") is None
+    assert o.get_slot("second") == second
+
+
+def test_meta_insert_slot():
+    first = PrimitiveStrObject("first")
+    second = PrimitiveStrObject("second")
+    third = PrimitiveStrObject("third")
+
+    o = Object()
+    assert not o.slots_references
+
+    o.meta_add_slot("first", first)
+    o.meta_add_slot("third", third)
+
+    assert o.get_slot("first") is first
+    assert o.get_slot("third") is third
+
+    o.meta_insert_slot(1, "second", second)
+    assert o.map.slots.keys() == ["first", "second", "third"]
+
+    # make sure that objects didn't shifted
+    assert o.get_slot("first") is first
+    assert o.get_slot("second") is second
+    assert o.get_slot("third") is third
+
+
+def test_clone():
+    o = Object()
+    o.meta_add_slot("test", Object())
+
+    # clones share same map
+    clone = o.clone()
+    assert clone.map is o.map
+    assert clone.slots_references == o.slots_references
+
+    # clones with updated slot value share same map
+    clone.set_slot("test", Object())
+    assert clone.map is o.map
+    assert clone.slots_references != o.slots_references
+
+    # clones with different structure don't share maps
+    clone.meta_add_slot("another", Object())
+    assert clone.map is not o.map
+    assert clone.slots_references != o.slots_references
+
+
+def test_meta_add_parent():
+    val = Object()
+
+    o = Object()
+    o.meta_add_parent("p*", val)
+
+    assert "p*" in o.map.parent_slots
+
+
+def test_get_slot_from_parents():
+    raise NotImplementedError()
