@@ -45,17 +45,17 @@ class Object(object):
 
         return None
 
-    def parent_lookup(self, slot_name, visited_maps=None):
+    def parent_lookup(self, slot_name, _visited_maps=None):
         first_level_call = False
-        if visited_maps is None:
+        if _visited_maps is None:
             first_level_call = True
-            visited_maps = set()
+            _visited_maps = set()
 
         def unvisit():
             if not first_level_call:
                 return
 
-            for obj_map in visited_maps:
+            for obj_map in _visited_maps:
                 obj_map.visited = False
 
         for parent in self.map.parent_slots.itervalues():
@@ -63,13 +63,13 @@ class Object(object):
                 continue
 
             parent.map.visited = True
-            visited_maps.add(parent.map)
+            _visited_maps.add(parent.map)
 
             if slot_name in parent.map.slots:
                 unvisit()
                 return parent.get_slot(slot_name)
 
-            result = parent.parent_lookup(slot_name, visited_maps)
+            result = parent.parent_lookup(slot_name, _visited_maps)
             if result is not None:
                 unvisit()
                 return result
