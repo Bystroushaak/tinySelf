@@ -128,5 +128,49 @@ def test_meta_add_parent():
     assert "p*" in o.map.parent_slots
 
 
-def test_get_slot_from_parents():
-    raise NotImplementedError()
+def test_get_slot_from_one_parent():
+    val = PrimitiveStrObject("it is xex!")
+
+    p = Object()
+    p.meta_add_slot("xex", val)
+
+    o = Object()
+    o.meta_add_parent("p", p)
+
+    assert o.get_slot("xex") is None
+    assert o.parent_lookup("xex") is val
+
+
+def test_get_slot_from_several_parents():
+    """
+    o.parents
+    |
+    |-- p <-- cycle, yay --,
+    |   |-- x -> Object()  |
+    |   |-- y -> Object()  |
+    |   `-- z -> p --------'
+    |
+    `-- p3
+        `-- x -> p2
+                 |
+                 `-- xex
+    """
+    val = PrimitiveStrObject("it is xex!")
+
+    p = Object()
+    p.meta_add_slot("x", Object())
+    p.meta_add_slot("y", Object())
+    p.meta_add_slot("z", p)  # cycle, yay!
+
+    p2 = Object()
+    p.meta_add_slot("xex", val)
+
+    p3 = Object()
+    p.meta_add_slot("x", p2)
+
+    o = Object()
+    o.meta_add_parent("p", p)
+    o.meta_add_parent("p3", p3)
+
+    assert o.get_slot("xex") is None
+    assert o.parent_lookup("xex") is val
