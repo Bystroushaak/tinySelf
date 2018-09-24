@@ -77,6 +77,14 @@ class Object(object):
         unvisit()
         return None
 
+    def slot_lookup(self, slot_name):
+        slot_index = self.map.slots.get(slot_name, None)
+
+        if slot_index is not None:
+            return self.slots_references[slot_index]
+
+        return self.parent_lookup(slot_name)
+
     # meta operations
     def meta_add_slot(self, slot_name, value):  # TODO: support auto Nil value
         assert isinstance(value, Object)

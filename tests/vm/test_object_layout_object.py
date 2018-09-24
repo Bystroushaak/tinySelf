@@ -174,3 +174,19 @@ def test_get_slot_from_several_parents():
 
     assert o.get_slot("xex") is None
     assert o.parent_lookup("xex") is val
+
+
+def slot_lookup():
+    val = PrimitiveStrObject("it is xex!")
+    flat = PrimitiveStrObject("it is flat")
+
+    p = Object()
+    p.meta_add_slot("xex", val)
+
+    o = Object()
+    o.meta_add_parent("p", p)
+    o.meta_add_parent("p", flat)
+
+    assert o.get_slot("xex") is None
+    assert o.slot_lookup("xex") is val
+    assert o.slot_lookup("flat") is flat
