@@ -29,6 +29,12 @@ class PrimitiveIntObject(Object):
 
         return PrimitiveIntObject(self.value + obj.value)
 
+    def __eq__(self, obj):
+        if not hasattr(obj, "value"):
+            return False
+
+        return self.value == obj.value
+
 
 class PrimitiveStrObject(Object):
     def __init__(self, value, obj_map=None):
