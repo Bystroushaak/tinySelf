@@ -8,12 +8,11 @@ from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveStrObject
 from tinySelf.vm.primitives import AssignmentPrimitive
 
-from tinySelf.vm.code_context import ObjBox
 from tinySelf.vm.object_layout import Object
 
 
-BOXED_NIL = ObjBox(PrimitiveNilObject())
-BOXED_ASSIGNMENT_PRIMITIVE = ObjBox(AssignmentPrimitive())
+BOXED_NIL = PrimitiveNilObject()
+BOXED_ASSIGNMENT_PRIMITIVE = AssignmentPrimitive()
 
 
 # TODO: benchmark and eventually rewrite to linked list
@@ -22,6 +21,8 @@ class Frame(object):
         self.stack = []
 
     def push(self, item):
+        assert isinstance(item, Object)
+
         self.stack.append(item)
 
     def pop(self):
@@ -133,8 +134,7 @@ class Interpreter(object):
         boxed_message = frame.pop()
         message_name = boxed_message.value  # unpack from StrBox
 
-        obj_box = frame.pop()
-        obj = obj_box.value
+        obj = frame.pop()
 
         value_of_slot = obj.slot_lookup(message_name)
         if value_of_slot is None:
@@ -149,9 +149,7 @@ class Interpreter(object):
             )
 
         elif value_of_slot.has_primitive_code:
-            return_value = ObjBox(
-                value_of_slot.map.primitive_code(*parameters_values)
-            )
+            return_value = value_of_slot.map.primitive_code(*parameters_values)
 
         elif value_of_slot.is_assignment_primitive:
             if len(parameters_values) != 1:
@@ -168,7 +166,7 @@ class Interpreter(object):
             return bc_index + 2
 
         else:
-            return_value = ObjBox(value_of_slot)
+            return_value = value_of_slot
 
         frame.push(return_value)
 
@@ -181,7 +179,7 @@ class Interpreter(object):
     #     pass
 
     def _do_push_self(self, bc_index, code_obj, frame):
-        frame.push(ObjBox(code_obj.scope_parent))
+        frame.push(code_obj.scope_parent)
 
         return bc_index + 1
 
@@ -190,31 +188,29 @@ class Interpreter(object):
         Convert literal to primitive object.
         """
         if literal_type == LITERAL_TYPE_INT:
-            obj = PrimitiveIntObject(boxed_literal.value)
+            return PrimitiveIntObject(boxed_literal.value)
         elif literal_type == LITERAL_TYPE_STR:
-            obj = PrimitiveStrObject(boxed_literal.value)
+            return PrimitiveStrObject(boxed_literal.value)
         elif literal_type == LITERAL_TYPE_OBJ:
-            return boxed_literal
+            return boxed_literal.value
         else:
             raise ValueError("Unknown literal type; %s" % literal_type)
-
-        return ObjBox(obj)
 
     def _do_push_literal(self, bc_index, code_obj, frame):
         literal_type = code_obj.get_bytecode(bc_index + 1)
         literal_index = code_obj.get_bytecode(bc_index + 2)
 
         if literal_type == LITERAL_TYPE_NIL:
-            literal_obj = BOXED_NIL
+            obj = BOXED_NIL
         elif literal_type == LITERAL_TYPE_ASSIGNMENT:
-            literal_obj = BOXED_ASSIGNMENT_PRIMITIVE
+            obj = BOXED_ASSIGNMENT_PRIMITIVE
         else:
-            literal_obj = self._literal_to_obj(
+            obj = self._literal_to_obj(
                 code_obj.literals[literal_index],
                 literal_type
             )
 
-        frame.push(literal_obj)
+        frame.push(obj)
 
         return bc_index + 2
 
@@ -227,27 +223,21 @@ class Interpreter(object):
     #     pass
 
     def _do_add_slot(self, bc_index, code_obj, frame):
-        boxed_value = frame.pop()
+        value = frame.pop()
         boxed_slot_name = frame.pop()
-        boxed_obj = frame.pop()
+        obj = frame.pop()
 
-        slot_name_prim_str = boxed_slot_name.value
+        slot_name = boxed_slot_name.value
 
         slot_type = code_obj.get_bytecode(bc_index + 1)
         if slot_type == SLOT_NORMAL:
-            result = boxed_obj.value.meta_add_slot(
-                slot_name=slot_name_prim_str.value,
-                value=boxed_value.value,
-            )
+            obj.meta_add_slot(slot_name=slot_name, value=value)
         elif slot_type == SLOT_PARENT:
-            result = boxed_obj.value.meta_add_parent(
-                slot_name=slot_name_prim_str.value,
-                value=boxed_value.value,
-            )
+            obj.meta_add_parent(slot_name=slot_name, value=value)
         else:
             raise ValueError("Unknown slot type in ._do_add_slot()!")
 
         # keep the receiver on the top of the stack
-        frame.push(boxed_obj)
+        frame.push(obj)
 
         return bc_index + 1

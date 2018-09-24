@@ -8,24 +8,25 @@ from tinySelf.vm.interpreter import Interpreter
 from tinySelf.vm.code_context import CodeContext
 
 from tinySelf.vm.primitives import get_primitives
+from tinySelf.vm.primitives import PrimitiveIntObject
 
 from tinySelf.parser import lex_and_parse
 
 
 def test_frame():
     f = Frame()
-    f.push(1)
-    f.push(2)
+    f.push(PrimitiveIntObject(1))
+    f.push(PrimitiveIntObject(2))
 
-    assert f.pop() == 2
-    assert f.pop() == 1
+    assert f.pop() == PrimitiveIntObject(2)
+    assert f.pop() == PrimitiveIntObject(1)
 
     with raises(IndexError):
         f.pop()
 
     assert f.pop_or_nil() == BOXED_NIL
-    f.push(1)
-    assert f.pop_or_nil() == 1
+    f.push(PrimitiveIntObject(1))
+    assert f.pop_or_nil() == PrimitiveIntObject(1)
     assert f.pop_or_nil() == BOXED_NIL
 
 
