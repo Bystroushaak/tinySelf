@@ -136,11 +136,7 @@ class Interpreter(object):
         obj_box = frame.pop()
         obj = obj_box.value
 
-        value_of_slot = obj.get_slot(message_name)
-        if value_of_slot is None:
-            # TODO: parent lookup
-            value_of_slot = obj.get_slot_from_parents(message_name)
-
+        value_of_slot = obj.slot_lookup(message_name)
         if value_of_slot is None:
             raise ValueError("TODO: not implemented yet (missing slot err)")
 
@@ -250,9 +246,6 @@ class Interpreter(object):
             )
         else:
             raise ValueError("Unknown slot type in ._do_add_slot()!")
-
-        if not result:
-            raise ValueError("Couldn't add slot!")
 
         # keep the receiver on the top of the stack
         frame.push(boxed_obj)

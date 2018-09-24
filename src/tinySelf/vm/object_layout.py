@@ -78,6 +78,8 @@ class Object(object):
         return None
 
     def slot_lookup(self, slot_name):
+        assert isinstance(slot_name, str)
+
         slot_index = self.map.slots.get(slot_name, None)
 
         if slot_index is not None:
