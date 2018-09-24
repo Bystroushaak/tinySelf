@@ -84,8 +84,8 @@ def get_primitives():
         obj: Instance of tinySelf's Object.
     """
     primitives = Object()
-    primitives.meta_add_slot("primitiveInt", PrimitiveIntObject)
-    primitives.meta_add_slot("primitiveStr", PrimitiveStrObject)
+    _add_primitive_fn(primitives, "primitiveInt", PrimitiveIntObject, "literal")
+    _add_primitive_fn(primitives, "primitiveStr", PrimitiveStrObject, "literal")
     primitives.meta_add_slot("primitiveNil", PrimitiveNilObject())
 
     # _add_primitive(primitives, "mirrorOn:", _primitive_create_mirror, ["obj"])
