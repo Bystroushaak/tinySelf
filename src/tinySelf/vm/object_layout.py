@@ -144,6 +144,9 @@ class Object(object):
     def meta_set_code_context(self, code_context):
         self.map.code_context = code_context
 
+    def __str__(self):
+        return "Object(%s)" % ", ".join(self.map.slots.keys())
+
 
 class ObjectMap(object):
     def __init__(self):

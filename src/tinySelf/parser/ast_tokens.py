@@ -390,3 +390,6 @@ class AssignmentPrimitive(BaseBox):
 
     def __ne__(self, obj):
         return not self.__eq__(obj)
+
+    def __str__(self):
+        return "AssignmentPrimitive()"

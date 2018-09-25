@@ -35,6 +35,9 @@ class PrimitiveIntObject(Object):
 
         return self.value == obj.value
 
+    def __str__(self):
+        return "PrimitiveIntObject(%d)" % self.value
+
 
 class PrimitiveStrObject(Object):
     def __init__(self, value, obj_map=None):
@@ -49,10 +52,16 @@ class PrimitiveStrObject(Object):
 
         return PrimitiveStrObject(self.value + obj.value)
 
+    def __str__(self):
+        return "PrimitiveStrObject(%s)" % self.value
+
 
 class PrimitiveNilObjectSingleton(Object):
     def __init__(self):
         super(PrimitiveNilObjectSingleton, self).__init__()
+
+    def __str__(self):
+        return "PrimitiveNilObject()"
 
 
 _NIL_OBJ = PrimitiveNilObjectSingleton()
@@ -64,6 +73,9 @@ class AssignmentPrimitiveSingleton(Object):
     @property
     def is_assignment_primitive(self):
         return True
+
+    def __str__(self):
+        return "AssignmentPrimitive()"
 
 
 _ASSIGNMENT_PRIMITIVE_OBJ = AssignmentPrimitiveSingleton()
