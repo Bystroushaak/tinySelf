@@ -83,7 +83,7 @@ class CodeContext(object):
 
         return self.bytecodes[index]
 
-    def to_bytecode(self):
+    def debug_json(self):
         out = '{\n"literals": {\n'
         for cnt, i in enumerate(self.literals):
             out += '    "%d": "%s",\n' % (cnt, i.__str__())
