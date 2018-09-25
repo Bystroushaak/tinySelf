@@ -2,7 +2,7 @@
 from pytest import raises
 
 from tinySelf.vm.interpreter import Frame
-from tinySelf.vm.interpreter import BOXED_NIL
+from tinySelf.vm.interpreter import NIL
 from tinySelf.vm.interpreter import Interpreter
 
 from tinySelf.vm.code_context import CodeContext
@@ -24,10 +24,10 @@ def test_frame():
     with raises(IndexError):
         f.pop()
 
-    assert f.pop_or_nil() == BOXED_NIL
+    assert f.pop_or_nil() == NIL
     f.push(PrimitiveIntObject(1))
     assert f.pop_or_nil() == PrimitiveIntObject(1)
-    assert f.pop_or_nil() == BOXED_NIL
+    assert f.pop_or_nil() == NIL
 
 
 def test_interpreter():
