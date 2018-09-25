@@ -11,8 +11,16 @@ from tinySelf.vm.primitives import AssignmentPrimitive
 from tinySelf.vm.object_layout import Object
 
 
-BOXED_NIL = PrimitiveNilObject()
-BOXED_ASSIGNMENT_PRIMITIVE = AssignmentPrimitive()
+NIL = PrimitiveNilObject()
+ASSIGNMENT_PRIMITIVE = AssignmentPrimitive()
+
+
+import logging
+logging.basicConfig(
+    filename='trace.log',
+    level=logging.DEBUG,
+    format="%(lineno)d %(funcName)s(): %(message)s"
+)
 
 
 # TODO: benchmark and eventually rewrite to linked list
@@ -23,16 +31,23 @@ class Frame(object):
     def push(self, item):
         assert isinstance(item, Object)
 
+        logging.debug("pushing %s", item)
+
         self.stack.append(item)
 
     def pop(self):
-        return self.stack.pop()
+        item = self.stack.pop()
+
+        logging.debug("pop %s", item)
+
+        return item
 
     def pop_or_nil(self):
         if self.stack:
+            logging.debug("pop or nil %s", self.stack[-1])
             return self.pop()
 
-        return BOXED_NIL
+        return NIL
 
 
 class Interpreter(object):
@@ -42,8 +57,15 @@ class Interpreter(object):
     def interpret(self, code_obj, frame):
         bc_index = 0
 
+        logging.debug(code_obj.debug_json())
+
         while True:
             bytecode = code_obj.get_bytecode(bc_index)
+
+            logging.debug("\nFrame:")
+            for i, obj in enumerate(frame.stack):
+                logging.debug("\t %d) %s", i, str(obj))
+            logging.debug("\n\n")
 
             # TODO: sort by the statistical probability of each bytecode
             if bytecode == BYTECODE_SEND:
@@ -68,6 +90,7 @@ class Interpreter(object):
             bc_index += 1
 
     def _put_together_parameters(self, parameter_names, parameters):
+        logging.debug("")
         if len(parameter_names) < len(parameters):
             raise ValueError("Too many parameters!")
 
@@ -80,15 +103,13 @@ class Interpreter(object):
             for parameter_name in parameter_names
         ]
 
-    def _parent_lookup(self, obj, message_name):
-        pass
-
     def _interpret_obj_with_code(self, code_obj, obj, value_of_slot, parameters_values):
+        logging.debug("")
         # inject the universe to the objects without scope parents
         if code_obj.scope_parent is None:
             scope_parent = self.universe
         else:
-            scope_parent = code_obj.scope_parent
+            scope_parent = obj
 
         if parameters_values:
             intermediate_obj = Object()
@@ -121,6 +142,7 @@ class Interpreter(object):
         Returns:
             int: Index of next bytecode.
         """
+        logging.debug("")
         message_type = code_obj.get_bytecode(bc_index + 1)
         number_of_parameters = code_obj.get_bytecode(bc_index + 2)
 
@@ -179,11 +201,13 @@ class Interpreter(object):
     #     pass
 
     def _do_push_self(self, bc_index, code_obj, frame):
-        frame.push(code_obj.scope_parent)
+        logging.debug("")
+        frame.push(code_obj.scope_parent)  # TODO: tohle je blbě!
 
-        return bc_index + 1
+        return bc_index
 
     def _literal_to_obj(self, boxed_literal, literal_type):
+        logging.debug("")
         """
         Convert literal to primitive object.
         """
@@ -197,13 +221,14 @@ class Interpreter(object):
             raise ValueError("Unknown literal type; %s" % literal_type)
 
     def _do_push_literal(self, bc_index, code_obj, frame):
+        logging.debug("")
         literal_type = code_obj.get_bytecode(bc_index + 1)
         literal_index = code_obj.get_bytecode(bc_index + 2)
 
         if literal_type == LITERAL_TYPE_NIL:
-            obj = BOXED_NIL
+            obj = NIL
         elif literal_type == LITERAL_TYPE_ASSIGNMENT:
-            obj = BOXED_ASSIGNMENT_PRIMITIVE
+            obj = ASSIGNMENT_PRIMITIVE
         else:
             obj = self._literal_to_obj(
                 code_obj.literals[literal_index],
@@ -215,6 +240,7 @@ class Interpreter(object):
         return bc_index + 2
 
     def _do_pop(self, bc_index, code_obj, frame):
+        logging.debug("")
         frame.pop()
 
         return bc_index + 1
@@ -223,6 +249,7 @@ class Interpreter(object):
     #     pass
 
     def _do_add_slot(self, bc_index, code_obj, frame):
+        logging.debug("")
         value = frame.pop()
         boxed_slot_name = frame.pop()
         obj = frame.pop()
