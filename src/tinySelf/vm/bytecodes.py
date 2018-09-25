@@ -49,7 +49,7 @@ def disassemble(bytecodes):
             continue
 
         elif bytecode == BYTECODE_PUSHSELF:
-            disassembled.append(["BYTECODE_PUSHSELF"])
+            disassembled.append(["PUSH_SELF"])
             continue
 
         elif bytecode == BYTECODE_PUSHLITERAL:
