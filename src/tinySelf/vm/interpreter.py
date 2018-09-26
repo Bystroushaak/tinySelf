@@ -103,21 +103,17 @@ class Interpreter(object):
             for parameter_name in parameter_names
         ]
 
-    def _interpret_obj_with_code(self, code_obj, obj, value_of_slot, parameters_values):
+    def _interpret_obj_with_code(self, code, obj, method_obj, parameters):
         logging.debug("")
-        # inject the universe to the objects without scope parents
-        if code_obj.scope_parent is None:
-            scope_parent = self.universe
-        else:
-            scope_parent = obj
+        scope_parent = obj
 
-        if parameters_values:
+        if parameters:
             intermediate_obj = Object()
             intermediate_obj.meta_add_parent("*", scope_parent)
 
             parameter_pairs = self._put_together_parameters(
-                parameter_names=value_of_slot.map.parameters,
-                parameters=parameters_values
+                parameter_names=method_obj.map.parameters,
+                parameters=parameters
             )
             for name, value in parameter_pairs:
                 intermediate_obj.meta_add_slot(name, value)
@@ -127,24 +123,24 @@ class Interpreter(object):
             obj.map.scope_parent = scope_parent
 
         sub_frame = Frame()
-        ret_val = self.interpret(value_of_slot.map.code_context, sub_frame)
+        ret_val = self.interpret(method_obj.map.code_context, sub_frame)
+        method_obj.map.scope_parent = None
 
-        value_of_slot.map.scope_parent = None
         return ret_val
 
-    def _do_send(self, bc_index, code_obj, frame):
+    def _do_send(self, bc_index, code, frame):
         """
         Args:
-            bc_index (int): Index of the bytecode in `code_obj` bytecode list.
-            code_obj (obj): :class:`CodeContext` instance.
+            bc_index (int): Index of the bytecode in `code` bytecode list.
+            code (obj): :class:`CodeContext` instance.
             frame (obj): :class:`Frame` instance.
 
         Returns:
             int: Index of next bytecode.
         """
         logging.debug("")
-        message_type = code_obj.get_bytecode(bc_index + 1)
-        number_of_parameters = code_obj.get_bytecode(bc_index + 2)
+        message_type = code.get_bytecode(bc_index + 1)
+        number_of_parameters = code.get_bytecode(bc_index + 2)
 
         parameters_values = []
         if message_type == SEND_TYPE_BINARY:
@@ -164,7 +160,7 @@ class Interpreter(object):
 
         if value_of_slot.has_code:
             return_value = self._interpret_obj_with_code(
-                code_obj,
+                code,
                 obj,
                 value_of_slot,
                 parameters_values,
@@ -216,7 +212,7 @@ class Interpreter(object):
         elif literal_type == LITERAL_TYPE_STR:
             return PrimitiveStrObject(boxed_literal.value)
         elif literal_type == LITERAL_TYPE_OBJ:
-            return boxed_literal.value
+            return boxed_literal.value.literal_copy()
         else:
             raise ValueError("Unknown literal type; %s" % literal_type)
 
