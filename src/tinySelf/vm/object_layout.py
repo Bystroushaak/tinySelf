@@ -85,7 +85,33 @@ class Object(object):
         if slot_index is not None:
             return self.slots_references[slot_index]
 
+        if self.map.scope_parent is not None:
+            obj = self.map.scope_parent.slot_lookup(slot_name)
+
+            if obj is not None:
+                return obj
+
         return self.parent_lookup(slot_name)
+
+    def literal_copy(self):
+        """
+        Create copy such that modifications of the copy will not have any
+        influence on the original object.
+
+        This is used to create copy from objects on literal stack, which need
+        to stay unchanged.
+
+        Returns:
+            Object: Copy of this object.
+        """
+        obj = Object()
+        obj.slots_references = self.slots_references[:]
+        obj.map = self.map.clone()
+
+        return obj
+
+    def __str__(self):
+        return "Object(%s)" % ", ".join(self.map.slots.keys())
 
     # meta operations
     def meta_add_slot(self, slot_name, value):  # TODO: support auto Nil value
@@ -143,9 +169,6 @@ class Object(object):
 
     def meta_set_code_context(self, code_context):
         self.map.code_context = code_context
-
-    def __str__(self):
-        return "Object(%s)" % ", ".join(self.map.slots.keys())
 
 
 class ObjectMap(object):

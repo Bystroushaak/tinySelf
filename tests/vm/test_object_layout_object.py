@@ -190,3 +190,15 @@ def slot_lookup():
     assert o.get_slot("xex") is None
     assert o.slot_lookup("xex") is val
     assert o.slot_lookup("flat") is flat
+
+
+def test_slot_lookup_from_scope_parent():
+    p = Object()
+    val = PrimitiveStrObject("it is xex!")
+    p.meta_add_slot("xex", val)
+
+    o = Object()
+    o.map.scope_parent = p
+
+    assert o.get_slot("xex") is None
+    assert o.slot_lookup("xex") is val
