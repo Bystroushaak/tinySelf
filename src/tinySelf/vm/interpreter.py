@@ -103,9 +103,8 @@ class Interpreter(object):
             for parameter_name in parameter_names
         ]
 
-    def _interpret_obj_with_code(self, code, obj, method_obj, parameters):
+    def _interpret_obj_with_code(self, code, scope_parent, method_obj, parameters):
         logging.debug("")
-        scope_parent = obj
 
         if parameters:
             intermediate_obj = Object()
@@ -118,12 +117,16 @@ class Interpreter(object):
             for name, value in parameter_pairs:
                 intermediate_obj.meta_add_slot(name, value)
 
-            obj.map.scope_parent = intermediate_obj
+            method_obj.map.scope_parent = intermediate_obj
         else:
-            obj.map.scope_parent = scope_parent
+            method_obj.map.scope_parent = scope_parent
 
-        sub_frame = Frame()
-        ret_val = self.interpret(method_obj.map.code_context, sub_frame)
+        code_context = method_obj.map.code_context
+        code_context.scope_parent = scope_parent
+
+        ret_val = self.interpret(code_context, Frame())
+
+        code_context.scope_parent = None
         method_obj.map.scope_parent = None
 
         return ret_val
@@ -153,6 +156,12 @@ class Interpreter(object):
         message_name = boxed_message.value  # unpack from StrBox
 
         obj = frame.pop()
+
+        if obj.map.scope_parent is None:
+            if code.scope_parent is None:
+                obj.map.scope_parent = self.universe
+            else:
+                obj.map.scope_parent = code.scope_parent
 
         value_of_slot = obj.slot_lookup(message_name)
         if value_of_slot is None:
