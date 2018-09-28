@@ -47,6 +47,7 @@ class CodeContext(object):
         self.bytecodes = []  # rewrite to bytearray or something like that?
         self.literals = []
         self.scope_parent = scope_parent
+        self.self = None
 
     def add_literal(self, literal):
         assert isinstance(literal, LiteralBox)

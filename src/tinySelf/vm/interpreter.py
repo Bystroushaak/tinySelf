@@ -122,10 +122,12 @@ class Interpreter(object):
             method_obj.map.scope_parent = scope_parent
 
         code_context = method_obj.map.code_context
+        code_context.self = method_obj
         code_context.scope_parent = scope_parent
 
         ret_val = self.interpret(code_context, Frame())
 
+        code_context.self = None
         code_context.scope_parent = None
         method_obj.map.scope_parent = None
 
@@ -155,6 +157,8 @@ class Interpreter(object):
         boxed_message = frame.pop()
         message_name = boxed_message.value  # unpack from StrBox
 
+        logging.debug("message name %s", message_name)
+
         obj = frame.pop()
 
         if obj.map.scope_parent is None:
@@ -165,7 +169,7 @@ class Interpreter(object):
 
         value_of_slot = obj.slot_lookup(message_name)
         if value_of_slot is None:
-            raise ValueError("TODO: not implemented yet (missing slot err)")
+            raise ValueError("Missing slot error: " + message_name)
 
         if value_of_slot.has_code:
             return_value = self._interpret_obj_with_code(
@@ -207,7 +211,7 @@ class Interpreter(object):
 
     def _do_push_self(self, bc_index, code_obj, frame):
         logging.debug("")
-        frame.push(code_obj.scope_parent)  # TODO: tohle je blbě!
+        frame.push(code_obj.self)
 
         return bc_index
 

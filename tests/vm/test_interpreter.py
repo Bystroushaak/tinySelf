@@ -36,7 +36,7 @@ def test_interpreter():
         print: b = (||
             (a + 1) + b
         )
-    |) print: 1""")
+    |) print: 2""")
 
     context = ast[0].compile(CodeContext())
 
