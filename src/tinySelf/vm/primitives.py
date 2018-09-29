@@ -6,7 +6,7 @@ def _build_primitive_code_obj(primitive_fn, arguments):
     code_obj = Object()
 
     code_obj.map.arguments = arguments
-    code_obj.primitive_code = primitive_fn
+    code_obj.map.primitive_code = primitive_fn
 
     return code_obj
 
