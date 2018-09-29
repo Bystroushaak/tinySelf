@@ -172,6 +172,7 @@ class Interpreter(object):
             raise ValueError("Missing slot error: " + message_name)
 
         if value_of_slot.has_code:
+            logging.debug("code run")
             return_value = self._interpret_obj_with_code(
                 code,
                 obj,
@@ -180,9 +181,11 @@ class Interpreter(object):
             )
 
         elif value_of_slot.has_primitive_code:
+            logging.debug("primitive code run")
             return_value = value_of_slot.map.primitive_code(*parameters_values)
 
         elif value_of_slot.is_assignment_primitive:
+            logging.debug("is assignment primitive")
             if len(parameters_values) != 1:
                 raise ValueError("Too many values to set!")
 
@@ -197,6 +200,7 @@ class Interpreter(object):
             return bc_index + 2
 
         else:
+            logging.debug("is just normal value")
             return_value = value_of_slot
 
         frame.push(return_value)
