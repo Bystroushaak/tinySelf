@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-from tinySelf.vm.object_layout import Object
 from tinySelf.vm.primitives import PrimitiveStrObject
+from tinySelf.vm.primitives import AssignmentPrimitive
+from tinySelf.vm.code_context import CodeContext
+from tinySelf.vm.object_layout import Object
 
 
 def test_meta_add_slot():
@@ -202,3 +204,32 @@ def test_slot_lookup_from_scope_parent():
 
     assert o.get_slot("xex") is None
     assert o.slot_lookup("xex") is val
+
+
+def test_has_code():
+    o = Object()
+    assert not o.has_code
+
+    o.map.code_context = CodeContext()
+    assert o.has_code
+
+
+def test_has_primitive_code():
+    o = Object()
+    assert not o.has_primitive_code
+
+    def test(x):
+        return x
+
+    o.map.primitive_code = test
+    assert o.has_primitive_code
+    assert not o.is_assignment_primitive
+
+
+def test_is_assignment_primitive():
+    o = Object()
+    assert not o.is_assignment_primitive
+
+    o = AssignmentPrimitive()
+    assert o.is_assignment_primitive
+    assert not o.has_code
