@@ -33,10 +33,10 @@ def test_frame():
 def test_interpreter():
     ast = lex_and_parse("""(|
         a <- 1.
-        print: b = (||
+        add: b = (||
             (a + 1) + b
         )
-    |) print: 2""")
+    |) add: 2""")
 
     context = ast[0].compile(CodeContext())
 
