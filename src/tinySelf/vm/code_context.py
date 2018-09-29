@@ -79,7 +79,7 @@ class CodeContext(object):
         return index
 
     def get_bytecode(self, index):
-        if index > len(self.bytecodes):
+        if index >= len(self.bytecodes):
             return BYTECODE_RETURNTOP
 
         return self.bytecodes[index]

@@ -43,4 +43,5 @@ def test_interpreter():
     frame = Frame()
     interpreter = Interpreter(universe=get_primitives())
 
-    interpreter.interpret(context, frame)
+    result = interpreter.interpret(context, frame)
+    assert result == PrimitiveIntObject(4)
