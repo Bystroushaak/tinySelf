@@ -159,7 +159,25 @@ class Object(BaseBox):
 
 class Block(Object):
     def compile(self, context):
-        # TODO: compile blocks
+        block = ObjectRepresentation()
+        block.meta_set_ast(self)
+        block.meta_set_parameters(self.params)
+
+        index = context.add_literal_obj(block)
+        context.add_bytecode(BYTECODE_PUSHLITERAL)
+        context.add_bytecode(LITERAL_TYPE_BLOCK)
+        context.add_bytecode(index)
+
+        for name, value in self.parents.iteritems():
+            self._add_slot_to_bytecode(context, name, value)
+            context.add_bytecode(SLOT_PARENT)
+
+        new_context = CodeContext()
+        block.meta_set_code_context(new_context)
+        for item in self.code:
+            item.compile(new_context)
+
+        block.map.code_context = new_context
 
         return context
 
