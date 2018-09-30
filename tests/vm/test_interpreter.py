@@ -40,8 +40,28 @@ def test_interpreter():
 
     context = ast[0].compile(CodeContext())
 
-    frame = Frame()
     interpreter = Interpreter(universe=get_primitives())
 
-    result = interpreter.interpret(context, frame)
+    result = interpreter.interpret(context, Frame())
     assert result == PrimitiveIntObject(4)
+
+
+def test_block():
+    ast = lex_and_parse("""(|
+        a <- 0.
+        addTenToBlk: blk = (||
+            10 + (blk value).
+        ).
+
+        add = (| tmp = 3. tmp_block. |
+            tmp_block = [a + tmp].
+            a: 1.
+            2 + addTenToBlk: tmp_block.
+        )
+    |) add""")
+
+    context = ast[0].compile(CodeContext())
+    interpreter = Interpreter(universe=get_primitives())
+
+    result = interpreter.interpret(context, Frame())
+    assert result == PrimitiveIntObject(16)
