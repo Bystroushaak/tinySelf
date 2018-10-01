@@ -27,6 +27,8 @@ from ast_tokens import Self
 from ast_tokens import Return
 from ast_tokens import AssignmentPrimitive
 
+from ast_tokens import Comment
+
 
 pg = ParserGenerator(
     (
@@ -737,13 +739,9 @@ def parse_expression_then_comment(p):
     return p[0]
 
 
-class RemoveThis(BaseBox):
-    pass
-
-
 @pg.production('expression : COMMENT')
 def parse_comment(p):
-    return RemoveThis()
+    return Comment(p[0].getstr())
 
 
 # Parser initialization #######################################################
@@ -754,7 +752,4 @@ def lex_and_parse(i):
     tree = parser.parse(lexer.lex(i))
     assert isinstance(tree, Root)
 
-    return [
-        x for x in tree.ast
-        if not isinstance(x, RemoveThis)
-    ]
+    return tree.ast

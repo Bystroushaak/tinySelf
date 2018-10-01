@@ -13,6 +13,7 @@ from tinySelf.parser.ast_tokens import Number
 from tinySelf.parser.ast_tokens import String
 from tinySelf.parser.ast_tokens import Return
 from tinySelf.parser.ast_tokens import Cascade
+from tinySelf.parser.ast_tokens import Comment
 from tinySelf.parser.ast_tokens import Message
 from tinySelf.parser.ast_tokens import BinaryMessage
 from tinySelf.parser.ast_tokens import KeywordMessage
@@ -862,7 +863,7 @@ def test_parse_multiline_comment():
 def test_parse_just_comment():
     result = lex_and_parse('# comment')
 
-    assert result == []
+    assert result == [Comment("# comment")]
 
 
 # Multiple statements are code ################################################

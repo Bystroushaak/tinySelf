@@ -168,6 +168,10 @@ class Block(Object):
         context.add_bytecode(LITERAL_TYPE_BLOCK)
         context.add_bytecode(index)
 
+        for name, value in self.slots.iteritems():
+            self._add_slot_to_bytecode(context, name, value)
+            context.add_bytecode(SLOT_NORMAL)
+
         for name, value in self.parents.iteritems():
             self._add_slot_to_bytecode(context, name, value)
             context.add_bytecode(SLOT_PARENT)
@@ -411,3 +415,17 @@ class AssignmentPrimitive(BaseBox):
 
     def __str__(self):
         return "AssignmentPrimitive()"
+
+
+class Comment(BaseBox):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def compile(self, context):
+        return context
+
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and self.msg == obj.msg
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
