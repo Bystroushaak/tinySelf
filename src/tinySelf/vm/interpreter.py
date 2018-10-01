@@ -219,34 +219,33 @@ class Interpreter(object):
 
         return bc_index
 
-    def _literal_to_obj(self, boxed_literal, literal_type):
-        logging.debug("")
-        """
-        Convert literal to primitive object.
-        """
-        if literal_type == LITERAL_TYPE_INT:
-            return PrimitiveIntObject(boxed_literal.value)
-        elif literal_type == LITERAL_TYPE_STR:
-            return PrimitiveStrObject(boxed_literal.value)
-        elif literal_type == LITERAL_TYPE_OBJ:
-            return boxed_literal.value.literal_copy()
-        else:
-            raise ValueError("Unknown literal type; %s" % literal_type)
-
     def _do_push_literal(self, bc_index, code_obj, frame):
         logging.debug("")
         literal_type = code_obj.get_bytecode(bc_index + 1)
         literal_index = code_obj.get_bytecode(bc_index + 2)
+        boxed_literal = code_obj.literals[literal_index]
 
         if literal_type == LITERAL_TYPE_NIL:
             obj = NIL
         elif literal_type == LITERAL_TYPE_ASSIGNMENT:
             obj = ASSIGNMENT_PRIMITIVE
+        elif literal_type == LITERAL_TYPE_INT:
+            obj = PrimitiveIntObject(boxed_literal.value)
+        elif literal_type == LITERAL_TYPE_STR:
+            obj = PrimitiveStrObject(boxed_literal.value)
+        elif literal_type == LITERAL_TYPE_OBJ:
+            obj = boxed_literal.value.literal_copy()
+        elif literal_type == LITERAL_TYPE_BLOCK:
+            obj = boxed_literal.value.literal_copy()
+
+            if code_obj.self is not None:
+                obj.meta_add_parent("|", code_obj.self)
+            elif code_obj.scope_parent is not None:
+                obj.meta_add_parent("|", code_obj.scope_parent)
+            else:
+                obj.meta_add_parent("|", self.universe)
         else:
-            obj = self._literal_to_obj(
-                code_obj.literals[literal_index],
-                literal_type
-            )
+            raise ValueError("Unknown literal type; %s" % literal_type)
 
         frame.push(obj)
 
