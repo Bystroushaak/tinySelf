@@ -211,11 +211,14 @@ def test_slot_lookup_from_scope_parent_and_then_parents():
     val = PrimitiveStrObject("it is xex!")
     p.meta_add_slot("a", val)
 
+    interobj = Object()
+    interobj.map.scope_parent = p
+
     o = Object()
     o.map.scope_parent = Object()
-    o.map.scope_parent.meta_add_parent("*", p)
+    o.map.scope_parent.meta_add_parent("*", interobj)
 
-    assert o.slot_lookup("xex") is val
+    assert o.slot_lookup("a") is val
 
 
 def test_has_code():
