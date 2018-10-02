@@ -46,6 +46,22 @@ def test_interpreter():
     assert result == PrimitiveIntObject(4)
 
 
+def test_assignment_primitive():
+    ast = lex_and_parse("""(|
+        a <- 0.
+        incA = (||
+            a: 1.
+            ^a
+        )
+    |) incA""")
+
+    context = ast[0].compile(CodeContext())
+    interpreter = Interpreter(universe=get_primitives())
+
+    result = interpreter.interpret(context, Frame())
+    assert result == PrimitiveIntObject(1)
+
+
 def test_block():
     ast = lex_and_parse("""(|
         a <- 0.
@@ -54,7 +70,7 @@ def test_block():
         ).
 
         add = (| tmp = 3. tmp_block. |
-            tmp_block = [a + tmp].
+            tmp_block: [a + tmp].
             a: 1.
             2 + addTenToBlk: tmp_block.
         )
