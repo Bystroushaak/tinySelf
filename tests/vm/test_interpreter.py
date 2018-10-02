@@ -71,7 +71,7 @@ def test_block():
 
         add = (| tmp = 3. tmp_block. |
             tmp_block: [a + tmp].
-            a: 1.
+            a: 1.  # block should reflect current scopes
             2 + addTenToBlk: tmp_block.
         )
     |) add""")
@@ -81,3 +81,24 @@ def test_block():
 
     result = interpreter.interpret(context, Frame())
     assert result == PrimitiveIntObject(16)
+
+
+def test_block_with_argument():
+    ast = lex_and_parse("""(|
+        a <- 0.
+        giveOneToBlock: blk = (||
+            blk with: 1
+        ).
+
+        shouldBeThree = (| tmp = 1. block. |
+            block: [| :x | a + tmp + x].
+            a: 1.
+            giveOneToBlock: block.
+        )
+    |) shouldBeThree""")
+
+    context = ast[0].compile(CodeContext())
+    interpreter = Interpreter(universe=get_primitives())
+
+    result = interpreter.interpret(context, Frame())
+    assert result == PrimitiveIntObject(3)
