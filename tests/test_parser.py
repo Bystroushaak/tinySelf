@@ -17,6 +17,7 @@ from tinySelf.parser.ast_tokens import Comment
 from tinySelf.parser.ast_tokens import Message
 from tinySelf.parser.ast_tokens import BinaryMessage
 from tinySelf.parser.ast_tokens import KeywordMessage
+from tinySelf.parser.ast_tokens import AssignmentPrimitive
 
 
 def join_dicts(*args):
@@ -335,27 +336,36 @@ def test_parse_object_with_empty_slots():
 
 def test_parse_object_with_nil_slot():
     result = lex_and_parse('(| asd |)')
-    assert result == [Object(slots={"asd": Nil()})]
+    assert result == [Object(slots=_rw_slot("asd", Nil()))]
 
     result = lex_and_parse('(| asd. |)')
-    assert result == [Object(slots={"asd": Nil()})]
+    assert result == [Object(slots=_rw_slot("asd", Nil()))]
 
     result = lex_and_parse('(asd |)')
-    assert result == [Object(slots={"asd": Nil()})]
+    assert result == [Object(slots=_rw_slot("asd", Nil()))]
 
     result = lex_and_parse('( asd. |)')
-    assert result == [Object(slots={"asd": Nil()})]
+    assert result == [Object(slots=_rw_slot("asd", Nil()))]
 
 
 def test_parse_object_with_multiple_nil_slots():
+    expected_result = [Object(
+        slots=OrderedDict((
+            ("asd", Nil()),
+            ("asd:", AssignmentPrimitive()),
+            ("bsd", Nil()),
+            ("bsd:", AssignmentPrimitive())
+        ))
+    )]
+
     result = lex_and_parse('(| asd. bsd |)')
-    assert result == [Object(slots=OrderedDict((("asd", Nil()), ("bsd", Nil()))))]
+    assert result == expected_result
 
     result = lex_and_parse('(| asd. bsd. |)')
-    assert result == [Object(slots=OrderedDict((("asd", Nil()), ("bsd", Nil()))))]
+    assert result == expected_result
 
     result = lex_and_parse('(asd. bsd. |)')
-    assert result == [Object(slots=OrderedDict((("asd", Nil()), ("bsd", Nil()))))]
+    assert result == expected_result
 
 
 def test_parse_slot_assignment():
@@ -456,16 +466,16 @@ def test_parse_slot_definition_with_combination_of_slots():
         |)
     """)
 
-    assert result[0] == Object(
-        slots=OrderedDict((
-            ("a", Nil()),
-            ("asd:", Object(params=["b"])),
-            ("asd:Bsd:", Object(params=["a", "b"])),
-            ("+", Object(params=["b"])),
-            ("-", Object(params=["a"])),
-            ("=", Object(params=["a"])),
-        ))
-    )
+    slots = _rw_slot("a", Nil())
+    slots.update(OrderedDict((
+        ("asd:", Object(params=["b"])),
+        ("asd:Bsd:", Object(params=["a", "b"])),
+        ("+", Object(params=["b"])),
+        ("-", Object(params=["a"])),
+        ("=", Object(params=["a"])),
+    )))
+
+    assert result[0] == Object(slots=slots)
 
 
 def test_argument_parser():
@@ -483,7 +493,7 @@ def test_obj_with_code():
     result = lex_and_parse('(| a | a printLine)')
 
     assert result == [Object(
-        slots={"a": Nil()},
+        slots=_rw_slot("a", Nil()),
         code=[
             Send(
                 Send(Self(), Message("a")),
@@ -497,7 +507,7 @@ def test_obj_with_code_with_dot():
     result = lex_and_parse('(| a | a printLine.)')
 
     assert result == [Object(
-        slots={"a": Nil()},
+        slots=_rw_slot("a", Nil()),
         code=[
             Send(
                 Send(Self(), Message("a")),
@@ -511,7 +521,7 @@ def test_obj_with_code_statements():
     result = lex_and_parse('(| a | a printLine. a print. test)')
 
     assert result == [Object(
-        slots={"a": Nil()},
+        slots=_rw_slot("a", Nil()),
         code=[
             Send(
                 Send(Self(), Message("a")),
@@ -538,7 +548,7 @@ def test_recursive_obj_definition():
         slots=join_dicts(
             {
                 "a": Object(
-                    slots={"var": Nil()},
+                    slots=_rw_slot("var", Nil()),
                     code=[
                         Send(
                             Send(Self(), Message("var")),
@@ -703,7 +713,7 @@ def test_block_with_code_statements():
     result = lex_and_parse('[| a. :b | a printLine. a print. test]')
 
     assert result == [Block(
-        slots={"a": Nil()},
+        slots=_rw_slot("a", Nil()),
         params=["b"],
         code=[
             Send(

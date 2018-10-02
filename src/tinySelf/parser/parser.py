@@ -8,6 +8,7 @@ from rply.token import BaseBox
 from lexer import lexer
 
 from ast_tokens import Root
+from ast_tokens import Comment
 
 from ast_tokens import Object
 from ast_tokens import Block
@@ -26,8 +27,6 @@ from ast_tokens import Nil
 from ast_tokens import Self
 from ast_tokens import Return
 from ast_tokens import AssignmentPrimitive
-
-from ast_tokens import Comment
 
 
 pg = ParserGenerator(
@@ -365,7 +364,7 @@ def _str_from_strcontainer(str_container_obj):
 def nil_slot_definition(p):
     slot_name = _str_from_strcontainer(p[0])
 
-    return OrderedDictContainer.from_kw(slot_name, Nil())
+    return OrderedDictContainer(_rw_slot(name=slot_name, value=Nil()))
 
 
 @pg.production('slot_definition : slot_name ASSIGNMENT expression')
