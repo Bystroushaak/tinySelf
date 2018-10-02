@@ -133,6 +133,13 @@ class Interpreter(object):
 
         return ret_val
 
+    def _check_scope_parent(self, obj, code):
+        if obj.map.scope_parent is None:
+            if code.scope_parent is not None:
+                obj.map.scope_parent = code.scope_parent
+            else:
+                obj.map.scope_parent = self.universe
+
     def _do_send(self, bc_index, code, frame):
         """
         Args:
@@ -160,12 +167,7 @@ class Interpreter(object):
         logging.debug("message name %s", message_name)
 
         obj = frame.pop()
-
-        if obj.map.scope_parent is None:
-            if code.scope_parent is None:
-                obj.map.scope_parent = self.universe
-            else:
-                obj.map.scope_parent = code.scope_parent
+        self._check_scope_parent(obj, code)
 
         value_of_slot = obj.slot_lookup(message_name)
         if value_of_slot is None:
@@ -235,15 +237,12 @@ class Interpreter(object):
             obj = PrimitiveStrObject(boxed_literal.value)
         elif literal_type == LITERAL_TYPE_OBJ:
             obj = boxed_literal.value.literal_copy()
+            if code_obj.self is None:
+                code_obj.self = obj
         elif literal_type == LITERAL_TYPE_BLOCK:
             obj = boxed_literal.value.literal_copy()
-
-            if code_obj.self is not None:
-                obj.meta_add_parent("|", code_obj.self)
-            elif code_obj.scope_parent is not None:
-                obj.meta_add_parent("|", code_obj.scope_parent)
-            else:
-                obj.meta_add_parent("|", self.universe)
+            current_scope = frame.pop()
+            obj.map.scope_parent = current_scope
         else:
             raise ValueError("Unknown literal type; %s" % literal_type)
 

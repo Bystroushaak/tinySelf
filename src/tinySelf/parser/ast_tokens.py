@@ -163,6 +163,9 @@ class Block(Object):
         block.meta_set_ast(self)
         block.meta_set_parameters(self.params)
 
+        # push current scope
+        context.add_bytecode(BYTECODE_PUSHSELF)
+
         index = context.add_literal_obj(block)
         context.add_bytecode(BYTECODE_PUSHLITERAL)
         context.add_bytecode(LITERAL_TYPE_BLOCK)
