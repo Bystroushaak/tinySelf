@@ -102,21 +102,28 @@ class Interpreter(object):
             for parameter_name in parameter_names
         ]
 
+    def _create_intermediate_params_obj(self, scope_parent, method_obj, parameters):
+        intermediate_obj = Object()
+        intermediate_obj.meta_add_parent("*", scope_parent)
+
+        parameter_pairs = self._put_together_parameters(
+            parameter_names=method_obj.map.parameters,
+            parameters=parameters
+        )
+        for name, value in parameter_pairs:
+            intermediate_obj.meta_add_slot(name, value)
+
+        return intermediate_obj
+
     def _interpret_obj_with_code(self, code, scope_parent, method_obj, parameters):
         logging.debug("")
 
         if parameters:
-            intermediate_obj = Object()
-            intermediate_obj.meta_add_parent("*", scope_parent)
-
-            parameter_pairs = self._put_together_parameters(
-                parameter_names=method_obj.map.parameters,
-                parameters=parameters
+            method_obj.map.scope_parent = self._create_intermediate_params_obj(
+                scope_parent,
+                method_obj,
+                parameters
             )
-            for name, value in parameter_pairs:
-                intermediate_obj.meta_add_slot(name, value)
-
-            method_obj.map.scope_parent = intermediate_obj
         else:
             method_obj.map.scope_parent = scope_parent
 
@@ -175,10 +182,10 @@ class Interpreter(object):
         if value_of_slot.has_code:
             logging.debug("code run")
             return_value = self._interpret_obj_with_code(
-                code,
-                obj,
-                value_of_slot,
-                parameters_values,
+                code=code,
+                scope_parent=obj,
+                method_obj=value_of_slot,
+                parameters=parameters_values,
             )
 
         elif value_of_slot.has_primitive_code:
@@ -197,7 +204,7 @@ class Interpreter(object):
             ret_val = assignee.set_slot(slot_name, parameters_values[0])
 
             if ret_val is None:
-                raise ValueError("Mistery - the slot that was and is not any more: %s" % slot_name)
+                raise ValueError("Mistery; a slot that was and is not any more: %s" % slot_name)
 
             return bc_index + 2
 
