@@ -12,7 +12,6 @@ from tinySelf.vm.object_layout import Object
 
 
 NIL = PrimitiveNilObject()
-ASSIGNMENT_PRIMITIVE = AssignmentPrimitive()
 
 
 import logging
@@ -194,10 +193,11 @@ class Interpreter(object):
             assert len(message_name) > 1
             slot_name = message_name[:-1]
 
-            ret_val = obj.set_slot(slot_name, parameters_values[0])
+            assignee = value_of_slot.real_parent
+            ret_val = assignee.set_slot(slot_name, parameters_values[0])
 
             if ret_val is None:
-                raise ValueError("wtf? how can you set slot that isn't there?")
+                raise ValueError("Mistery - the slot that was and is not any more: %s" % slot_name)
 
             return bc_index + 2
 
@@ -230,7 +230,7 @@ class Interpreter(object):
         if literal_type == LITERAL_TYPE_NIL:
             obj = NIL
         elif literal_type == LITERAL_TYPE_ASSIGNMENT:
-            obj = ASSIGNMENT_PRIMITIVE
+            obj = AssignmentPrimitive()
         elif literal_type == LITERAL_TYPE_INT:
             obj = PrimitiveIntObject(boxed_literal.value)
         elif literal_type == LITERAL_TYPE_STR:
@@ -266,6 +266,9 @@ class Interpreter(object):
         obj = frame.pop()
 
         slot_name = boxed_slot_name.value
+
+        if value.is_assignment_primitive:
+            value.real_parent = obj
 
         slot_type = code_obj.get_bytecode(bc_index + 1)
         if slot_type == SLOT_NORMAL:

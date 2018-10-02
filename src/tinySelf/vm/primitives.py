@@ -69,19 +69,16 @@ def PrimitiveNilObject(*args, **kwargs):
     return _NIL_OBJ
 
 
-class AssignmentPrimitiveSingleton(Object):
+class AssignmentPrimitive(Object):
+    def __inti__(self, real_parent=None):
+        self.real_parent = real_parent
+
     @property
     def is_assignment_primitive(self):
         return True
 
     def __str__(self):
         return "AssignmentPrimitive()"
-
-
-_ASSIGNMENT_PRIMITIVE_OBJ = AssignmentPrimitiveSingleton()
-
-def AssignmentPrimitive(*args, **kwargs):
-    return _ASSIGNMENT_PRIMITIVE_OBJ
 
 
 # def _primitive_create_mirror(obj):
