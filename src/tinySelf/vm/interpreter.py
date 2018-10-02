@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 from tinySelf.vm.bytecodes import *
 
+from tinySelf.vm.primitives import add_block_trait
 from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveStrObject
@@ -247,9 +248,9 @@ class Interpreter(object):
             if code_obj.self is None:
                 code_obj.self = obj
         elif literal_type == LITERAL_TYPE_BLOCK:
-            obj = boxed_literal.value.literal_copy()
-            current_scope = frame.pop()
-            obj.map.scope_parent = current_scope
+            block = boxed_literal.value.literal_copy()
+            block.map.scope_parent = frame.pop()
+            obj = add_block_trait(block)
         else:
             raise ValueError("Unknown literal type; %s" % literal_type)
 

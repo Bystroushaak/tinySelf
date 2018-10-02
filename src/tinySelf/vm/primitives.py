@@ -89,6 +89,18 @@ class AssignmentPrimitive(Object):
         return "AssignmentPrimitive()"
 
 
+def add_block_trait(block):
+    obj = Object()
+    obj.meta_add_slot("value", block)
+    obj.meta_add_slot("with:", block)
+    obj.meta_add_slot("with:With:", block)
+    obj.meta_add_slot("with:With:With:", block)
+    obj.meta_add_slot("with:With:With:With:", block)
+    obj.meta_add_slot("withAll:", block)
+
+    return obj
+
+
 # def _primitive_create_mirror(obj):
 #     def list_slots():
 #         for slot_name in obj.map.slots.keys():
