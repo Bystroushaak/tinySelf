@@ -206,6 +206,18 @@ def test_slot_lookup_from_scope_parent():
     assert o.slot_lookup("xex") is val
 
 
+def test_slot_lookup_from_scope_parent_and_then_parents():
+    p = Object()
+    val = PrimitiveStrObject("it is xex!")
+    p.meta_add_slot("a", val)
+
+    o = Object()
+    o.map.scope_parent = Object()
+    o.map.scope_parent.meta_add_parent("*", p)
+
+    assert o.slot_lookup("xex") is val
+
+
 def test_has_code():
     o = Object()
     assert not o.has_code
