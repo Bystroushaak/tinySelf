@@ -70,12 +70,20 @@ def PrimitiveNilObject(*args, **kwargs):
 
 
 class AssignmentPrimitive(Object):
-    def __inti__(self, real_parent=None):
+    def __init__(self, real_parent=None):
         self.real_parent = real_parent
 
     @property
     def is_assignment_primitive(self):
         return True
+
+    @property
+    def has_code(self):
+        return False
+
+    @property
+    def has_primitive_code(self):
+        return False
 
     def __str__(self):
         return "AssignmentPrimitive()"
