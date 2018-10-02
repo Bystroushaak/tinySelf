@@ -58,7 +58,12 @@ class Object(object):
             for obj_map in _visited_maps:
                 obj_map.visited = False
 
-        for parent in self.map.parent_slots.itervalues():
+        parents = []
+        if self.map.scope_parent is not None:
+            parents.append(self.map.scope_parent)
+        parents.extend(self.map.parent_slots.values())
+
+        for parent in parents:
             if parent.map.visited:
                 continue
 
