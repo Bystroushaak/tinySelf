@@ -11,6 +11,7 @@ from tinySelf.parser.ast_tokens import Block
 from tinySelf.parser.ast_tokens import Object
 from tinySelf.parser.ast_tokens import Number
 from tinySelf.parser.ast_tokens import String
+from tinySelf.parser.ast_tokens import Resend
 from tinySelf.parser.ast_tokens import Return
 from tinySelf.parser.ast_tokens import Cascade
 from tinySelf.parser.ast_tokens import Comment
@@ -888,4 +889,27 @@ def test_multiple_statements_make_code():
         Send(obj=Self(), msg=Message('xe')),
         Object(code=[Self()]),
         Number(1)
+    ]
+
+
+# Resends #####################################################################
+def test_resend():
+    result = lex_and_parse('''(| p* = xe. |
+        p.msg.
+        p.kwd: x Msg: y.
+    )''')
+
+    assert result == [
+        Object(
+            code=[
+                Resend(parent_name="p", msg=Message("msg")),
+                Resend(parent_name="p", msg=KeywordMessage(
+                    name="kwd:Msg:",
+                    parameters=[
+                        Send(obj=Self(), msg=Message("x")),
+                        Send(obj=Self(), msg=Message("y"))
+                    ]
+                ))
+            ],
+            parents={"p": Send(obj=Self(), msg=Message("xe"))})
     ]
