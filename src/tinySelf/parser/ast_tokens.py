@@ -280,7 +280,7 @@ class Message(MessageBase):
 
 class KeywordMessage(MessageBase):
     def __init__(self, name, parameters):
-        super(KeywordMessage, self).__init__(name)
+        MessageBase.__init__(self, name)  # weird stuff
         self.parameters = parameters
 
     def compile(self, context):
