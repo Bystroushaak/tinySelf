@@ -128,3 +128,49 @@ def test_calling_block_twice_with_argument():
 
     result = interpreter.interpret(context)
     assert result == PrimitiveIntObject(7)
+
+
+def test_resend():
+    ast = lex_and_parse("""(|
+        p* = (| xex = 1. |).
+        q* = (| xex = 2. |).
+
+        fetchXex = (|| q.xex)
+    |) fetchXex""")
+
+    context = ast[0].compile(CodeContext())
+    interpreter = Interpreter(universe=get_primitives())
+
+    result = interpreter.interpret(context)
+    assert result == PrimitiveIntObject(2)
+
+
+def test_resend_is_in_local_context():
+    ast = lex_and_parse("""(|
+        p* = (| xex = (|| ^1). |).
+        q* = (| xex = (|| a + 1). |).
+        a = 1.
+
+        fetchXex = (|| q.xex)
+    |) fetchXex""")
+
+    context = ast[0].compile(CodeContext())
+    interpreter = Interpreter(universe=get_primitives())
+
+    result = interpreter.interpret(context)
+    assert result == PrimitiveIntObject(2)
+
+
+def test_resend_keyword():
+    ast = lex_and_parse("""(|
+        p* = (| xex: a = (|| 1). |).
+        q* = (| xex: a = (|| a). |).
+
+        fetchXex = (|| q.xex: 2)
+    |) fetchXex""")
+
+    context = ast[0].compile(CodeContext())
+    interpreter = Interpreter(universe=get_primitives())
+
+    result = interpreter.interpret(context)
+    assert result == PrimitiveIntObject(2)
