@@ -237,10 +237,20 @@ class String(BaseBox):  # TODO: remove?
         return "'%s'" % self.value  # TODO: escaping
 
 
-class Message(BaseBox):
+class MessageBase(BaseBox):
     def __init__(self, name):
         self.name = name
 
+    @property
+    def is_resend(self):
+        return "." in self.name
+
+    def remove_resend_and_return_parent_name(self):
+        parent_name, self.name = self.name.split(".", 1)
+        return parent_name
+
+
+class Message(MessageBase):
     def compile(self, context):
         context.add_literal_str_push_bytecode(self.name)
 
@@ -261,9 +271,9 @@ class Message(BaseBox):
         return "Message(%s)" % self.name
 
 
-class KeywordMessage(BaseBox):
+class KeywordMessage(MessageBase):
     def __init__(self, name, parameters):
-        self.name = name
+        super(KeywordMessage, self).__init__(name)
         self.parameters = parameters
 
     def compile(self, context):
@@ -299,6 +309,10 @@ class BinaryMessage(BaseBox):
     def __init__(self, name, parameter):
         self.name = name
         self.parameter = parameter
+
+    @property
+    def is_resend(self):
+        return False
 
     def compile(self, context):
         context.add_literal_str_push_bytecode(self.name)
@@ -350,6 +364,40 @@ class Send(BaseBox):
             self.obj.__str__(),
             self.msg.__str__()
         )
+
+
+class Resend(BaseBox):
+    def __init__(self, parent_name, msg):
+        self.parent_name = parent_name
+        self.msg = msg
+
+    def compile(self, context):
+        raise NotImplementedError
+
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and \
+               self.parent_name == obj.parent_name and \
+               self.msg == obj.msg
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
+    def __str__(self):
+        return "Resend(parent_name=%s, msg=%s)" % (
+            self.parent_name.__str__(),
+            self.msg.__str__()
+        )
+
+
+def send_or_resend(obj, msg):
+    if msg.is_resend:
+        if obj != Self():
+            raise ValueError("Can't send resend to %s" % obj.__str__())
+
+        parent = msg.remove_resend_and_return_parent_name()
+        return Resend(parent, msg)
+
+    return Send(obj, msg)
 
 
 class Cascade(BaseBox):

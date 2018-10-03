@@ -22,6 +22,7 @@ from ast_tokens import BinaryMessage
 
 from ast_tokens import Send
 from ast_tokens import Cascade
+from ast_tokens import send_or_resend
 
 from ast_tokens import Nil
 from ast_tokens import Self
@@ -151,12 +152,11 @@ def expression_strings_numbers(p):
 # Unary messages ##############################################################
 @pg.production('unary_message : IDENTIFIER')
 def unary_message(p):
-    return Send(obj=Self(), msg=Message(p[0].getstr()))
-
+    return send_or_resend(obj=Self(), msg=Message(p[0].getstr()))
 
 @pg.production('unary_message : expression IDENTIFIER')
 def unary_message_to_expression(p):
-    return Send(obj=p[0], msg=Message(p[1].getstr()))
+    return send_or_resend(obj=p[0], msg=Message(p[1].getstr()))
 
 
 # Binary messages #############################################################
@@ -172,12 +172,12 @@ def binary_message_to_expression(p):
 # Keyword messages ############################################################
 @pg.production('keyword_msg : FIRST_KW expression')
 def keyword_message(p):
-    return Send(obj=Self(), msg=KeywordMessage(p[0].getstr(), [p[1]]))
+    return send_or_resend(obj=Self(), msg=KeywordMessage(p[0].getstr(), [p[1]]))
 
 
 @pg.production('keyword_msg : expression FIRST_KW expression')
 def keyword_message_to_obj(p):
-    return Send(obj=p[0], msg=KeywordMessage(p[1].getstr(), [p[2]]))
+    return send_or_resend(obj=p[0], msg=KeywordMessage(p[1].getstr(), [p[2]]))
 
 
 @pg.production('kwd : KEYWORD expression')
@@ -211,7 +211,7 @@ def keyword_message_with_parameters(p):
         else:
             parameters.append(token)
 
-    return Send(
+    return send_or_resend(
         obj=Self(),
         msg=KeywordMessage(
             name="".join(signature),
@@ -234,7 +234,7 @@ def keyword_message_to_self_with_parameters(p):
         else:
             parameters.append(token)
 
-    return Send(
+    return send_or_resend(
         obj=Self(),
         msg=KeywordMessage(
             name="".join(signature),
@@ -257,7 +257,7 @@ def keyword_message_to_obj_with_parameters(p):
         else:
             parameters.append(token)
 
-    return Send(
+    return send_or_resend(
         obj=p[0],
         msg=KeywordMessage(
             name="".join(signature),
