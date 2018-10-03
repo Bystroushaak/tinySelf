@@ -42,7 +42,7 @@ def test_interpreter():
 
     interpreter = Interpreter(universe=get_primitives())
 
-    result = interpreter.interpret(context, Frame())
+    result = interpreter.interpret(context)
     assert result == PrimitiveIntObject(4)
 
 
@@ -58,7 +58,7 @@ def test_assignment_primitive():
     context = ast[0].compile(CodeContext())
     interpreter = Interpreter(universe=get_primitives())
 
-    result = interpreter.interpret(context, Frame())
+    result = interpreter.interpret(context)
     assert result == PrimitiveIntObject(1)
 
 
@@ -79,7 +79,7 @@ def test_block():
     context = ast[0].compile(CodeContext())
     interpreter = Interpreter(universe=get_primitives())
 
-    result = interpreter.interpret(context, Frame())
+    result = interpreter.interpret(context)
     assert result == PrimitiveIntObject(16)
 
 
@@ -100,5 +100,5 @@ def test_block_with_argument():
     context = ast[0].compile(CodeContext())
     interpreter = Interpreter(universe=get_primitives())
 
-    result = interpreter.interpret(context, Frame())
+    result = interpreter.interpret(context)
     assert result == PrimitiveIntObject(3)

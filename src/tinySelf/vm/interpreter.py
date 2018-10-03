@@ -50,11 +50,42 @@ class Frame(object):
         return NIL
 
 
-class Interpreter(object):
+class FrameSet(object):
+    def __init__(self):
+        self.frame = Frame()
+        self.frameset = [self.frame]
+
+    def push_frame(self):
+        self.frame = Frame()
+        self.frameset.append(self.frame)
+
+    def pop_frame(self):
+        if len(self.frameset) == 1:
+            return
+
+        self.frameset.pop()
+        self.frame = self.frameset[-1]
+
+    def pop_frame_down(self):
+        if len(self.frameset) == 1:
+            return False
+
+        result = self.frame.pop_or_nil()
+
+        self.frameset.pop()
+        self.frame = self.frameset[-1]
+
+        self.frame.push(result)
+
+        return True
+
+
+class Interpreter(FrameSet):
     def __init__(self, universe):
+        super(Interpreter, self).__init__()
         self.universe = universe
 
-    def interpret(self, code_obj, frame):
+    def interpret(self, code_obj):
         bc_index = 0
 
         logging.debug(code_obj.debug_json())
@@ -63,29 +94,29 @@ class Interpreter(object):
             bytecode = code_obj.get_bytecode(bc_index)
 
             logging.debug("\nFrame:")
-            for i, obj in enumerate(frame.stack):
+            for i, obj in enumerate(self.frame.stack):
                 logging.debug("\t %d) %s", i, str(obj))
             logging.debug("\n\n")
 
             # TODO: sort by the statistical probability of each bytecode
             if bytecode == BYTECODE_SEND:
-                bc_index = self._do_send(bc_index, code_obj, frame)
+                bc_index = self._do_send(bc_index, code_obj)
             # elif bytecode == BYTECODE_SELFSEND:
             #     self._do_selfSend(bc_index, code_obj, frame)
             # elif bytecode == BYTECODE_RESEND:
             #     self._do_resend(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_PUSHSELF:
-                bc_index = self._do_push_self(bc_index, code_obj, frame)
+                bc_index = self._do_push_self(bc_index, code_obj)
             elif bytecode == BYTECODE_PUSHLITERAL:
-                bc_index = self._do_push_literal(bc_index, code_obj, frame)
+                bc_index = self._do_push_literal(bc_index, code_obj)
             elif bytecode == BYTECODE_POP:
-                self._do_pop(bc_index, code_obj, frame)
+                self._do_pop(bc_index, code_obj)
             elif bytecode == BYTECODE_RETURNTOP:
-                return frame.pop_or_nil()
+                return self.frame.pop_or_nil()
             # elif bytecode == BYTECODE_RETURNIMPLICIT:
             #     self._do_return_implicit(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_ADD_SLOT:
-                bc_index = self._do_add_slot(bc_index, code_obj, frame)
+                bc_index = self._do_add_slot(bc_index, code_obj)
 
             bc_index += 1
 
@@ -132,7 +163,9 @@ class Interpreter(object):
         code_context.self = method_obj
         code_context.scope_parent = scope_parent
 
-        ret_val = self.interpret(code_context, Frame())
+        self.push_frame()
+        ret_val = self.interpret(code_context)
+        self.pop_frame()
 
         code_context.self = None
         code_context.scope_parent = None
@@ -147,7 +180,7 @@ class Interpreter(object):
             else:
                 obj.map.scope_parent = self.universe
 
-    def _do_send(self, bc_index, code, frame):
+    def _do_send(self, bc_index, code):
         """
         Args:
             bc_index (int): Index of the bytecode in `code` bytecode list.
@@ -163,17 +196,17 @@ class Interpreter(object):
 
         parameters_values = []
         if message_type == SEND_TYPE_BINARY:
-            parameters_values = [frame.pop()]
+            parameters_values = [self.frame.pop()]
         elif message_type == SEND_TYPE_KEYWORD:
             for _ in range(number_of_parameters):
-                parameters_values.append(frame.pop())
+                parameters_values.append(self.frame.pop())
 
-        boxed_message = frame.pop()
+        boxed_message = self.frame.pop()
         message_name = boxed_message.value  # unpack from StrBox
 
         logging.debug("message name %s", message_name)
 
-        obj = frame.pop()
+        obj = self.frame.pop()
         self._check_scope_parent(obj, code)
 
         value_of_slot = obj.slot_lookup(message_name)
@@ -213,7 +246,7 @@ class Interpreter(object):
             logging.debug("is just normal value")
             return_value = value_of_slot
 
-        frame.push(return_value)
+        self.frame.push(return_value)
 
         return bc_index + 2
 
@@ -223,13 +256,13 @@ class Interpreter(object):
     # def _do_resend(self, bc_index, code_obj, frame):
     #     pass
 
-    def _do_push_self(self, bc_index, code_obj, frame):
+    def _do_push_self(self, bc_index, code_obj):
         logging.debug("")
-        frame.push(code_obj.self)
+        self.frame.push(code_obj.self)
 
         return bc_index
 
-    def _do_push_literal(self, bc_index, code_obj, frame):
+    def _do_push_literal(self, bc_index, code_obj):
         logging.debug("")
         literal_type = code_obj.get_bytecode(bc_index + 1)
         literal_index = code_obj.get_bytecode(bc_index + 2)
@@ -249,29 +282,29 @@ class Interpreter(object):
                 code_obj.self = obj
         elif literal_type == LITERAL_TYPE_BLOCK:
             block = boxed_literal.value.literal_copy()
-            block.map.scope_parent = frame.pop()
+            block.map.scope_parent = self.frame.pop()
             obj = add_block_trait(block)
         else:
             raise ValueError("Unknown literal type; %s" % literal_type)
 
-        frame.push(obj)
+        self.frame.push(obj)
 
         return bc_index + 2
 
-    def _do_pop(self, bc_index, code_obj, frame):
+    def _do_pop(self, bc_index, code_obj):
         logging.debug("")
-        frame.pop()
+        self.frame.pop()
 
         return bc_index + 1
 
     # def _do_return_implicit(self, bc_index, code_obj, frame):
     #     pass
 
-    def _do_add_slot(self, bc_index, code_obj, frame):
+    def _do_add_slot(self, bc_index, code_obj):
         logging.debug("")
-        value = frame.pop()
-        boxed_slot_name = frame.pop()
-        obj = frame.pop()
+        value = self.frame.pop()
+        boxed_slot_name = self.frame.pop()
+        obj = self.frame.pop()
 
         slot_name = boxed_slot_name.value
 
@@ -287,6 +320,6 @@ class Interpreter(object):
             raise ValueError("Unknown slot type in ._do_add_slot()!")
 
         # keep the receiver on the top of the stack
-        frame.push(obj)
+        self.frame.push(obj)
 
         return bc_index + 1
