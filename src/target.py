@@ -17,6 +17,7 @@ from tinySelf.parser import lex_and_parse
 
 from tinySelf.vm.object_layout import Object
 from tinySelf.vm.code_context import CodeContext
+from tinySelf.vm.virtual_machine import virtual_machine
 
 
 def run_interactive():
@@ -52,14 +53,7 @@ def run_script(path):
     print "Running script", path  # TODO: remove
 
     with open(path) as f:
-        try:
-            for expr in lex_and_parse(f.read()):
-                print expr.__str__()
-        except ParsingError as e:
-            ewriteln("Parse error.")
-            if e.message:
-                ewriteln(e.message)
-            return 1
+        virtual_machine(f.read())
 
     return 0
 
@@ -80,19 +74,21 @@ def show_ast(path):
 
 def compile_file(path):
     print "Compiling script", path  # TODO: remove
-    context = CodeContext()
 
     with open(path) as f:
         try:
-            for expr in lex_and_parse(f.read()):
-                expr.compile(context)
+            contexts = [
+                expr.compile(CodeContext())
+                for expr in lex_and_parse(f.read())
+            ]
         except ParsingError as e:
             ewriteln("Parse error.")
             if e.message:
                 ewriteln(e.message)
             return 1
 
-    print context.to_bytecode()
+    for context in contexts:
+        print context.debug_json()
 
     return 0
 
