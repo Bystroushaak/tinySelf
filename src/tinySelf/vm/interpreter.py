@@ -103,8 +103,6 @@ class Interpreter(FrameSet):
                 bc_index = self._do_send(bc_index, code_obj)
             # elif bytecode == BYTECODE_SELFSEND:
             #     self._do_selfSend(bc_index, code_obj, frame)
-            # elif bytecode == BYTECODE_RESEND:
-            #     self._do_resend(bc_index, code_obj, frame)
             elif bytecode == BYTECODE_PUSHSELF:
                 bc_index = self._do_push_self(bc_index, code_obj)
             elif bytecode == BYTECODE_PUSHLITERAL:
@@ -180,12 +178,25 @@ class Interpreter(FrameSet):
             else:
                 obj.map.scope_parent = self.universe
 
+    def _resend_to_parent(self, obj, parent_name, message_name):
+        logging.debug("resend %s.%s" % (parent_name, message_name))
+
+        resend_parent = obj.map.parent_slots.get(parent_name)
+        if resend_parent is None and obj.map.scope_parent:
+            resend_parent = obj.map.scope_parent.map.parent_slots.get(parent_name)
+
+        if resend_parent is None:
+            raise ValueError(
+                "Can't do resend; parent `%s` not found!" % parent_name
+            )
+
+        return resend_parent.slot_lookup(message_name)
+
     def _do_send(self, bc_index, code):
         """
         Args:
             bc_index (int): Index of the bytecode in `code` bytecode list.
             code (obj): :class:`CodeContext` instance.
-            frame (obj): :class:`Frame` instance.
 
         Returns:
             int: Index of next bytecode.
@@ -197,9 +208,15 @@ class Interpreter(FrameSet):
         parameters_values = []
         if message_type == SEND_TYPE_BINARY:
             parameters_values = [self.frame.pop()]
-        elif message_type == SEND_TYPE_KEYWORD:
+        elif message_type == SEND_TYPE_KEYWORD or \
+             message_type == SEND_TYPE_KEYWORD_RESEND:
             for _ in range(number_of_parameters):
                 parameters_values.append(self.frame.pop())
+
+        boxed_resend_parent_name = ""
+        if message_type == SEND_TYPE_UNARY_RESEND or \
+           message_type == SEND_TYPE_KEYWORD_RESEND:
+            boxed_resend_parent_name = self.frame.pop()
 
         boxed_message = self.frame.pop()
         message_name = boxed_message.value  # unpack from StrBox
@@ -209,24 +226,29 @@ class Interpreter(FrameSet):
         obj = self.frame.pop()
         self._check_scope_parent(obj, code)
 
-        value_of_slot = obj.slot_lookup(message_name)
-        if value_of_slot is None:
+        if boxed_resend_parent_name:
+            parent_name = boxed_resend_parent_name.value
+            slot = self._resend_to_parent(obj, parent_name, message_name)
+        else:
+            slot = obj.slot_lookup(message_name)
+
+        if slot is None:
             raise ValueError("Missing slot error: " + message_name)
 
-        if value_of_slot.has_code:
+        if slot.has_code:
             logging.debug("code run")
             return_value = self._interpret_obj_with_code(
                 code=code,
                 scope_parent=obj,
-                method_obj=value_of_slot,
+                method_obj=slot,
                 parameters=parameters_values,
             )
 
-        elif value_of_slot.has_primitive_code:
+        elif slot.has_primitive_code:
             logging.debug("primitive code run")
-            return_value = value_of_slot.map.primitive_code(*parameters_values)
+            return_value = slot.map.primitive_code(*parameters_values)
 
-        elif value_of_slot.is_assignment_primitive:
+        elif slot.is_assignment_primitive:
             logging.debug("is assignment primitive")
             if len(parameters_values) != 1:
                 raise ValueError("Too many values to set!")
@@ -234,7 +256,7 @@ class Interpreter(FrameSet):
             assert len(message_name) > 1
             slot_name = message_name[:-1]
 
-            assignee = value_of_slot.real_parent
+            assignee = slot.real_parent
             ret_val = assignee.set_slot(slot_name, parameters_values[0])
 
             if ret_val is None:
@@ -244,16 +266,13 @@ class Interpreter(FrameSet):
 
         else:
             logging.debug("is just normal value")
-            return_value = value_of_slot
+            return_value = slot
 
         self.frame.push(return_value)
 
         return bc_index + 2
 
     # def _do_selfSend(self, bc_index, code_obj, frame):
-    #     pass
-
-    # def _do_resend(self, bc_index, code_obj, frame):
     #     pass
 
     def _do_push_self(self, bc_index, code_obj):
@@ -315,7 +334,7 @@ class Interpreter(FrameSet):
         if slot_type == SLOT_NORMAL:
             obj.meta_add_slot(slot_name=slot_name, value=value)
         elif slot_type == SLOT_PARENT:
-            obj.meta_add_parent(slot_name=slot_name, value=value)
+            obj.meta_add_parent(parent_name=slot_name, value=value)
         else:
             raise ValueError("Unknown slot type in ._do_add_slot()!")
 
