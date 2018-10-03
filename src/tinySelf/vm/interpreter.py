@@ -105,7 +105,7 @@ class Interpreter(object):
 
     def _create_intermediate_params_obj(self, scope_parent, method_obj, parameters):
         intermediate_obj = Object()
-        intermediate_obj.meta_add_parent("*", scope_parent)
+        intermediate_obj.map.scope_parent = scope_parent
 
         parameter_pairs = self._put_together_parameters(
             parameter_names=method_obj.map.parameters,
