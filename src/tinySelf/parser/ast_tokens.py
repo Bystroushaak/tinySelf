@@ -239,23 +239,30 @@ class String(BaseBox):  # TODO: remove?
 
 class MessageBase(BaseBox):
     def __init__(self, name):
+        self.true_name = name
+
         self.name = name
+        self.parent_name = ""
+
+        if self.is_resend:
+            self.parent_name, self.name = self.name.split(".", 1)
 
     @property
     def is_resend(self):
-        return "." in self.name
-
-    def remove_resend_and_return_parent_name(self):
-        parent_name, self.name = self.name.split(".", 1)
-        return parent_name
+        return "." in self.true_name
 
 
 class Message(MessageBase):
     def compile(self, context):
         context.add_literal_str_push_bytecode(self.name)
 
+        send_type = SEND_TYPE_UNARY
+        if self.is_resend:
+            send_type = SEND_TYPE_UNARY_RESEND
+            context.add_literal_str_push_bytecode(self.parent_name)
+
         context.add_bytecode(BYTECODE_SEND)
-        context.add_bytecode(SEND_TYPE_UNARY)
+        context.add_bytecode(send_type)
         context.add_bytecode(0)
 
         return context
@@ -279,11 +286,16 @@ class KeywordMessage(MessageBase):
     def compile(self, context):
         context.add_literal_str_push_bytecode(self.name)
 
+        send_type = SEND_TYPE_KEYWORD
+        if self.is_resend:
+            send_type = SEND_TYPE_KEYWORD_RESEND
+            context.add_literal_str_push_bytecode(self.parent_name)
+
         for parameter in self.parameters:
             parameter.compile(context)
 
         context.add_bytecode(BYTECODE_SEND)
-        context.add_bytecode(SEND_TYPE_KEYWORD)
+        context.add_bytecode(send_type)
         context.add_bytecode(len(self.parameters))
 
         return context
@@ -372,7 +384,10 @@ class Resend(BaseBox):
         self.msg = msg
 
     def compile(self, context):
-        raise NotImplementedError
+        context.add_bytecode(BYTECODE_PUSHSELF)
+        self.msg.compile(context)
+
+        return context
 
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
@@ -394,8 +409,7 @@ def send_or_resend(obj, msg):
         if obj != Self():
             raise ValueError("Can't send resend to %s" % obj.__str__())
 
-        parent = msg.remove_resend_and_return_parent_name()
-        return Resend(parent, msg)
+        return Resend(msg.parent_name, msg)
 
     return Send(obj, msg)
 
@@ -434,7 +448,6 @@ class Return(BaseBox):
 
     def compile(self, context):
         self.value.compile(context)
-        # context.add_bytecode(BYTECODE_RETURNIMPLICIT)
         context.add_bytecode(BYTECODE_RETURNTOP)
 
         return context
