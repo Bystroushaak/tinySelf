@@ -102,3 +102,29 @@ def test_block_with_argument():
 
     result = interpreter.interpret(context)
     assert result == PrimitiveIntObject(3)
+
+
+def test_calling_block_twice_with_argument():
+    ast = lex_and_parse("""(|
+        a <- 0.
+        giveOneToBlock: blk = (||
+            blk with: 1
+        ).
+
+        giveTwoToBlock: blk = (||
+            blk with: 2
+        ).
+
+        shouldBeThree = (| tmp = 1. block. sub_result. |
+            block: [| :x | a + tmp + x].
+            a: 1.
+            sub_result: giveOneToBlock: block.
+            ^ sub_result + giveTwoToBlock: block
+        )
+    |) shouldBeThree""")
+
+    context = ast[0].compile(CodeContext())
+    interpreter = Interpreter(universe=get_primitives())
+
+    result = interpreter.interpret(context)
+    assert result == PrimitiveIntObject(7)
