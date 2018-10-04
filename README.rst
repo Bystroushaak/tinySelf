@@ -25,7 +25,7 @@ PIP for pypy
 
 You will also need PIP configured to install packages into your pypy paths. Easiest way how to do it is to run the PIP install script::
 
-    curl https://bootstrap.pypa.io/get-pip.py | pypy
+    curl https://bootstrap.pypa.io/get-pip.py | pypy - --user
 
 rpython
 +++++++
