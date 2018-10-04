@@ -12,6 +12,8 @@ class LiteralBox(BaseBox):
 
 class IntBox(LiteralBox):
     def __init__(self, value):
+        assert isinstance(value, int)
+
         self.value = value
         self.literal_type = LITERAL_TYPE_INT
 
@@ -21,6 +23,8 @@ class IntBox(LiteralBox):
 
 class StrBox(LiteralBox):
     def __init__(self, value):
+        assert isinstance(value, str)
+
         self.value = value
         self.literal_type = LITERAL_TYPE_STR
 

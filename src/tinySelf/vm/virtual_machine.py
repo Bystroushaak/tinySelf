@@ -17,4 +17,4 @@ def virtual_machine(source):
     interpreter = Interpreter(universe)
     for item in ast:
         context = item.compile(CodeContext())
-        print interpreter.interpret(context)
+        print interpreter.interpret(context).__str__()

@@ -9,18 +9,14 @@ from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveStrObject
 from tinySelf.vm.primitives import AssignmentPrimitive
 
+from tinySelf.vm.code_context import IntBox
+from tinySelf.vm.code_context import StrBox
+from tinySelf.vm.code_context import ObjBox
+
 from tinySelf.vm.object_layout import Object
 
 
 NIL = PrimitiveNilObject()
-
-
-import logging
-logging.basicConfig(
-    filename='trace.log',
-    level=logging.DEBUG,
-    format="%(lineno)d %(funcName)s(): %(message)s"
-)
 
 
 # TODO: benchmark and eventually rewrite to linked list
@@ -30,21 +26,13 @@ class Frame(object):
 
     def push(self, item):
         assert isinstance(item, Object)
-
-        logging.debug("pushing %s", item)
-
         self.stack.append(item)
 
     def pop(self):
-        item = self.stack.pop()
-
-        logging.debug("pop %s", item)
-
-        return item
+        return self.stack.pop()
 
     def pop_or_nil(self):
         if self.stack:
-            logging.debug("pop or nil %s", self.stack[-1])
             return self.pop()
 
         return NIL
@@ -82,21 +70,14 @@ class FrameSet(object):
 
 class Interpreter(FrameSet):
     def __init__(self, universe):
-        super(Interpreter, self).__init__()
+        FrameSet.__init__(self)
         self.universe = universe
 
     def interpret(self, code_obj):
         bc_index = 0
 
-        logging.debug(code_obj.debug_json())
-
         while True:
             bytecode = code_obj.get_bytecode(bc_index)
-
-            logging.debug("\nFrame:")
-            for i, obj in enumerate(self.frame.stack):
-                logging.debug("\t %d) %s", i, str(obj))
-            logging.debug("\n\n")
 
             # TODO: sort by the statistical probability of each bytecode
             if bytecode == BYTECODE_SEND:
@@ -119,7 +100,6 @@ class Interpreter(FrameSet):
             bc_index += 1
 
     def _put_together_parameters(self, parameter_names, parameters):
-        logging.debug("")
         if len(parameter_names) < len(parameters):
             raise ValueError("Too many parameters!")
 
@@ -146,8 +126,6 @@ class Interpreter(FrameSet):
         return intermediate_obj
 
     def _interpret_obj_with_code(self, code, scope_parent, method_obj, parameters):
-        logging.debug("")
-
         if parameters:
             method_obj.map.scope_parent = self._create_intermediate_params_obj(
                 scope_parent,
@@ -179,8 +157,6 @@ class Interpreter(FrameSet):
                 obj.map.scope_parent = self.universe
 
     def _resend_to_parent(self, obj, parent_name, message_name):
-        logging.debug("resend %s.%s" % (parent_name, message_name))
-
         resend_parent = obj.map.parent_slots.get(parent_name)
         if resend_parent is None and obj.map.scope_parent:
             resend_parent = obj.map.scope_parent.map.parent_slots.get(parent_name)
@@ -201,7 +177,6 @@ class Interpreter(FrameSet):
         Returns:
             int: Index of next bytecode.
         """
-        logging.debug("")
         message_type = code.get_bytecode(bc_index + 1)
         number_of_parameters = code.get_bytecode(bc_index + 2)
 
@@ -213,15 +188,15 @@ class Interpreter(FrameSet):
             for _ in range(number_of_parameters):
                 parameters_values.append(self.frame.pop())
 
-        boxed_resend_parent_name = ""
+        boxed_resend_parent_name = None
         if message_type == SEND_TYPE_UNARY_RESEND or \
            message_type == SEND_TYPE_KEYWORD_RESEND:
             boxed_resend_parent_name = self.frame.pop()
+            assert isinstance(boxed_resend_parent_name, PrimitiveStrObject)
 
         boxed_message = self.frame.pop()
+        assert isinstance(boxed_message, PrimitiveStrObject)
         message_name = boxed_message.value  # unpack from StrBox
-
-        logging.debug("message name %s", message_name)
 
         obj = self.frame.pop()
         self._check_scope_parent(obj, code)
@@ -236,7 +211,6 @@ class Interpreter(FrameSet):
             raise ValueError("Missing slot error: " + message_name)
 
         if slot.has_code:
-            logging.debug("code run")
             return_value = self._interpret_obj_with_code(
                 code=code,
                 scope_parent=obj,
@@ -245,11 +219,9 @@ class Interpreter(FrameSet):
             )
 
         elif slot.has_primitive_code:
-            logging.debug("primitive code run")
-            return_value = slot.map.primitive_code(*parameters_values)
+            return_value = slot.map.primitive_code(obj, parameters_values)
 
         elif slot.is_assignment_primitive:
-            logging.debug("is assignment primitive")
             if len(parameters_values) != 1:
                 raise ValueError("Too many values to set!")
 
@@ -265,7 +237,6 @@ class Interpreter(FrameSet):
             return bc_index + 2
 
         else:
-            logging.debug("is just normal value")
             return_value = slot
 
         self.frame.push(return_value)
@@ -276,13 +247,11 @@ class Interpreter(FrameSet):
     #     pass
 
     def _do_push_self(self, bc_index, code_obj):
-        logging.debug("")
         self.frame.push(code_obj.self)
 
         return bc_index
 
     def _do_push_literal(self, bc_index, code_obj):
-        logging.debug("")
         literal_type = code_obj.get_bytecode(bc_index + 1)
         literal_index = code_obj.get_bytecode(bc_index + 2)
         boxed_literal = code_obj.literals[literal_index]
@@ -292,14 +261,18 @@ class Interpreter(FrameSet):
         elif literal_type == LITERAL_TYPE_ASSIGNMENT:
             obj = AssignmentPrimitive()
         elif literal_type == LITERAL_TYPE_INT:
+            assert isinstance(boxed_literal, IntBox)
             obj = PrimitiveIntObject(boxed_literal.value)
         elif literal_type == LITERAL_TYPE_STR:
+            assert isinstance(boxed_literal, StrBox)
             obj = PrimitiveStrObject(boxed_literal.value)
         elif literal_type == LITERAL_TYPE_OBJ:
+            assert isinstance(boxed_literal, ObjBox)
             obj = boxed_literal.value.literal_copy()
             if code_obj.self is None:
                 code_obj.self = obj
         elif literal_type == LITERAL_TYPE_BLOCK:
+            assert isinstance(boxed_literal, ObjBox)
             block = boxed_literal.value.literal_copy()
             block.map.scope_parent = self.frame.pop()
             obj = add_block_trait(block)
@@ -311,7 +284,6 @@ class Interpreter(FrameSet):
         return bc_index + 2
 
     def _do_pop(self, bc_index, code_obj):
-        logging.debug("")
         self.frame.pop()
 
         return bc_index + 1
@@ -320,11 +292,11 @@ class Interpreter(FrameSet):
     #     pass
 
     def _do_add_slot(self, bc_index, code_obj):
-        logging.debug("")
         value = self.frame.pop()
         boxed_slot_name = self.frame.pop()
         obj = self.frame.pop()
 
+        assert isinstance(boxed_slot_name, PrimitiveStrObject)
         slot_name = boxed_slot_name.value
 
         if value.is_assignment_primitive:

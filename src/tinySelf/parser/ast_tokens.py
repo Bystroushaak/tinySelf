@@ -380,6 +380,8 @@ class Send(BaseBox):
 
 class Resend(BaseBox):
     def __init__(self, parent_name, msg):
+        assert isinstance(parent_name, str)
+
         self.parent_name = parent_name
         self.msg = msg
 
@@ -399,7 +401,7 @@ class Resend(BaseBox):
 
     def __str__(self):
         return "Resend(parent_name=%s, msg=%s)" % (
-            self.parent_name.__str__(),
+            self.parent_name,
             self.msg.__str__()
         )
 

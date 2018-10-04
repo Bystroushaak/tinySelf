@@ -50,8 +50,6 @@ def run_interactive():
 
 
 def run_script(path):
-    print "Running script", path  # TODO: remove
-
     with open(path) as f:
         virtual_machine(f.read())
 
@@ -73,8 +71,6 @@ def show_ast(path):
 
 
 def compile_file(path):
-    print "Compiling script", path  # TODO: remove
-
     with open(path) as f:
         try:
             contexts = [

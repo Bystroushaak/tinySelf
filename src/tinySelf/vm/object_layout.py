@@ -4,6 +4,14 @@ from collections import OrderedDict
 from rply.token import BaseBox
 
 
+def unvisit(visited_maps, first_level_call):
+    if not first_level_call:
+        return
+
+    for obj_map in visited_maps.keys():
+        obj_map.visited = False
+
+
 class Object(object):
     def __init__(self, obj_map=None):
         if obj_map is None:
@@ -39,8 +47,8 @@ class Object(object):
         return True
 
     def get_slot(self, slot_name):
-        slot_index = self.map.slots.get(slot_name, None)
-        if slot_index is not None:
+        slot_index = self.map.slots.get(slot_name, -1)
+        if slot_index is not -1:
             return self.slots_references[slot_index]
 
         return None
@@ -49,18 +57,14 @@ class Object(object):
         first_level_call = False
         if _visited_maps is None:
             first_level_call = True
-            _visited_maps = set()
-
-        def unvisit():
-            if not first_level_call:
-                return
-
-            for obj_map in _visited_maps:
-                obj_map.visited = False
+            # sets are not supported, see
+            # https://rpython.readthedocs.io/en/latest/rpython.html
+            _visited_maps = {}
 
         parents = []
         if self.map.scope_parent is not None:
             parents.append(self.map.scope_parent)
+
         parents.extend(self.map.parent_slots.values())
 
         for parent in parents:
@@ -68,26 +72,26 @@ class Object(object):
                 continue
 
             parent.map.visited = True
-            _visited_maps.add(parent.map)
+            _visited_maps[parent.map] = None
 
             if slot_name in parent.map.slots:
-                unvisit()
+                unvisit(_visited_maps, first_level_call)
                 return parent.get_slot(slot_name)
 
             result = parent.parent_lookup(slot_name, _visited_maps)
             if result is not None:
-                unvisit()
+                unvisit(_visited_maps, first_level_call)
                 return result
 
-        unvisit()
+        unvisit(_visited_maps, first_level_call)
         return None
 
     def slot_lookup(self, slot_name):
         assert isinstance(slot_name, str)
 
-        slot_index = self.map.slots.get(slot_name, None)
+        slot_index = self.map.slots.get(slot_name, -1)
 
-        if slot_index is not None:
+        if slot_index != -1:
             return self.slots_references[slot_index]
 
         if self.map.scope_parent is not None:

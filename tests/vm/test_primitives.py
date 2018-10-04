@@ -7,4 +7,4 @@ def test_PrimitiveIntObject():
 
     plus_slot = o.slot_lookup("+")
     assert plus_slot.map.primitive_code
-    assert plus_slot.map.primitive_code(PrimitiveIntObject(2)) == PrimitiveIntObject(5)
+    assert plus_slot.map.primitive_code(o, [PrimitiveIntObject(2)]) == PrimitiveIntObject(5)
