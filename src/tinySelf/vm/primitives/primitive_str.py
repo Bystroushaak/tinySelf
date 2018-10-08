@@ -24,3 +24,9 @@ class PrimitiveStrObject(Object):
 
     def __str__(self):
         return "PrimitiveStrObject(%s)" % self.value
+
+    def __eq__(self, obj):
+        if not isinstance(obj, PrimitiveStrObject):
+            return False
+
+        return self.value == obj.value
