@@ -38,6 +38,10 @@ Get newest version of the rpython, which is part of the pypy project repository:
 
 (If you already have the repository cloned, just run ``hg pull``.)
 
+Last tested working revision is ``95194``::
+
+    hg update 95194
+
 rply
 ++++
 
