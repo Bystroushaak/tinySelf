@@ -114,10 +114,10 @@ class Interpreter(FrameSet):
 
     def _create_intermediate_params_obj(self, scope_parent, method_obj, parameters):
         intermediate_obj = Object()
-        intermediate_obj.map.scope_parent = scope_parent
+        intermediate_obj.scope_parent = scope_parent
 
         parameter_pairs = self._put_together_parameters(
-            parameter_names=method_obj.map.parameters,
+            parameter_names=method_obj.parameters,
             parameters=parameters
         )
         for name, value in parameter_pairs:
@@ -127,15 +127,15 @@ class Interpreter(FrameSet):
 
     def _interpret_obj_with_code(self, code, scope_parent, method_obj, parameters):
         if parameters:
-            method_obj.map.scope_parent = self._create_intermediate_params_obj(
+            method_obj.scope_parent = self._create_intermediate_params_obj(
                 scope_parent,
                 method_obj,
                 parameters
             )
         else:
-            method_obj.map.scope_parent = scope_parent
+            method_obj.scope_parent = scope_parent
 
-        code_context = method_obj.map.code_context
+        code_context = method_obj.code_context
         code_context.self = method_obj
         code_context.scope_parent = scope_parent
 
@@ -145,21 +145,21 @@ class Interpreter(FrameSet):
 
         code_context.self = None
         code_context.scope_parent = None
-        method_obj.map.scope_parent = None
+        method_obj.scope_parent = None
 
         return ret_val
 
     def _check_scope_parent(self, obj, code):
-        if obj.map.scope_parent is None:
+        if obj.scope_parent is None:
             if code.scope_parent is not None:
-                obj.map.scope_parent = code.scope_parent
+                obj.scope_parent = code.scope_parent
             else:
-                obj.map.scope_parent = self.universe
+                obj.scope_parent = self.universe
 
     def _resend_to_parent(self, obj, parent_name, message_name):
-        resend_parent = obj.map.parent_slots.get(parent_name)
-        if resend_parent is None and obj.map.scope_parent:
-            resend_parent = obj.map.scope_parent.map.parent_slots.get(parent_name)
+        resend_parent = obj.parent_slots.get(parent_name)
+        if resend_parent is None and obj.scope_parent:
+            resend_parent = obj.scope_parent.parent_slots.get(parent_name)
 
         if resend_parent is None:
             raise ValueError(
@@ -274,7 +274,7 @@ class Interpreter(FrameSet):
         elif literal_type == LITERAL_TYPE_BLOCK:
             assert isinstance(boxed_literal, ObjBox)
             block = boxed_literal.value.literal_copy()
-            block.map.scope_parent = self.frame.pop()
+            block.scope_parent = self.frame.pop()
             obj = add_block_trait(block)
         else:
             raise ValueError("Unknown literal type; %s" % literal_type)
