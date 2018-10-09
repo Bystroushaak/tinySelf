@@ -4,45 +4,53 @@ from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 
-def _assert_primitive_ints(first, second):
-    assert isinstance(first, PrimitiveIntObject)
-    assert isinstance(second, PrimitiveIntObject)
-
-    assert isinstance(first.value, int)
-    assert isinstance(second.value, int)
-
-
 def add(self, parameters):
     obj = parameters[0]
-    _assert_primitive_ints(self, obj)
+    # yeah, this can't be factored out, I've tried..
+    assert isinstance(self, PrimitiveIntObject)
+    assert isinstance(obj, PrimitiveIntObject)
+    assert isinstance(self.value, int)
+    assert isinstance(obj.value, int)
 
     return PrimitiveIntObject(self.value + obj.value)
 
 
 def substract(self, parameters):
     obj = parameters[0]
-    _assert_primitive_ints(self, obj)
+    assert isinstance(self, PrimitiveIntObject)
+    assert isinstance(obj, PrimitiveIntObject)
+    assert isinstance(self.value, int)
+    assert isinstance(obj.value, int)
 
     return PrimitiveIntObject(self.value - obj.value)
 
 
 def multiply(self, parameters):
     obj = parameters[0]
-    _assert_primitive_ints(self, obj)
+    assert isinstance(self, PrimitiveIntObject)
+    assert isinstance(obj, PrimitiveIntObject)
+    assert isinstance(self.value, int)
+    assert isinstance(obj.value, int)
 
     return PrimitiveIntObject(self.value * obj.value)
 
 
 def divide(self, parameters):
     obj = parameters[0]
-    _assert_primitive_ints(self, obj)
+    assert isinstance(self, PrimitiveIntObject)
+    assert isinstance(obj, PrimitiveIntObject)
+    assert isinstance(self.value, int)
+    assert isinstance(obj.value, int)
 
     return PrimitiveIntObject(self.value / obj.value)
 
 
 def modulo(self, parameters):
     obj = parameters[0]
-    _assert_primitive_ints(self, obj)
+    assert isinstance(self, PrimitiveIntObject)
+    assert isinstance(obj, PrimitiveIntObject)
+    assert isinstance(self.value, int)
+    assert isinstance(obj.value, int)
 
     return PrimitiveIntObject(self.value % obj.value)
 
