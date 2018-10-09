@@ -179,6 +179,57 @@ class Object(object):
     def meta_set_code_context(self, code_context):
         self.map.code_context = code_context
 
+    # map encapsulation - lets pretend that map is not present at all
+    @property
+    def slot_keys(self):
+        return self.map.slots.keys()
+
+    @property
+    def parent_slots(self):
+        return self.map.parent_slots
+
+    @parent_slots.setter
+    def parent_slots(self, new_parent_slots):
+        assert isinstance(new_parent_slots)
+        self.map.parent_slots = new_parent_slots
+
+    @property
+    def parameters(self):
+        return self.map.parameters
+
+    @parameters.setter
+    def parameters(self, new_paremeters):
+        assert isinstance(new_paremeters, list)
+        self.map.parameters = new_paremeters
+
+    @property
+    def scope_parent(self):
+        return self.map.scope_parent
+
+    @scope_parent.setter
+    def scope_parent(self, new_scope_parent):
+        self.map.scope_parent = new_scope_parent
+
+    @property
+    def ast(self):
+        return self.map.ast
+
+    @ast.setter
+    def ast(self, new_ast):
+        self.map.ast = ast
+
+    @property
+    def code_context(self):
+        return self.map.code_context
+
+    @code_context.setter
+    def code_context(self, new_code_context):
+        self.map.code_context = new_code_context
+
+    @property
+    def primitive_code(self):
+        return self.map.primitive_code
+
 
 class ObjectMap(object):
     def __init__(self):
