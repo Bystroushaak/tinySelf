@@ -219,7 +219,7 @@ class Interpreter(FrameSet):
             )
 
         elif slot.has_primitive_code:
-            return_value = slot.map.primitive_code(obj, parameters_values)
+            return_value = slot.primitive_code(obj, parameters_values)
 
         elif slot.is_assignment_primitive:
             if len(parameters_values) != 1:

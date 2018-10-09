@@ -40,8 +40,8 @@ class ObjBox(LiteralBox):
         self.literal_type = LITERAL_TYPE_OBJ
 
     def __str__(self):
-        if self.value.map.ast is not None:
-            return self.value.map.ast.__str__()
+        if self.value.ast is not None:
+            return self.value.ast.__str__()
 
         return "No obj representation"
 
