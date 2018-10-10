@@ -17,7 +17,7 @@ class PrimitiveFalseObjectSingleton(Object):
     def __init__(self):
         Object.__init__(self)
 
-        add_primitive_fn(self, "is", is_false, ["obj"])
+        add_primitive_fn(self, "is:", is_false, ["obj"])
 
     def clone(self):
         return self

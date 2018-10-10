@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from tinySelf.vm.object_layout import Object
-from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 from tinySelf.vm.primitives.primitive_true import PrimitiveTrueObject
 from tinySelf.vm.primitives.primitive_false import PrimitiveFalseObject
+from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 
 def is_nil(self, parameters):
@@ -19,7 +19,7 @@ class PrimitiveNilObjectSingleton(Object):
         Object.__init__(self)
 
         add_primitive_fn(self, "==", is_nil, ["obj"])
-        add_primitive_fn(self, "is", is_nil, ["obj"])
+        add_primitive_fn(self, "is:", is_nil, ["obj"])
 
     def clone(self):
         return self

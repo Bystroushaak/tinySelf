@@ -12,15 +12,15 @@ def test_PrimitiveNilObject():
 def test_PrimitiveNilObject_is():
     o = PrimitiveNilObject()
 
-    is_slot = o.slot_lookup("is")
+    is_slot = o.slot_lookup("is:")
     result = is_slot.map.primitive_code(o, [PrimitiveNilObject()])
     assert result == PrimitiveTrueObject()
 
-    is_slot = o.slot_lookup("is")
+    is_slot = o.slot_lookup("is:")
     result = is_slot.map.primitive_code(o, [PrimitiveIntObject(3)])
     assert result == PrimitiveFalseObject()
 
-    is_slot = o.slot_lookup("is")
+    is_slot = o.slot_lookup("is:")
     result = is_slot.map.primitive_code(o, [PrimitiveTrueObject()])
     assert result == PrimitiveFalseObject()
 
