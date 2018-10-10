@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from pytest import raises
 
-from tinySelf.vm.interpreter import Frame
 from tinySelf.vm.interpreter import NIL
 from tinySelf.vm.interpreter import Interpreter
+from tinySelf.vm.frame_and_frameset import Frame
 
 from tinySelf.vm.code_context import CodeContext
 
