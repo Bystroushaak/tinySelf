@@ -1,22 +1,13 @@
 # -*- coding: utf-8 -*-
 from tinySelf.vm.object_layout import Object
 
+from tinySelf.vm.primitives.primitive_nil import PrimitiveNilObject
+from tinySelf.vm.primitives.primitive_true import PrimitiveTrueObject
+from tinySelf.vm.primitives.primitive_false import PrimitiveFalseObject
+from tinySelf.vm.primitives.primitive_nil import PrimitiveNilObject
 from tinySelf.vm.primitives.primitive_int import PrimitiveIntObject
 from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
-
-
-class PrimitiveNilObjectSingleton(Object):
-    def __init__(self):
-        Object.__init__(self)
-
-    def __str__(self):
-        return "PrimitiveNilObject()"
-
-
-_NIL_OBJ = PrimitiveNilObjectSingleton()
-def PrimitiveNilObject():
-    return _NIL_OBJ
 
 
 class AssignmentPrimitive(Object):
@@ -74,7 +65,9 @@ def get_primitives():
 
     # add_primitive_fn(primitives, "primitiveInt", lambda x: PrimitiveIntObject(x), ["literal"])
     # add_primitive_fn(primitives, "primitiveStr", lambda x: PrimitiveStrObject(x), ["literal"])
-    primitives.meta_add_slot("primitiveNil", PrimitiveNilObject())
+    primitives.meta_add_slot("nil", PrimitiveNilObject())
+    primitives.meta_add_slot("true", PrimitiveTrueObject())
+    primitives.meta_add_slot("false", PrimitiveFalseObject())
 
     # _add_primitive(primitives, "mirrorOn:", _primitive_create_mirror, ["obj"])
 
