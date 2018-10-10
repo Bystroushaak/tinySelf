@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import pytest
-
 from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.primitives import PrimitiveTrueObject
