@@ -12,7 +12,7 @@ def unvisit(visited_maps, first_level_call):
         obj_map.visited = False
 
 
-class Object(object):
+class _BareObject(object):
     def __init__(self, obj_map=None):
         if obj_map is None:
             obj_map = ObjectMap()
@@ -122,7 +122,8 @@ class Object(object):
     def __str__(self):
         return "Object(%s)" % ", ".join(self.map.slots.keys())
 
-    # meta operations
+
+class _ObjectWithMetaOperations(_BareObject):
     def meta_add_slot(self, slot_name, value):  # TODO: support auto Nil value
         assert isinstance(value, Object)
 
@@ -179,6 +180,8 @@ class Object(object):
     def meta_set_code_context(self, code_context):
         self.map.code_context = code_context
 
+
+class _ObjectWithMapEncapsulation(_ObjectWithMetaOperations):
     # map encapsulation - lets pretend that map is not present at all
     @property
     def slot_keys(self):
@@ -229,6 +232,10 @@ class Object(object):
     @property
     def primitive_code(self):
         return self.map.primitive_code
+
+
+class Object(_ObjectWithMapEncapsulation):
+    pass
 
 
 class ObjectMap(object):
