@@ -6,10 +6,12 @@ from tinySelf.vm.primitives import PrimitiveNilObject
 NIL = PrimitiveNilObject()
 
 
-# TODO: benchmark and eventually rewrite to linked list
 class Frame(object):
     def __init__(self):
         self.stack = []
+        self.bc_index = 0
+        self.code_context = None
+        self.tmp_method_obj_reference = None
 
     def push(self, item):
         assert isinstance(item, Object)
@@ -30,8 +32,13 @@ class FrameSet(object):
         self.frame = Frame()
         self.frameset = [self.frame]
 
-    def push_frame(self):
+    def is_nested_call(self):
+        return len(self.frameset) > 1
+
+    def push_frame(self, code_context, method_obj):
         self.frame = Frame()
+        self.frame.code_context = code_context
+        self.frame.tmp_method_obj_reference = method_obj
         self.frameset.append(self.frame)
 
     def pop_frame(self):
@@ -43,7 +50,7 @@ class FrameSet(object):
 
     def pop_frame_down(self):
         if len(self.frameset) == 1:
-            return False
+            return
 
         result = self.frame.pop_or_nil()
 
@@ -52,4 +59,12 @@ class FrameSet(object):
 
         self.frame.push(result)
 
-        return True
+    def pop_and_cleanup_frame(self):
+        self.frame.code_context.self = None
+        self.frame.code_context.scope_parent = None
+
+        self.frame.tmp_method_obj_reference.scope_parent = None
+        self.frame.tmp_method_obj_reference = None
+
+        self.pop_frame_down()
+

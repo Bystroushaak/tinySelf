@@ -21,35 +21,51 @@ NIL = PrimitiveNilObject()
 
 
 class Interpreter(FrameSet):
-    def __init__(self, universe):
+    def __init__(self, code_context, universe):
         FrameSet.__init__(self)
         self.universe = universe
+        self.frame.code_context = code_context
 
-    def interpret(self, code_obj):
-        bc_index = 0
+    def add_process(self, code_context):
+        self.frame.code_context = code_context
 
+    def interpret(self):
         while True:
+            frame = self.frame
+            bc_index = frame.bc_index
+            code_obj = frame.code_context
+
             bytecode = code_obj.get_bytecode(bc_index)
 
-            # TODO: sort by the statistical probability of each bytecode
             if bytecode == BYTECODE_SEND:
-                bc_index = self._do_send(bc_index, code_obj)
+                bc_index += self._do_send(bc_index, code_obj)
+
+            elif bytecode == BYTECODE_PUSHSELF:
+                bc_index += self._do_push_self(bc_index, code_obj)
+
+            elif bytecode == BYTECODE_PUSHLITERAL:
+                bc_index += self._do_push_literal(bc_index, code_obj)
+
+            elif bytecode == BYTECODE_RETURNTOP:
+                if not self.is_nested_call():
+                    return self.frame.pop_or_nil()
+
+                self.pop_and_cleanup_frame()
+                continue
+
+            elif bytecode == BYTECODE_ADD_SLOT:
+                bc_index += self._do_add_slot(bc_index, code_obj)
+
             # elif bytecode == BYTECODE_SELFSEND:
             #     self._do_selfSend(bc_index, code_obj, frame)
-            elif bytecode == BYTECODE_PUSHSELF:
-                bc_index = self._do_push_self(bc_index, code_obj)
-            elif bytecode == BYTECODE_PUSHLITERAL:
-                bc_index = self._do_push_literal(bc_index, code_obj)
-            elif bytecode == BYTECODE_POP:
-                self._do_pop(bc_index, code_obj)
-            elif bytecode == BYTECODE_RETURNTOP:
-                return self.frame.pop_or_nil()
+
             # elif bytecode == BYTECODE_RETURNIMPLICIT:
             #     self._do_return_implicit(bc_index, code_obj, frame)
-            elif bytecode == BYTECODE_ADD_SLOT:
-                bc_index = self._do_add_slot(bc_index, code_obj)
 
-            bc_index += 1
+            else:
+                raise ValueError("Unknown bytecode!")
+
+            frame.bc_index = bc_index
 
     def _put_together_parameters(self, parameter_names, parameters):
         if len(parameter_names) < len(parameters):
@@ -77,7 +93,7 @@ class Interpreter(FrameSet):
 
         return intermediate_obj
 
-    def _interpret_obj_with_code(self, code, scope_parent, method_obj, parameters):
+    def _push_code_obj_for_interpretation(self, code, scope_parent, method_obj, parameters):
         if parameters:
             method_obj.scope_parent = self._create_intermediate_params_obj(
                 scope_parent,
@@ -87,21 +103,13 @@ class Interpreter(FrameSet):
         else:
             method_obj.scope_parent = scope_parent
 
-        code_context = method_obj.code_context
-        code_context.self = method_obj
-        code_context.scope_parent = scope_parent
+        new_code_context = method_obj.code_context
+        new_code_context.self = method_obj
+        new_code_context.scope_parent = scope_parent
 
-        self.push_frame()
-        ret_val = self.interpret(code_context)
-        self.pop_frame()
+        self.push_frame(new_code_context, method_obj)
 
-        code_context.self = None
-        code_context.scope_parent = None
-        method_obj.scope_parent = None
-
-        return ret_val
-
-    def _check_scope_parent(self, obj, code):
+    def _set_scope_parent_if_not_already_set(self, obj, code):
         if obj.scope_parent is None:
             if code.scope_parent is not None:
                 obj.scope_parent = code.scope_parent
@@ -129,6 +137,7 @@ class Interpreter(FrameSet):
         Returns:
             int: Index of next bytecode.
         """
+        BYTECODE_SIZE = 3
         message_type = code.get_bytecode(bc_index + 1)
         number_of_parameters = code.get_bytecode(bc_index + 2)
 
@@ -151,7 +160,7 @@ class Interpreter(FrameSet):
         message_name = boxed_message.value  # unpack from StrBox
 
         obj = self.frame.pop()
-        self._check_scope_parent(obj, code)
+        self._set_scope_parent_if_not_already_set(obj, code)
 
         if boxed_resend_parent_name:
             parent_name = boxed_resend_parent_name.value
@@ -163,12 +172,13 @@ class Interpreter(FrameSet):
             raise ValueError("Missing slot error: " + message_name)
 
         if slot.has_code:
-            return_value = self._interpret_obj_with_code(
+            self._push_code_obj_for_interpretation(
                 code=code,
                 scope_parent=obj,
                 method_obj=slot,
                 parameters=parameters_values,
             )
+            return BYTECODE_SIZE
 
         elif slot.has_primitive_code:
             return_value = slot.primitive_code(obj, parameters_values)
@@ -186,14 +196,14 @@ class Interpreter(FrameSet):
             if ret_val is None:
                 raise ValueError("Mistery; a slot that was and is not any more: %s" % slot_name)
 
-            return bc_index + 2
+            return BYTECODE_SIZE
 
         else:
             return_value = slot
 
         self.frame.push(return_value)
 
-        return bc_index + 2
+        return BYTECODE_SIZE
 
     # def _do_selfSend(self, bc_index, code_obj, frame):
     #     pass
@@ -201,7 +211,7 @@ class Interpreter(FrameSet):
     def _do_push_self(self, bc_index, code_obj):
         self.frame.push(code_obj.self)
 
-        return bc_index
+        return 1
 
     def _do_push_literal(self, bc_index, code_obj):
         literal_type = code_obj.get_bytecode(bc_index + 1)
@@ -233,12 +243,7 @@ class Interpreter(FrameSet):
 
         self.frame.push(obj)
 
-        return bc_index + 2
-
-    def _do_pop(self, bc_index, code_obj):
-        self.frame.pop()
-
-        return bc_index + 1
+        return 3
 
     # def _do_return_implicit(self, bc_index, code_obj, frame):
     #     pass
@@ -265,4 +270,4 @@ class Interpreter(FrameSet):
         # keep the receiver on the top of the stack
         self.frame.push(obj)
 
-        return bc_index + 1
+        return 2
