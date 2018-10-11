@@ -26,7 +26,8 @@ class Interpreter(FrameSet):
         self.universe = universe
         self.frame.code_context = code_context
 
-    def add_process(self, code_context):
+    def set_process(self, code_context):
+        self.clean_frames()
         self.frame.code_context = code_context
 
     def interpret(self):

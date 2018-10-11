@@ -29,8 +29,7 @@ class Frame(object):
 
 class FrameSet(object):
     def __init__(self):
-        self.frame = Frame()
-        self.frameset = [self.frame]
+        self.clean_frames()
 
     def is_nested_call(self):
         return len(self.frameset) > 1
@@ -39,6 +38,7 @@ class FrameSet(object):
         self.frame = Frame()
         self.frame.code_context = code_context
         self.frame.tmp_method_obj_reference = method_obj
+
         self.frameset.append(self.frame)
 
     def pop_frame(self):
@@ -68,3 +68,6 @@ class FrameSet(object):
 
         self.pop_frame_down()
 
+    def clean_frames(self):
+        self.frame = Frame()
+        self.frameset = [self.frame]

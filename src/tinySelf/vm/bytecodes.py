@@ -75,10 +75,6 @@ def disassemble(bytecodes):
             ])
             continue
 
-        elif bytecode == BYTECODE_POP:
-            disassembled.append(["POP"])
-            continue
-
         elif bytecode == BYTECODE_RETURNTOP:
             disassembled.append(["RETURNTOP"])
             continue

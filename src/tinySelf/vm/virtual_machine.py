@@ -14,7 +14,8 @@ def virtual_machine(source):
 
     ast = lex_and_parse(source)
 
-    interpreter = Interpreter(universe)
+    interpreter = Interpreter(None, universe)
     for item in ast:
         context = item.compile(CodeContext())
-        print interpreter.interpret(context).__str__()
+        interpreter.set_process(context)
+        print interpreter.interpret().__str__()
