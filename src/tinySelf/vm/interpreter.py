@@ -138,15 +138,11 @@ class Interpreter(FrameSet):
         Returns:
             int: Index of next bytecode.
         """
-        BYTECODE_SIZE = 3
         message_type = code.get_bytecode(bc_index + 1)
         number_of_parameters = code.get_bytecode(bc_index + 2)
 
         parameters_values = []
-        if message_type == SEND_TYPE_BINARY:
-            parameters_values = [self.frame.pop()]
-        elif message_type == SEND_TYPE_KEYWORD or \
-             message_type == SEND_TYPE_KEYWORD_RESEND:
+        if number_of_parameters > 0:
             for _ in range(number_of_parameters):
                 parameters_values.append(self.frame.pop())
 
@@ -179,10 +175,10 @@ class Interpreter(FrameSet):
                 method_obj=slot,
                 parameters=parameters_values,
             )
-            return BYTECODE_SIZE
 
         elif slot.has_primitive_code:
             return_value = slot.primitive_code(obj, parameters_values)
+            self.frame.push(return_value)
 
         elif slot.is_assignment_primitive:
             if len(parameters_values) != 1:
@@ -197,14 +193,11 @@ class Interpreter(FrameSet):
             if ret_val is None:
                 raise ValueError("Mistery; a slot that was and is not any more: %s" % slot_name)
 
-            return BYTECODE_SIZE
-
         else:
             return_value = slot
+            self.frame.push(return_value)
 
-        self.frame.push(return_value)
-
-        return BYTECODE_SIZE
+        return 3
 
     # def _do_selfSend(self, bc_index, code_obj, frame):
     #     pass
