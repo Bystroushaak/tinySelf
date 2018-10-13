@@ -8,6 +8,7 @@ from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveStrObject
 from tinySelf.vm.primitives import AssignmentPrimitive
+from tinySelf.vm.primitives import add_primitive_method
 
 from tinySelf.vm.code_context import IntBox
 from tinySelf.vm.code_context import StrBox
@@ -20,15 +21,39 @@ from tinySelf.vm.frame_and_frameset import FrameSet
 NIL = PrimitiveNilObject()
 
 
+def number_of_frames(this, obj, parameters):
+    return PrimitiveIntObject(len(this.frames))
+
+
 class Interpreter(FrameSet):
     def __init__(self, code_context, universe):
         FrameSet.__init__(self)
         self.universe = universe
         self.frame.code_context = code_context
 
+        self._add_reflection()
+
     def set_process(self, code_context):
         self.clean_frames()
         self.frame.code_context = code_context
+
+    def _add_reflection(self):
+        primitives = self.universe.get_slot("primitives")
+
+        if primitives is None:
+            primitives = Object()
+            self.universe.meta_add_slot("primitives", primitives)
+
+        interpreter = Object()
+        primitives.meta_add_slot("interpreter", interpreter)
+
+        add_primitive_method(
+            self,
+            interpreter,
+            "numberOfFrames",
+            number_of_frames,
+            []
+        )
 
     def interpret(self):
         while True:
@@ -177,7 +202,12 @@ class Interpreter(FrameSet):
             )
 
         elif slot.has_primitive_code:
-            return_value = slot.primitive_code(obj, parameters_values)
+            return_value = slot.primitive_code(
+                slot.primitive_code_self,
+                obj,
+                parameters_values
+            )
+
             self.frame.push(return_value)
 
         elif slot.is_assignment_primitive:
