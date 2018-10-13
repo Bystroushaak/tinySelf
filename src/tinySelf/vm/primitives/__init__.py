@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 from tinySelf.vm.object_layout import Object
 
+from tinySelf.vm.primitives.primitive_int import PrimitiveIntObject
+from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
+
 from tinySelf.vm.primitives.primitive_nil import PrimitiveNilObject
 from tinySelf.vm.primitives.primitive_true import PrimitiveTrueObject
 from tinySelf.vm.primitives.primitive_false import PrimitiveFalseObject
-from tinySelf.vm.primitives.primitive_nil import PrimitiveNilObject
-from tinySelf.vm.primitives.primitive_int import PrimitiveIntObject
-from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
+
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
+from tinySelf.vm.primitives.add_primitive_fn import add_primitive_method
 
 
 class AssignmentPrimitive(Object):

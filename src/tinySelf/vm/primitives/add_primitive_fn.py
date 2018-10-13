@@ -18,3 +18,17 @@ def add_primitive_fn(obj, slot_name, primitive_fn, arguments):
 
     primitive_code_obj = build_primitive_code_obj(primitive_fn, arguments)
     obj.meta_add_slot(slot_name, primitive_code_obj)
+
+    return primitive_code_obj
+
+
+def add_primitive_method(this, obj, slot_name, primitive_fn, arguments):
+    assert isinstance(obj, Object)
+    assert isinstance(slot_name, str)
+    assert isinstance(arguments, list)
+
+    primitive_code_obj = build_primitive_code_obj(primitive_fn, arguments)
+    primitive_code_obj.map.primitive_code_self = this
+    obj.meta_add_slot(slot_name, primitive_code_obj)
+
+    return primitive_code_obj
