@@ -11,6 +11,7 @@ class Frame(object):
         self.stack = []
         self.bc_index = 0
         self.code_context = None
+        self.error_handler = None
 
         # used to remove scope parent from the method later 
         self.tmp_method_obj_reference = None
@@ -31,35 +32,36 @@ class Frame(object):
 
 class FrameSet(object):
     def __init__(self):
-        self.clean_frames()
+        self.frame = Frame()
+        self.frames = [self.frame]
 
     def is_nested_call(self):
-        return len(self.frameset) > 1
+        return len(self.frames) > 1
 
     def push_frame(self, code_context, method_obj):
         self.frame = Frame()
         self.frame.code_context = code_context
         self.frame.tmp_method_obj_reference = method_obj
 
-        self.frameset.append(self.frame)
+        self.frames.append(self.frame)
 
     def top_frame(self):
-        return self.frameset[-1]
+        return self.frames[-1]
 
     def pop_frame(self):
-        if len(self.frameset) == 1:
+        if len(self.frames) == 1:
             return
 
-        self.frameset.pop()
+        self.frames.pop()
         self.frame = self.top_frame()
 
     def pop_frame_down(self):
-        if len(self.frameset) == 1:
+        if len(self.frames) == 1:
             return
 
         result = self.frame.pop_or_nil()
 
-        self.frameset.pop()
+        self.frames.pop()
         self.frame = self.top_frame()
 
         self.frame.push(result)
@@ -75,4 +77,4 @@ class FrameSet(object):
 
     def clean_frames(self):
         self.frame = Frame()
-        self.frameset = [self.frame]
+        self.frames = [self.frame]
