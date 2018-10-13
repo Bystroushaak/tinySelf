@@ -25,6 +25,13 @@ def number_of_frames(this, obj, parameters):
     return PrimitiveIntObject(len(this.frames))
 
 
+def set_error_handler(this, obj, parameters):
+    blck = parameters[0]
+    assert isinstance(blck, Object)
+
+    this.frame.error_handler = blck
+
+
 class Interpreter(FrameSet):
     def __init__(self, code_context, universe):
         FrameSet.__init__(self)
@@ -47,13 +54,10 @@ class Interpreter(FrameSet):
         interpreter = Object()
         primitives.meta_add_slot("interpreter", interpreter)
 
-        add_primitive_method(
-            self,
-            interpreter,
-            "numberOfFrames",
-            number_of_frames,
-            []
-        )
+        add_primitive_method(self, interpreter, "numberOfFrames",
+                             number_of_frames, [])
+        add_primitive_method(self, interpreter, "setErrorHandler:",
+                             set_error_handler, ["blck"])
 
     def interpret(self):
         while True:
