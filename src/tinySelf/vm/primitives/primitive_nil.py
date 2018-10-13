@@ -5,7 +5,7 @@ from tinySelf.vm.primitives.primitive_false import PrimitiveFalseObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 
-def is_nil(self, parameters):
+def is_nil(_, self, parameters):
     obj = parameters[0]
 
     if isinstance(obj, PrimitiveNilObjectSingleton):

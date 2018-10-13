@@ -4,7 +4,7 @@ from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 
-def add(self, parameters):
+def add(_, self, parameters):
     obj = parameters[0]
     # yeah, this can't be factored out, I've tried..
     assert isinstance(self, PrimitiveIntObject)
@@ -15,7 +15,7 @@ def add(self, parameters):
     return PrimitiveIntObject(self.value + obj.value)
 
 
-def substract(self, parameters):
+def substract(_, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveIntObject)
     assert isinstance(obj, PrimitiveIntObject)
@@ -25,7 +25,7 @@ def substract(self, parameters):
     return PrimitiveIntObject(self.value - obj.value)
 
 
-def multiply(self, parameters):
+def multiply(_, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveIntObject)
     assert isinstance(obj, PrimitiveIntObject)
@@ -35,7 +35,7 @@ def multiply(self, parameters):
     return PrimitiveIntObject(self.value * obj.value)
 
 
-def divide(self, parameters):
+def divide(_, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveIntObject)
     assert isinstance(obj, PrimitiveIntObject)
@@ -45,7 +45,7 @@ def divide(self, parameters):
     return PrimitiveIntObject(self.value / obj.value)
 
 
-def modulo(self, parameters):
+def modulo(_, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveIntObject)
     assert isinstance(obj, PrimitiveIntObject)
@@ -55,7 +55,7 @@ def modulo(self, parameters):
     return PrimitiveIntObject(self.value % obj.value)
 
 
-def as_string(self, parameters):
+def as_string(_, self, parameters):
     assert isinstance(self, PrimitiveIntObject)
     return PrimitiveStrObject(str(self.value))
 

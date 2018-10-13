@@ -3,7 +3,7 @@ from tinySelf.vm.object_layout import Object
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 
-def add_strings(self, parameters):
+def add_strings(_, self, parameters):
     obj = parameters[0]
     assert isinstance(obj, PrimitiveStrObject)
     assert isinstance(self, PrimitiveStrObject)
