@@ -11,6 +11,8 @@ class Frame(object):
         self.stack = []
         self.bc_index = 0
         self.code_context = None
+
+        # used to remove scope parent from the method later 
         self.tmp_method_obj_reference = None
 
     def push(self, item):
@@ -41,12 +43,15 @@ class FrameSet(object):
 
         self.frameset.append(self.frame)
 
+    def top_frame(self):
+        return self.frameset[-1]
+
     def pop_frame(self):
         if len(self.frameset) == 1:
             return
 
         self.frameset.pop()
-        self.frame = self.frameset[-1]
+        self.frame = self.top_frame()
 
     def pop_frame_down(self):
         if len(self.frameset) == 1:
@@ -55,7 +60,7 @@ class FrameSet(object):
         result = self.frame.pop_or_nil()
 
         self.frameset.pop()
-        self.frame = self.frameset[-1]
+        self.frame = self.top_frame()
 
         self.frame.push(result)
 
