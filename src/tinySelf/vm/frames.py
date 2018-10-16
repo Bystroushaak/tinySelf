@@ -6,7 +6,7 @@ from tinySelf.vm.primitives import PrimitiveNilObject
 NIL = PrimitiveNilObject()
 
 
-class Frame(object):
+class MethodStack(object):
     def __init__(self):
         self.stack = []
         self.bc_index = 0
@@ -30,16 +30,16 @@ class Frame(object):
         return NIL
 
 
-class FrameSet(object):
+class ProcessStack(object):
     def __init__(self):
-        self.frame = Frame()
+        self.frame = MethodStack()
         self.frames = [self.frame]
 
     def is_nested_call(self):
         return len(self.frames) > 1
 
     def push_frame(self, code_context, method_obj):
-        self.frame = Frame()
+        self.frame = MethodStack()
         self.frame.code_context = code_context
         self.frame.tmp_method_obj_reference = method_obj
 
@@ -76,5 +76,5 @@ class FrameSet(object):
         self.pop_frame_down()
 
     def clean_frames(self):
-        self.frame = Frame()
+        self.frame = MethodStack()
         self.frames = [self.frame]

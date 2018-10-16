@@ -3,7 +3,6 @@ from pytest import raises
 
 from tinySelf.vm.interpreter import NIL
 from tinySelf.vm.interpreter import Interpreter
-from tinySelf.vm.frame_and_frameset import Frame
 
 from tinySelf.vm.code_context import CodeContext
 
@@ -11,23 +10,6 @@ from tinySelf.vm.primitives import get_primitives
 from tinySelf.vm.primitives import PrimitiveIntObject
 
 from tinySelf.parser import lex_and_parse
-
-
-def test_frame():
-    f = Frame()
-    f.push(PrimitiveIntObject(1))
-    f.push(PrimitiveIntObject(2))
-
-    assert f.pop() == PrimitiveIntObject(2)
-    assert f.pop() == PrimitiveIntObject(1)
-
-    with raises(IndexError):
-        f.pop()
-
-    assert f.pop_or_nil() == NIL
-    f.push(PrimitiveIntObject(1))
-    assert f.pop_or_nil() == PrimitiveIntObject(1)
-    assert f.pop_or_nil() == NIL
 
 
 def test_interpreter():

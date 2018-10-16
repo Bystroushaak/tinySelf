@@ -14,8 +14,8 @@ from tinySelf.vm.code_context import IntBox
 from tinySelf.vm.code_context import StrBox
 from tinySelf.vm.code_context import ObjBox
 
+from tinySelf.vm.frames import ProcessStack
 from tinySelf.vm.object_layout import Object
-from tinySelf.vm.frame_and_frameset import FrameSet
 
 
 NIL = PrimitiveNilObject()
@@ -32,9 +32,9 @@ def set_error_handler(this, obj, parameters):
     this.frame.error_handler = blck
 
 
-class Interpreter(FrameSet):
+class Interpreter(ProcessStack):
     def __init__(self, code_context, universe):
-        FrameSet.__init__(self)
+        ProcessStack.__init__(self)
         self.universe = universe
         self.frame.code_context = code_context
 
