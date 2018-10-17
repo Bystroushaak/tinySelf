@@ -14,7 +14,7 @@ from tinySelf.vm.code_context import IntBox
 from tinySelf.vm.code_context import StrBox
 from tinySelf.vm.code_context import ObjBox
 
-from tinySelf.vm.frames import ProcessStack
+from tinySelf.vm.frames import ProcessesCycler
 from tinySelf.vm.object_layout import Object
 
 
@@ -32,19 +32,15 @@ def set_error_handler(this, obj, parameters):
     this.frame.error_handler = blck
 
 
-class Interpreter(ProcessStack):
+class Interpreter(ProcessesCycler):
     def __init__(self, code_context, universe):
-        ProcessStack.__init__(self)
+        ProcessesCycler.__init__(self)
         self.universe = universe
-        self.frame.code_context = code_context
+        self.add_process(code_context)
 
-        self._add_reflection()
+        self._add_reflection_to_universe()
 
-    def set_process(self, code_context):
-        self.clean_frames()
-        self.frame.code_context = code_context
-
-    def _add_reflection(self):
+    def _add_reflection_to_universe(self):
         primitives = self.universe.get_slot("primitives")
 
         if primitives is None:
@@ -61,7 +57,7 @@ class Interpreter(ProcessStack):
 
     def interpret(self):
         while True:
-            frame = self.frame
+            frame = self.process.frame
             bc_index = frame.bc_index
             code_obj = frame.code_context
 
@@ -77,10 +73,15 @@ class Interpreter(ProcessStack):
                 bc_index += self._do_push_literal(bc_index, code_obj)
 
             elif bytecode == BYTECODE_RETURNTOP:
-                if not self.is_nested_call():
-                    return self.frame.pop_or_nil()
+                if not self.process.is_nested_call():
+                    result = self.process.frame.pop_or_nil()
+                    self.remove_active_process()
 
-                self.pop_and_cleanup_frame()
+                    if not self.has_processes_to_run():
+                        return result
+
+                self.process.pop_and_cleanup_frame()
+                self.next_process()
                 continue
 
             elif bytecode == BYTECODE_ADD_SLOT:
@@ -96,6 +97,7 @@ class Interpreter(ProcessStack):
                 raise ValueError("Unknown bytecode!")
 
             frame.bc_index = bc_index
+            self.next_process()
 
     def _put_together_parameters(self, parameter_names, parameters):
         if len(parameter_names) < len(parameters):
@@ -137,7 +139,7 @@ class Interpreter(ProcessStack):
         new_code_context.self = method_obj
         new_code_context.scope_parent = scope_parent
 
-        self.push_frame(new_code_context, method_obj)
+        self.process.push_frame(new_code_context, method_obj)
 
     def _set_scope_parent_if_not_already_set(self, obj, code):
         if obj.scope_parent is None:
@@ -173,19 +175,19 @@ class Interpreter(ProcessStack):
         parameters_values = []
         if number_of_parameters > 0:
             for _ in range(number_of_parameters):
-                parameters_values.append(self.frame.pop())
+                parameters_values.append(self.process.frame.pop())
 
         boxed_resend_parent_name = None
         if message_type == SEND_TYPE_UNARY_RESEND or \
            message_type == SEND_TYPE_KEYWORD_RESEND:
-            boxed_resend_parent_name = self.frame.pop()
+            boxed_resend_parent_name = self.process.frame.pop()
             assert isinstance(boxed_resend_parent_name, PrimitiveStrObject)
 
-        boxed_message = self.frame.pop()
+        boxed_message = self.process.frame.pop()
         assert isinstance(boxed_message, PrimitiveStrObject)
         message_name = boxed_message.value  # unpack from StrBox
 
-        obj = self.frame.pop()
+        obj = self.process.frame.pop()
         self._set_scope_parent_if_not_already_set(obj, code)
 
         if boxed_resend_parent_name:
@@ -212,7 +214,7 @@ class Interpreter(ProcessStack):
                 parameters_values
             )
 
-            self.frame.push(return_value)
+            self.process.frame.push(return_value)
 
         elif slot.is_assignment_primitive:
             if len(parameters_values) != 1:
@@ -229,7 +231,7 @@ class Interpreter(ProcessStack):
 
         else:
             return_value = slot
-            self.frame.push(return_value)
+            self.process.frame.push(return_value)
 
         return 3
 
@@ -237,7 +239,7 @@ class Interpreter(ProcessStack):
     #     pass
 
     def _do_push_self(self, bc_index, code_obj):
-        self.frame.push(code_obj.self)
+        self.process.frame.push(code_obj.self)
 
         return 1
 
@@ -264,12 +266,12 @@ class Interpreter(ProcessStack):
         elif literal_type == LITERAL_TYPE_BLOCK:
             assert isinstance(boxed_literal, ObjBox)
             block = boxed_literal.value.literal_copy()
-            block.scope_parent = self.frame.pop()
+            block.scope_parent = self.process.frame.pop()
             obj = add_block_trait(block)
         else:
             raise ValueError("Unknown literal type; %s" % literal_type)
 
-        self.frame.push(obj)
+        self.process.frame.push(obj)
 
         return 3
 
@@ -277,9 +279,9 @@ class Interpreter(ProcessStack):
     #     pass
 
     def _do_add_slot(self, bc_index, code_obj):
-        value = self.frame.pop()
-        boxed_slot_name = self.frame.pop()
-        obj = self.frame.pop()
+        value = self.process.frame.pop()
+        boxed_slot_name = self.process.frame.pop()
+        obj = self.process.frame.pop()
 
         assert isinstance(boxed_slot_name, PrimitiveStrObject)
         slot_name = boxed_slot_name.value
@@ -296,6 +298,6 @@ class Interpreter(ProcessStack):
             raise ValueError("Unknown slot type in ._do_add_slot()!")
 
         # keep the receiver on the top of the stack
-        self.frame.push(obj)
+        self.process.frame.push(obj)
 
         return 2
