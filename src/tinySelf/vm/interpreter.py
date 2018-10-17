@@ -14,7 +14,7 @@ from tinySelf.vm.code_context import IntBox
 from tinySelf.vm.code_context import StrBox
 from tinySelf.vm.code_context import ObjBox
 
-from tinySelf.vm.frames import ProcessesCycler
+from tinySelf.vm.frames import ProcessCycler
 from tinySelf.vm.object_layout import Object
 
 
@@ -32,9 +32,9 @@ def set_error_handler(this, obj, parameters):
     this.frame.error_handler = blck
 
 
-class Interpreter(ProcessesCycler):
+class Interpreter(ProcessCycler):
     def __init__(self, code_context, universe):
-        ProcessesCycler.__init__(self)
+        ProcessCycler.__init__(self)
         self.universe = universe
         self.add_process(code_context)
 

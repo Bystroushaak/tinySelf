@@ -76,7 +76,7 @@ class ProcessStack(object):
         self.pop_frame_down()
 
 
-class ProcessesCycler:
+class ProcessCycler:
     def __init__(self):
         self.cycler = 0
         self.process = None
