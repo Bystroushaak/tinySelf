@@ -34,10 +34,8 @@ def set_error_handler(this, obj, parameters):
 
 class Interpreter(ProcessCycler):
     def __init__(self, code_context, universe):
-        ProcessCycler.__init__(self)
+        ProcessCycler.__init__(self, code_context)
         self.universe = universe
-        self.add_process(code_context)
-
         self._add_reflection_to_universe()
 
     def _add_reflection_to_universe(self):
@@ -75,10 +73,13 @@ class Interpreter(ProcessCycler):
             elif bytecode == BYTECODE_RETURNTOP:
                 if not self.process.is_nested_call():
                     result = self.process.frame.pop_or_nil()
-                    self.remove_active_process()
+                    process = self.remove_active_process()
+
+                    process.result = result
+                    process.finished = True
 
                     if not self.has_processes_to_run():
-                        return result
+                        return
 
                 self.process.pop_and_cleanup_frame()
                 self.next_process()

@@ -36,6 +36,9 @@ class ProcessStack(object):
         self.frame = MethodStack(code_context)
         self.frames = [self.frame]
 
+        self.result = None
+        self.finished = False
+
     def is_nested_call(self):
         return len(self.frames) > 1
 
@@ -67,21 +70,26 @@ class ProcessStack(object):
         self.frame.push(result)
 
     def pop_and_cleanup_frame(self):
-        self.frame.code_context.self = None
-        self.frame.code_context.scope_parent = None
+        if self.frame.code_context:
+            self.frame.code_context.self = None
+            self.frame.code_context.scope_parent = None
 
-        self.frame.tmp_method_obj_reference.scope_parent = None
-        self.frame.tmp_method_obj_reference = None
+        if self.frame.tmp_method_obj_reference:
+            self.frame.tmp_method_obj_reference.scope_parent = None
+            self.frame.tmp_method_obj_reference = None
 
         self.pop_frame_down()
 
 
 class ProcessCycler:
-    def __init__(self):
+    def __init__(self, code_context=None):
         self.cycler = 0
         self.process = None
         self.processes = []
         self.process_count = 0
+
+        if code_context is not None:
+            self.add_process(code_context)
 
     def add_process(self, code_context):
         assert isinstance(code_context, CodeContext)
@@ -93,8 +101,10 @@ class ProcessCycler:
         if not self.process:
             self.process = new_process
 
+        return new_process
+
     def has_processes_to_run(self):
-        return len(self.processes) > 0
+        return self.process_count != 0
 
     def remove_process(self, process):
         self.processes.remove(process)
@@ -105,8 +115,10 @@ class ProcessCycler:
         if self.processes:
             self.process = self.processes[-1]
 
+        return process
+
     def remove_active_process(self):
-        self.remove_process(self.process)
+        return self.remove_process(self.process)
 
     def next_process(self):
         if self.process_count == 1:
