@@ -23,8 +23,8 @@ def test_interpreter():
     context = ast[0].compile(CodeContext())
     interpreter = Interpreter(context, universe=get_primitives())
 
-    result = interpreter.interpret()
-    assert result == PrimitiveIntObject(4)
+    interpreter.interpret()
+    assert interpreter.process.result == PrimitiveIntObject(4)
 
 
 def test_assignment_primitive():
@@ -39,8 +39,8 @@ def test_assignment_primitive():
     context = ast[0].compile(CodeContext())
     interpreter = Interpreter(context, universe=get_primitives())
 
-    result = interpreter.interpret()
-    assert result == PrimitiveIntObject(1)
+    interpreter.interpret()
+    assert interpreter.process.result == PrimitiveIntObject(1)
 
 
 def test_block():
@@ -60,8 +60,8 @@ def test_block():
     context = ast[0].compile(CodeContext())
     interpreter = Interpreter(context, universe=get_primitives())
 
-    result = interpreter.interpret()
-    assert result == PrimitiveIntObject(16)
+    interpreter.interpret()
+    assert interpreter.process.result == PrimitiveIntObject(16)
 
 
 def test_block_with_argument():
@@ -81,8 +81,8 @@ def test_block_with_argument():
     context = ast[0].compile(CodeContext())
     interpreter = Interpreter(context, universe=get_primitives())
 
-    result = interpreter.interpret()
-    assert result == PrimitiveIntObject(3)
+    interpreter.interpret()
+    assert interpreter.process.result == PrimitiveIntObject(3)
 
 
 def test_calling_block_twice_with_argument():
@@ -107,8 +107,8 @@ def test_calling_block_twice_with_argument():
     context = ast[0].compile(CodeContext())
     interpreter = Interpreter(context, universe=get_primitives())
 
-    result = interpreter.interpret()
-    assert result == PrimitiveIntObject(7)
+    interpreter.interpret()
+    assert interpreter.process.result == PrimitiveIntObject(7)
 
 
 def test_resend():
@@ -122,8 +122,8 @@ def test_resend():
     context = ast[0].compile(CodeContext())
     interpreter = Interpreter(context, universe=get_primitives())
 
-    result = interpreter.interpret()
-    assert result == PrimitiveIntObject(2)
+    interpreter.interpret()
+    assert interpreter.process.result == PrimitiveIntObject(2)
 
 
 def test_resend_is_in_local_context():
@@ -138,8 +138,8 @@ def test_resend_is_in_local_context():
     context = ast[0].compile(CodeContext())
     interpreter = Interpreter(context, universe=get_primitives())
 
-    result = interpreter.interpret()
-    assert result == PrimitiveIntObject(2)
+    interpreter.interpret()
+    assert interpreter.process.result == PrimitiveIntObject(2)
 
 
 def test_resend_keyword():
@@ -153,5 +153,33 @@ def test_resend_keyword():
     context = ast[0].compile(CodeContext())
     interpreter = Interpreter(context, universe=get_primitives())
 
-    result = interpreter.interpret()
-    assert result == PrimitiveIntObject(2)
+    interpreter.interpret()
+    assert interpreter.process.result == PrimitiveIntObject(2)
+
+
+def test_parallelism():
+    one_plus_one_ast = lex_and_parse("""(|
+        add = (|| 1 + 1)
+    |) add""")
+    two_plus_two_ast = lex_and_parse("""(|
+        add = (|| 2 + 2)
+    |) add""")
+
+    one_plus_one_ctx = one_plus_one_ast[0].compile(CodeContext())
+    two_plus_two_ctx = two_plus_two_ast[0].compile(CodeContext())
+
+    interpreter = Interpreter(None, universe=get_primitives())
+    one_plus_one_process = interpreter.add_process(one_plus_one_ctx)
+    two_plus_two_process = interpreter.add_process(two_plus_two_ctx)
+
+    assert not one_plus_one_process.finished
+    assert not one_plus_one_process.result
+    assert not two_plus_two_process.finished
+    assert not two_plus_two_process.result
+
+    interpreter.interpret()
+
+    assert one_plus_one_process.finished
+    assert one_plus_one_process.result == PrimitiveIntObject(2)
+    assert two_plus_two_process.finished
+    assert two_plus_two_process.result == PrimitiveIntObject(4)
