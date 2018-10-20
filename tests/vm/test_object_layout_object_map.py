@@ -68,8 +68,6 @@ def test_remove_parent():
 
 
 def test_clone():
-    scope_parent = object()
-
     om = ObjectMap()
     om.visited = True
     om.code_context = "code"
