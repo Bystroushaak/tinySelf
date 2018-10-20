@@ -18,6 +18,7 @@ class _BareObject(object):
             obj_map = ObjectMap()
 
         self.map = obj_map
+        self.scope_parent = None
         self.slots_references = []
 
     @property
@@ -62,8 +63,8 @@ class _BareObject(object):
             _visited_maps = {}
 
         parents = []
-        if self.map.scope_parent is not None:
-            parents.append(self.map.scope_parent)
+        if self.scope_parent is not None:
+            parents.append(self.scope_parent)
 
         parents.extend(self.map.parent_slots.values())
 
@@ -94,8 +95,8 @@ class _BareObject(object):
         if slot_index != -1:
             return self.slots_references[slot_index]
 
-        if self.map.scope_parent is not None:
-            obj = self.map.scope_parent.slot_lookup(slot_name)
+        if self.scope_parent is not None:
+            obj = self.scope_parent.slot_lookup(slot_name)
 
             if obj is not None:
                 return obj
@@ -168,17 +169,24 @@ class _ObjectWithMetaOperations(_BareObject):
 
     def meta_add_parent(self, parent_name, value):
         assert isinstance(value, Object)
-        self.map.add_parent(parent_name, value)
+
+        new_map = self.map.clone()
+        new_map.add_parent(parent_name, value)
+        self.map = new_map
 
     def meta_set_parameters(self, parameters):
-        self.map.parameters = parameters
+        new_map = self.map.clone()
+        new_map.parameters = parameters
+        self.map = new_map
 
     def meta_set_ast(self, ast):
         assert isinstance(ast, BaseBox)
         self.map.ast = ast
 
     def meta_set_code_context(self, code_context):
-        self.map.code_context = code_context
+        new_map = self.map.clone()
+        new_map.code_context = code_context
+        self.map = new_map
 
 
 class _ObjectWithMapEncapsulation(_ObjectWithMetaOperations):
@@ -194,7 +202,10 @@ class _ObjectWithMapEncapsulation(_ObjectWithMetaOperations):
     @parent_slots.setter
     def parent_slots(self, new_parent_slots):
         assert isinstance(new_parent_slots)
-        self.map.parent_slots = new_parent_slots
+
+        new_map = self.map.clone()
+        new_map.parent_slots = new_parent_slots
+        self.map = new_map
 
     @property
     def parameters(self):
@@ -203,15 +214,10 @@ class _ObjectWithMapEncapsulation(_ObjectWithMetaOperations):
     @parameters.setter
     def parameters(self, new_paremeters):
         assert isinstance(new_paremeters, list)
-        self.map.parameters = new_paremeters
 
-    @property
-    def scope_parent(self):
-        return self.map.scope_parent
-
-    @scope_parent.setter
-    def scope_parent(self, new_scope_parent):
-        self.map.scope_parent = new_scope_parent
+        new_map = self.map.clone()
+        new_map.parameters = new_paremeters
+        self.map = new_map
 
     @property
     def ast(self):
@@ -219,7 +225,7 @@ class _ObjectWithMapEncapsulation(_ObjectWithMetaOperations):
 
     @ast.setter
     def ast(self, new_ast):
-        self.map.ast = ast
+        self.map.ast = new_ast
 
     @property
     def code_context(self):
@@ -227,7 +233,9 @@ class _ObjectWithMapEncapsulation(_ObjectWithMetaOperations):
 
     @code_context.setter
     def code_context(self, new_code_context):
-        self.map.code_context = new_code_context
+        new_map = self.map.clone()
+        new_map.code_context = new_code_context
+        self.map = new_map
 
     @property
     def primitive_code(self):
@@ -248,7 +256,6 @@ class ObjectMap(object):
 
         self.slots = OrderedDict()
         self.parent_slots = OrderedDict()
-        self.scope_parent = None
 
         self.visited = False
 
@@ -264,7 +271,6 @@ class ObjectMap(object):
         new_map.slots = self.slots.copy()
         new_map.parameters = self.parameters[:]
         new_map.parent_slots = self.parent_slots.copy()
-        new_map.scope_parent = self.scope_parent
         new_map.visited = False
         new_map.ast = self.ast
         new_map.code_context = self.code_context  # TODO: deep copy / recompile

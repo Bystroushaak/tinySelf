@@ -71,13 +71,11 @@ def test_clone():
     scope_parent = object()
 
     om = ObjectMap()
-    om.scope_parent = scope_parent
     om.visited = True
     om.code_context = "code"
     om.add_slot("xex", 1)
 
     cloned = om.clone()
     assert not cloned.visited
-    assert cloned.scope_parent == scope_parent
     assert cloned.slots == om.slots
     assert cloned.slots is not om.slots

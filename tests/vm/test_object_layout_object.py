@@ -200,7 +200,7 @@ def test_slot_lookup_from_scope_parent():
     p.meta_add_slot("xex", val)
 
     o = Object()
-    o.map.scope_parent = p
+    o.scope_parent = p
 
     assert o.get_slot("xex") is None
     assert o.slot_lookup("xex") is val
@@ -212,11 +212,11 @@ def test_slot_lookup_from_scope_parent_and_then_parents():
     p.meta_add_slot("a", val)
 
     interobj = Object()
-    interobj.map.scope_parent = p
+    interobj.scope_parent = p
 
     o = Object()
-    o.map.scope_parent = Object()
-    o.map.scope_parent.meta_add_parent("*", interobj)
+    o.scope_parent = Object()
+    o.scope_parent.meta_add_parent("*", interobj)
 
     assert o.slot_lookup("a") is val
 
