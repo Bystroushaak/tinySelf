@@ -4,11 +4,11 @@ from collections import OrderedDict
 from rply.token import BaseBox
 
 
-def unvisit(visited_maps, first_level_call):
+def unvisit(visited_objects, first_level_call):
     if not first_level_call:
         return
 
-    for obj_map in visited_maps.keys():
+    for obj_map in visited_objects.keys():
         obj_map.visited = False
 
 
@@ -18,6 +18,7 @@ class _BareObject(object):
             obj_map = ObjectMap()
 
         self.map = obj_map
+        self.visited = False
         self.scope_parent = None
         self.slots_references = []
 
@@ -54,13 +55,13 @@ class _BareObject(object):
 
         return None
 
-    def parent_lookup(self, slot_name, _visited_maps=None):
+    def parent_lookup(self, slot_name, _visited_objects=None):
         first_level_call = False
-        if _visited_maps is None:
+        if _visited_objects is None:
             first_level_call = True
             # sets are not supported, see
             # https://rpython.readthedocs.io/en/latest/rpython.html
-            _visited_maps = {}
+            _visited_objects = {}
 
         parents = []
         if self.scope_parent is not None:
@@ -69,22 +70,22 @@ class _BareObject(object):
         parents.extend(self.map.parent_slots.values())
 
         for parent in parents:
-            if parent.map.visited:
+            if parent.visited:
                 continue
 
-            parent.map.visited = True
-            _visited_maps[parent.map] = None
+            parent.visited = True
+            _visited_objects[parent.map] = None
 
             if slot_name in parent.map.slots:
-                unvisit(_visited_maps, first_level_call)
+                unvisit(_visited_objects, first_level_call)
                 return parent.get_slot(slot_name)
 
-            result = parent.parent_lookup(slot_name, _visited_maps)
+            result = parent.parent_lookup(slot_name, _visited_objects)
             if result is not None:
-                unvisit(_visited_maps, first_level_call)
+                unvisit(_visited_objects, first_level_call)
                 return result
 
-        unvisit(_visited_maps, first_level_call)
+        unvisit(_visited_objects, first_level_call)
         return None
 
     def slot_lookup(self, slot_name):
@@ -271,7 +272,6 @@ class ObjectMap(object):
         new_map.slots = self.slots.copy()
         new_map.parameters = self.parameters[:]
         new_map.parent_slots = self.parent_slots.copy()
-        new_map.visited = False
         new_map.ast = self.ast
         new_map.code_context = self.code_context  # TODO: deep copy / recompile
         new_map.primitive_code = self.primitive_code
