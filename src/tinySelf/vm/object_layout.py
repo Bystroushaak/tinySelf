@@ -125,7 +125,7 @@ class _BareObject(object):
 
 
 class _ObjectWithMetaOperations(_BareObject):
-    def meta_add_slot(self, slot_name, value):  # TODO: support auto Nil value
+    def meta_add_slot(self, slot_name, value):
         assert isinstance(value, Object)
 
         if slot_name in self.map.slots:
@@ -152,12 +152,12 @@ class _ObjectWithMetaOperations(_BareObject):
         ]
 
         for name, reference in new_map.slots.iteritems():
-            if reference >= i:
+            if reference >= slot_index:
                 new_map.slots[name] -= 1
 
         self.map = new_map
 
-    def meta_insert_slot(self, slot_index, slot_name, value):  # TODO: support auto Nil value
+    def meta_insert_slot(self, slot_index, slot_name, value):
         if slot_name in self.map.slots:
             self.set_slot(slot_name, value)
 

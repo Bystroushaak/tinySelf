@@ -58,24 +58,29 @@ def test_meta_remove_missing_slot():
 def test_meta_remove_slot_shift_map_pointers():
     first = PrimitiveStrObject("first")
     second = PrimitiveStrObject("second")
+    third = PrimitiveStrObject("third")
 
     o = Object()
     assert not o.slots_references
 
     o.meta_add_slot("first", first)
     o.meta_add_slot("second", second)
+    o.meta_add_slot("third", third)
 
     assert o.get_slot("first") is first
     assert o.get_slot("second") is second
+    assert o.get_slot("third") is third
 
     o.meta_remove_slot("first")
 
-    assert len(o.slots_references) == 1
-    assert len(o.map.slots) == 1
+    assert len(o.slots_references) == 2
+    assert len(o.map.slots) == 2
     assert o.map.slots["second"] == 0
+    assert o.map.slots["third"] == 1
 
     assert o.get_slot("first") is None
     assert o.get_slot("second") == second
+    assert o.get_slot("third") == third
 
 
 def test_meta_insert_slot():
