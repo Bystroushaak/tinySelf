@@ -18,7 +18,6 @@ class _BareObject(object):
             obj_map = ObjectMap()
 
         self.map = obj_map
-        self.visited = False
         self.scope_parent = None
         self.slots_references = []
 
@@ -197,6 +196,14 @@ class _ObjectWithMapEncapsulation(_ObjectWithMetaOperations):
         return self.map.slots.keys()
 
     @property
+    def visited(self):
+        return self.map.visited
+
+    @visited.setter
+    def visited(self, visited):
+        self.map.visited = visited
+
+    @property
     def parent_slots(self):
         return self.map.parent_slots
 
@@ -261,7 +268,6 @@ class ObjectMap(object):
         self.visited = False
 
         self.ast = None
-        # self.bytecode = None
         self.code_context = None
         self.primitive_code = None
         self.primitive_code_self = None
