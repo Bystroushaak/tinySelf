@@ -38,6 +38,7 @@ class ProcessStack(object):
 
         self.result = None
         self.finished = False
+        self.finished_with_error = False
 
     def is_nested_call(self):
         return len(self.frames) > 1
@@ -80,6 +81,9 @@ class ProcessStack(object):
 
         self.pop_frame_down()
 
+    def as_tself_object(self):
+        return Object()
+
 
 class ProcessCycler:
     def __init__(self, code_context=None):
@@ -121,7 +125,7 @@ class ProcessCycler:
         return self.remove_process(self.process)
 
     def next_process(self):
-        if self.process_count == 1:
+        if self.process_count == 0 or self.process_count == 1:
             return
 
         self.process = self.processes[self.cycler]

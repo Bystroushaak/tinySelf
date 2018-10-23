@@ -8,6 +8,7 @@ from tinySelf.vm.code_context import CodeContext
 
 from tinySelf.vm.primitives import get_primitives
 from tinySelf.vm.primitives import PrimitiveIntObject
+from tinySelf.vm.primitives import PrimitiveStrObject
 
 from tinySelf.parser import lex_and_parse
 
@@ -183,3 +184,19 @@ def test_parallelism():
     assert one_plus_one_process.result == PrimitiveIntObject(2)
     assert two_plus_two_process.finished
     assert two_plus_two_process.result == PrimitiveIntObject(4)
+
+
+def test_halt():
+    ast = lex_and_parse("""(|
+        test = (||
+            primitives interpreter halt: 'Test'
+        )
+    |) test""")
+
+    context = ast[0].compile(CodeContext())
+    interpreter = Interpreter(context, universe=get_primitives())
+
+    interpreter.interpret()
+    assert interpreter.process.finished
+    assert not interpreter.process.finished_with_error
+    assert interpreter.process.result == PrimitiveStrObject("Test")

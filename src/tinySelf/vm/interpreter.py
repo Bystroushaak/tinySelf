@@ -21,15 +21,40 @@ from tinySelf.vm.object_layout import Object
 NIL = PrimitiveNilObject()
 
 
-def number_of_frames(this, obj, parameters):
-    return PrimitiveIntObject(len(this.frames))
+def primitive_get_number_of_processes(interpreter, obj, parameters):
+    return PrimitiveIntObject(len(interpreter.processes))
 
 
-def set_error_handler(this, obj, parameters):
+def primitive_set_error_handler(interpreter, obj, parameters):
     blck = parameters[0]
     assert isinstance(blck, Object)
 
-    this.frame.error_handler = blck
+    interpreter.process.frame.error_handler = blck
+
+    return NIL
+
+
+def _get_frame_with_error_handler(frames):
+    while frames:
+        frame = frames.pop()
+        if frame.error_handler is not None:
+            frames.append(frame)
+            return frame
+
+    return None
+
+
+def primitive_halt(interpreter, obj, parameters):
+    obj = parameters[0]
+    assert isinstance(obj, Object)
+
+    process = interpreter.remove_active_process()
+
+    process.result = obj
+    process.finished = True
+    process.finished_with_error = False
+
+    return obj
 
 
 class Interpreter(ProcessCycler):
@@ -48,13 +73,15 @@ class Interpreter(ProcessCycler):
         interpreter = Object()
         primitives.meta_add_slot("interpreter", interpreter)
 
-        add_primitive_method(self, interpreter, "numberOfFrames",
-                             number_of_frames, [])
+        add_primitive_method(self, interpreter, "numberOfProcesses",
+                             primitive_get_number_of_processes, [])
         add_primitive_method(self, interpreter, "setErrorHandler:",
-                             set_error_handler, ["blck"])
+                             primitive_set_error_handler, ["blck"])
+        add_primitive_method(self, interpreter, "error:", primitive_raise_error, ["obj"])
+        add_primitive_method(self, interpreter, "halt:", primitive_halt, ["obj"])
 
     def interpret(self):
-        while True:
+        while self.process_count > 0:
             frame = self.process.frame
             bc_index = frame.bc_index
             code_obj = frame.code_context
