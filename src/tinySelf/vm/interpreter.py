@@ -124,6 +124,10 @@ class Interpreter(ProcessCycler):
             primitives = Object()
             self.universe.meta_add_slot("primitives", primitives)
 
+        # transport values from primitives to global level
+        for slot in primitives.map.slots.keys():
+            self.universe.meta_add_slot(slot, primitives.get_slot(slot))
+
         interpreter = Object()
         primitives.meta_add_slot("interpreter", interpreter)
 
@@ -232,10 +236,10 @@ class Interpreter(ProcessCycler):
 
     def _set_scope_parent_if_not_already_set(self, obj, code):
         if obj.scope_parent is None:
-            if code.scope_parent is not None:
-                obj.scope_parent = code.scope_parent
-            else:
+            if code.scope_parent is None:
                 obj.scope_parent = self.universe
+            else:
+                obj.scope_parent = code.scope_parent
 
     def _resend_to_parent(self, obj, parent_name, message_name):
         resend_parent = obj.parent_slots.get(parent_name)
@@ -358,6 +362,7 @@ class Interpreter(ProcessCycler):
             block = boxed_literal.value.literal_copy()
             block.scope_parent = self.process.frame.pop()
             obj = add_block_trait(block)
+            obj.scope_parent = block.scope_parent
         else:
             raise ValueError("Unknown literal type; %s" % literal_type)
 
