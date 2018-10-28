@@ -30,10 +30,10 @@
 
         universe_mirror: primitives mirrorOn: universe.
         universe_mirror toSlot: 'assert:' Add: (| :what |
-            what value ifFalse: [primitives interpreter halt: 'Assertion failed!'].
+            what value ifFalse: [primitives interpreter error: 'Assertion failed!'].
         ).
         universe_mirror toSlot: 'assertNot:' Add: (| :what |
-            what value ifTrue: [primitives interpreter halt: 'Assertion failed!'].
+            what value ifTrue: [primitives interpreter error: 'Assertion failed!'].
         ).
     ).
 |) init.
@@ -59,7 +59,7 @@
 
     test_that_parameters_are_rw_slots = (| msg: x = (|| x: true. x. ) |
         # see #63 for details
-        assert: [msg: false is: true].
+        assert: [(msg: false) is: true].
     ).
 
     run_tests = (||

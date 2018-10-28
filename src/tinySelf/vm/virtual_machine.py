@@ -23,3 +23,4 @@ def virtual_machine(source):
         process = interpreter.add_process(item.compile(CodeContext()))
         interpreter.interpret()
         print process.result.__str__()
+        print process.finished_with_error

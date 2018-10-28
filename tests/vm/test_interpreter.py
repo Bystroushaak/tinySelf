@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
+import os.path
+
 from pytest import raises
+
+from tinySelf.parser import lex_and_parse
+
+from tinySelf.vm.primitives import get_primitives
+from tinySelf.vm.primitives import PrimitiveIntObject
+from tinySelf.vm.primitives import PrimitiveStrObject
 
 from tinySelf.vm.interpreter import NIL
 from tinySelf.vm.interpreter import Interpreter
 
 from tinySelf.vm.code_context import CodeContext
 
-from tinySelf.vm.primitives import get_primitives
-from tinySelf.vm.primitives import PrimitiveIntObject
-from tinySelf.vm.primitives import PrimitiveStrObject
-
-from tinySelf.parser import lex_and_parse
+from tinySelf.vm.object_layout import Object
 
 
 def test_interpreter():
@@ -252,3 +256,21 @@ def test_set_error_handler_and_handle_error():
     assert not interpreter.process.finished_with_error
     result = interpreter.process.result
     assert result == PrimitiveIntObject(2)
+
+
+def test_running_self_unittest_file():
+    universe = Object()
+    universe.meta_add_slot("primitives", get_primitives())
+
+    dirname = os.path.dirname(__file__)
+    source_file_path = os.path.join(dirname, "..", "scripts", "unittest.self")
+    with open(source_file_path) as source_file:
+        ast = lex_and_parse(source_file.read())
+
+    interpreter = Interpreter(universe)
+    for item in ast:
+        process = interpreter.add_process(item.compile(CodeContext()))
+        interpreter.interpret()
+
+        assert process.finished
+        assert not process.finished_with_error

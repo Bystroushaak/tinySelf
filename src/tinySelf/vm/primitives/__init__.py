@@ -65,15 +65,6 @@ def add_block_trait(block):
     return obj
 
 
-# def _primitive_create_mirror(obj):
-#     def list_slots():
-#         for slot_name in obj.map.slots.keys():
-#             pass
-
-#     mirror_obj = Object()
-#     mirror_obj.meta_add_slot("mirroredObj", obj)
-
-
 def _create_mirror(_, __, parameters):
     obj = parameters[0]
     assert isinstance(obj, Object)

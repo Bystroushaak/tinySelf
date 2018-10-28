@@ -75,6 +75,7 @@ def primitive_restore_process_with(interpreter, _, parameters):
 
     return None
 
+
 def primitive_raise_error(interpreter, _, parameters):
     msg = parameters[0]
     assert isinstance(msg, Object)
