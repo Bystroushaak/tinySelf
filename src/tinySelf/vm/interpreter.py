@@ -214,10 +214,14 @@ class Interpreter(ProcessCycler):
         )
         for name, value in parameter_pairs:
             intermediate_obj.meta_add_slot(name, value)
+            intermediate_obj.meta_add_slot(
+                name + ":",
+                AssignmentPrimitive(intermediate_obj)
+            )
 
         return intermediate_obj
 
-    def _push_code_obj_for_interpretation(self, code, scope_parent, method_obj, parameters):
+    def _push_code_obj_for_interpretation(self, scope_parent, method_obj, parameters):
         if parameters:
             method_obj.scope_parent = self._create_intermediate_params_obj(
                 scope_parent,
@@ -293,7 +297,6 @@ class Interpreter(ProcessCycler):
 
         if slot.has_code:
             self._push_code_obj_for_interpretation(
-                code=code,
                 scope_parent=obj,
                 method_obj=slot,
                 parameters=parameters_values,

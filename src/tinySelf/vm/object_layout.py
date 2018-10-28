@@ -96,7 +96,7 @@ class _BareObject(object):
             return self.slots_references[slot_index]
 
         if self.scope_parent is not None:
-            obj = self.scope_parent.slot_lookup(slot_name)
+            obj = self.scope_parent.get_slot(slot_name)
 
             if obj is not None:
                 return obj
