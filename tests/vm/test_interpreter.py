@@ -200,3 +200,55 @@ def test_halt():
     assert interpreter.process.finished
     assert not interpreter.process.finished_with_error
     assert interpreter.process.result == PrimitiveStrObject("Test")
+
+
+def test_setting_of_error_handler_works():
+    ast = lex_and_parse("""(|
+        test = (||
+            primitives interpreter setErrorHandler: [:obj. :stack |
+                obj printString.
+            ]
+        )
+    |) test""")
+
+    context = ast[0].compile(CodeContext())
+    interpreter = Interpreter(context, universe=get_primitives())
+
+    interpreter.interpret()
+
+
+def test_unhandled_error():
+    ast = lex_and_parse("""(|
+        test = (||
+            primitives interpreter error: 'Test'
+        )
+    |) test""")
+
+    context = ast[0].compile(CodeContext())
+    interpreter = Interpreter(context, universe=get_primitives())
+
+    interpreter.interpret()
+    assert interpreter.process.finished
+    assert interpreter.process.finished_with_error
+    assert interpreter.process.result == PrimitiveStrObject("Test")
+
+
+def test_set_error_handler_and_handle_error():
+    ast = lex_and_parse("""(|
+        raiseError = (|| primitives interpreter error: 'Test'.).
+        test = (||
+            primitives interpreter setErrorHandler: [:msg. :err |
+                primitives interpreter restoreProcess: err With: 1.
+            ].
+            ^ 1 + raiseError.
+        )
+    |) test""")
+
+    context = ast[0].compile(CodeContext())
+    interpreter = Interpreter(context, universe=get_primitives())
+
+    interpreter.interpret()
+    assert interpreter.process.finished
+    assert not interpreter.process.finished_with_error
+    result = interpreter.process.result
+    assert result == PrimitiveIntObject(2)
