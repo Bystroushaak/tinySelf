@@ -57,9 +57,16 @@
         assertNot: [nil is: false].
     ).
 
+    test_that_parameters_are_rw_slots = (| msg: x = (|| x: true. x. ) |
+        # see #63 for details
+        assert: [msg: false is: true].
+    ).
+
     run_tests = (||
         true_comparision.
         false_comparision.
         nil_comparision.
+
+        test_that_parameters_are_rw_slots.
     )
 |) run_tests.
