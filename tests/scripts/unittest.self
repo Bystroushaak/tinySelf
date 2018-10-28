@@ -47,10 +47,19 @@
 
     false_comparision = (||
         assert: [false is: false].
+        assertNot: [false is: true].
+        assertNot: [false is: nil].
+    ).
+
+    nil_comparision = (||
+        assert: [nil is: nil].
+        assertNot: [nil is: true].
+        assertNot: [nil is: false].
     ).
 
     run_tests = (||
         true_comparision.
         false_comparision.
+        nil_comparision.
     )
 |) run_tests.
