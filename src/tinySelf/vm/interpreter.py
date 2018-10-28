@@ -200,10 +200,9 @@ class Interpreter(ProcessCycler):
                 parameters.append(PrimitiveNilObject())
 
         return [
-            (parameter_name, parameters.pop(0))
-            for parameter_name in parameter_names
+            (parameter_names[i], parameters[i])
+            for i in range(len(parameter_names))
         ]
-        # return zip(parameter_names, parameters)
 
     def _create_intermediate_params_obj(self, scope_parent, method_obj, parameters):
         intermediate_obj = Object()
@@ -268,7 +267,7 @@ class Interpreter(ProcessCycler):
         parameters_values = []
         if number_of_parameters > 0:
             for _ in range(number_of_parameters):
-                parameters_values.insert(0, self.process.frame.pop())
+                parameters_values.append(self.process.frame.pop())
 
         boxed_resend_parent_name = None
         if message_type == SEND_TYPE_UNARY_RESEND or \
@@ -360,9 +359,8 @@ class Interpreter(ProcessCycler):
         elif literal_type == LITERAL_TYPE_BLOCK:
             assert isinstance(boxed_literal, ObjBox)
             block = boxed_literal.value.literal_copy()
-            block.scope_parent = self.process.frame.pop()
             obj = add_block_trait(block)
-            obj.scope_parent = block.scope_parent
+            block.scope_parent = self.process.frame.pop()
         else:
             raise ValueError("Unknown literal type; %s" % literal_type)
 

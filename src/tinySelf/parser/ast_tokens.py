@@ -291,7 +291,7 @@ class KeywordMessage(MessageBase):
             send_type = SEND_TYPE_KEYWORD_RESEND
             context.add_literal_str_push_bytecode(self.parent_name)
 
-        for parameter in self.parameters:
+        for parameter in reversed(self.parameters):
             parameter.compile(context)
 
         context.add_bytecode(BYTECODE_SEND)

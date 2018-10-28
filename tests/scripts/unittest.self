@@ -14,7 +14,7 @@
     init_false = (| false_mirror |
         false_mirror: primitives mirrorOn: false.
 
-        false_mirror toSlot: 'ifTrue:' Add: (| :blck | nil.).
+        false_mirror toSlot: 'ifTrue:' Add: (| :blck | nil).
         false_mirror toSlot: 'ifFalse:' Add: (| :blck | blck value.).
         false_mirror toSlot: 'ifTrue:False:' Add: (| :true_blck. :false_blck |
             false_blck value
@@ -24,7 +24,7 @@
         ).
     ).
 
-    init = (| true_mirror. false_mirror. universe_mirror. |
+    init = (| universe_mirror |
         init_true.
         init_false.
 
@@ -44,7 +44,13 @@
         assertNot: [true is: false].
         assertNot: [true is: nil].
     ).
+
+    false_comparision = (||
+        assert: [false is: false].
+    ).
+
     run_tests = (||
         true_comparision.
+        false_comparision.
     )
 |) run_tests.
