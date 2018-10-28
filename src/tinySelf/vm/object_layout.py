@@ -128,8 +128,12 @@ class _ObjectWithMetaOperations(_BareObject):
     def meta_add_slot(self, slot_name, value):
         assert isinstance(value, Object)
 
+        if value.scope_parent is None:
+            value.scope_parent = self
+
         if slot_name in self.map.slots:
             self.set_slot(slot_name, value)
+            return
 
         new_map = self.map.clone()
         new_map.add_slot(slot_name, len(self.slots_references))

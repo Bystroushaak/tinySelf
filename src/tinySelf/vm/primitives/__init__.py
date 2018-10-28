@@ -16,6 +16,7 @@ from tinySelf.vm.primitives.add_primitive_fn import add_primitive_method
 
 class AssignmentPrimitive(Object):
     def __init__(self, real_parent=None):
+        Object.__init__(self)
         self.real_parent = real_parent
 
     @property
@@ -36,6 +37,7 @@ class AssignmentPrimitive(Object):
 
 class ErrorObject(Object):
     def __init__(self, message, process_stack):
+        Object.__init__(self)
         self.message = message
         self.process_stack = process_stack
 
