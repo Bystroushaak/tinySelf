@@ -1,3 +1,3 @@
 (|
-    run = (|| primitives interpreter numberOfFrames)
+    run = (|| primitives interpreter numberOfProcesses)
 |) run

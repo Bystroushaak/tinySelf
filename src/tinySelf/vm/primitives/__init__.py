@@ -79,9 +79,6 @@ def get_primitives():
     """
     primitives = Object()
 
-    # def create_primitive_int_instance(literal):
-    #     return PrimitiveIntObject(literal)
-
     # add_primitive_fn(primitives, "primitiveInt", lambda x: PrimitiveIntObject(x), ["literal"])
     # add_primitive_fn(primitives, "primitiveStr", lambda x: PrimitiveStrObject(x), ["literal"])
     primitives.meta_add_slot("nil", PrimitiveNilObject())

@@ -17,10 +17,9 @@ def virtual_machine(source):
     if not ast:
         return
 
-    interpreter = Interpreter(ast.pop().compile(CodeContext()), universe)
-    print interpreter.interpret().__str__()
+    interpreter = Interpreter(universe)
 
     for item in ast:
-        context = item.compile(CodeContext())
-        interpreter.add_process(context)
-        print interpreter.interpret().__str__()
+        process = interpreter.add_process(item.compile(CodeContext()))
+        interpreter.interpret()
+        print process.result.__str__()
