@@ -32,6 +32,23 @@ class AssignmentPrimitive(Object):
         return "AssignmentPrimitive()"
 
 
+class ErrorObject(Object):
+    def __init__(self, message, process_stack):
+        self.message = message
+        self.process_stack = process_stack
+
+    @property
+    def has_code(self):
+        return False
+
+    @property
+    def has_primitive_code(self):
+        return False
+
+    def __str__(self):
+        return "ErrorObject(%s)" % self.message
+
+
 def add_block_trait(block):
     obj = Object()
     obj.meta_add_slot("value", block)
