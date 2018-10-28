@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 from tinySelf.vm.bytecodes import *
 
+from tinySelf.vm.primitives import ErrorObject
 from tinySelf.vm.primitives import add_block_trait
 from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.primitives import PrimitiveIntObject
@@ -21,11 +22,11 @@ from tinySelf.vm.object_layout import Object
 NIL = PrimitiveNilObject()
 
 
-def primitive_get_number_of_processes(interpreter, obj, parameters):
+def primitive_get_number_of_processes(interpreter, _, parameters):
     return PrimitiveIntObject(len(interpreter.processes))
 
 
-def primitive_set_error_handler(interpreter, obj, parameters):
+def primitive_set_error_handler(interpreter, _, parameters):
     blck = parameters[0]
     assert isinstance(blck, Object)
 
@@ -44,17 +45,69 @@ def _get_frame_with_error_handler(frames):
     return None
 
 
-def primitive_halt(interpreter, obj, parameters):
+def primitive_halt(interpreter, _, parameters):
     obj = parameters[0]
     assert isinstance(obj, Object)
 
     process = interpreter.remove_active_process()
+
+    if interpreter.process_count == 0:
+        interpreter.process = process
 
     process.result = obj
     process.finished = True
     process.finished_with_error = False
 
     return obj
+
+
+def primitive_restore_process_with(interpreter, _, parameters):
+    obj = parameters[0]
+    assert isinstance(obj, Object)
+    with_obj = parameters[1]
+    assert isinstance(with_obj, Object)
+
+    if not isinstance(obj, ErrorObject):
+        raise ValueError("This is not instance of error object!")
+
+    obj.process_stack.frame.push(with_obj)
+    interpreter.restore_process(obj.process_stack)
+
+    return None
+
+def primitive_raise_error(interpreter, _, parameters):
+    msg = parameters[0]
+    assert isinstance(msg, Object)
+
+    poped_frames = interpreter.process.frames[:]
+    frame_with_handler = _get_frame_with_error_handler(poped_frames)
+    process = interpreter.remove_active_process()
+
+    if frame_with_handler is None:
+        process.result = msg
+        process.finished = True
+        process.finished_with_error = True
+
+        if interpreter.process_count == 0:
+            interpreter.process = process
+
+        return None
+
+    error_handler = frame_with_handler.error_handler.get_slot("with:With:")
+    if error_handler is None:
+        raise ValueError("Error handler must react to with:With: message!")
+
+    new_code_context = error_handler.code_context
+    new_code_context.scope_parent = interpreter._create_intermediate_params_obj(
+        error_handler.scope_parent,
+        error_handler,
+        [msg, ErrorObject(msg, process)]
+    )
+    new_code_context.self = error_handler.code_context.scope_parent
+
+    interpreter.add_process(new_code_context)
+
+    return None
 
 
 class Interpreter(ProcessCycler):
@@ -77,8 +130,12 @@ class Interpreter(ProcessCycler):
                              primitive_get_number_of_processes, [])
         add_primitive_method(self, interpreter, "setErrorHandler:",
                              primitive_set_error_handler, ["blck"])
-        add_primitive_method(self, interpreter, "error:", primitive_raise_error, ["obj"])
-        add_primitive_method(self, interpreter, "halt:", primitive_halt, ["obj"])
+        add_primitive_method(self, interpreter, "error:",
+                             primitive_raise_error, ["obj"])
+        add_primitive_method(self, interpreter, "halt:",
+                             primitive_halt, ["obj"])
+        add_primitive_method(self, interpreter, "restoreProcess:With:",
+                             primitive_restore_process_with, ["msg", "err_obj"])
 
     def interpret(self):
         while self.process_count > 0:
@@ -106,6 +163,7 @@ class Interpreter(ProcessCycler):
                     process.finished = True
 
                     if not self.has_processes_to_run():
+                        self.process = process
                         return
 
                 self.process.pop_and_cleanup_frame()
@@ -139,6 +197,7 @@ class Interpreter(ProcessCycler):
             (parameter_name, parameters.pop(0))
             for parameter_name in parameter_names
         ]
+        # return zip(parameter_names, parameters)
 
     def _create_intermediate_params_obj(self, scope_parent, method_obj, parameters):
         intermediate_obj = Object()
@@ -203,7 +262,7 @@ class Interpreter(ProcessCycler):
         parameters_values = []
         if number_of_parameters > 0:
             for _ in range(number_of_parameters):
-                parameters_values.append(self.process.frame.pop())
+                parameters_values.insert(0, self.process.frame.pop())
 
         boxed_resend_parent_name = None
         if message_type == SEND_TYPE_UNARY_RESEND or \
@@ -242,7 +301,8 @@ class Interpreter(ProcessCycler):
                 parameters_values
             )
 
-            self.process.frame.push(return_value)
+            if return_value is not None:
+                self.process.frame.push(return_value)
 
         elif slot.is_assignment_primitive:
             if len(parameters_values) != 1:
