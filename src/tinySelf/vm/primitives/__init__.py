@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from tinySelf.vm.object_layout import Object
 
+from tinySelf.vm.primitives.mirror import Mirror
+
 from tinySelf.vm.primitives.primitive_int import PrimitiveIntObject
 from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
 
@@ -70,6 +72,13 @@ def add_block_trait(block):
 #     mirror_obj.meta_add_slot("mirroredObj", obj)
 
 
+def _create_mirror(_, __, parameters):
+    obj = parameters[0]
+    assert isinstance(obj, Object)
+
+    return Mirror(obj)
+
+
 def get_primitives():
     """
     Return object with primitive functions mapped to its slots.
@@ -85,6 +94,6 @@ def get_primitives():
     primitives.meta_add_slot("true", PrimitiveTrueObject())
     primitives.meta_add_slot("false", PrimitiveFalseObject())
 
-    # _add_primitive(primitives, "mirrorOn:", _primitive_create_mirror, ["obj"])
+    add_primitive_fn(primitives, "mirrorOn:", _create_mirror, ["obj"])
 
     return primitives
