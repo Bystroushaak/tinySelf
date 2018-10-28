@@ -102,7 +102,7 @@ class ProcessCycler:
         self.processes.append(new_process)
         self.process_count += 1
 
-        if not self.process:
+        if not self.process or self.process_count <= 0:
             self.process = new_process
 
         return new_process
@@ -135,6 +135,14 @@ class ProcessCycler:
         return process
 
     def remove_active_process(self):
+        if self.process not in self.processes:
+            process = self.process
+
+            if self.processes:
+                self.process = self.processes[0]
+
+            return process
+
         return self.remove_process(self.process)
 
     def next_process(self):

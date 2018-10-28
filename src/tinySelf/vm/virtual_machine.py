@@ -10,7 +10,7 @@ from tinySelf.vm.object_layout import Object
 
 def virtual_machine(source):
     universe = Object()
-    universe.set_slot("primitives", get_primitives())
+    universe.meta_add_slot("primitives", get_primitives())
 
     ast = lex_and_parse(source)
 
