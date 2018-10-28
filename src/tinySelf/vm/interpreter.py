@@ -111,14 +111,15 @@ def primitive_raise_error(interpreter, _, parameters):
 
 
 class Interpreter(ProcessCycler):
-    def __init__(self, code_context, universe):
+    def __init__(self, universe, code_context=None):
         ProcessCycler.__init__(self, code_context)
         self.universe = universe
         self._add_reflection_to_universe()
 
     def _add_reflection_to_universe(self):
-        primitives = self.universe.get_slot("primitives")
+        self.universe.meta_add_slot("universe", self.universe)
 
+        primitives = self.universe.get_slot("primitives")
         if primitives is None:
             primitives = Object()
             self.universe.meta_add_slot("primitives", primitives)
@@ -136,6 +137,7 @@ class Interpreter(ProcessCycler):
                              primitive_halt, ["obj"])
         add_primitive_method(self, interpreter, "restoreProcess:With:",
                              primitive_restore_process_with, ["msg", "err_obj"])
+
 
     def interpret(self):
         while self.process_count > 0:

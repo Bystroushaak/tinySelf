@@ -22,7 +22,7 @@ def test_interpreter():
     |) add: 2""")
 
     context = ast[0].compile(CodeContext())
-    interpreter = Interpreter(context, universe=get_primitives())
+    interpreter = Interpreter(universe=get_primitives(), code_context=context)
 
     interpreter.interpret()
     assert interpreter.process.result == PrimitiveIntObject(4)
@@ -38,7 +38,7 @@ def test_assignment_primitive():
     |) incA""")
 
     context = ast[0].compile(CodeContext())
-    interpreter = Interpreter(context, universe=get_primitives())
+    interpreter = Interpreter(universe=get_primitives(), code_context=context)
 
     interpreter.interpret()
     assert interpreter.process.result == PrimitiveIntObject(1)
@@ -59,7 +59,7 @@ def test_block():
     |) add""")
 
     context = ast[0].compile(CodeContext())
-    interpreter = Interpreter(context, universe=get_primitives())
+    interpreter = Interpreter(universe=get_primitives(), code_context=context)
 
     interpreter.interpret()
     assert interpreter.process.result == PrimitiveIntObject(16)
@@ -80,7 +80,7 @@ def test_block_with_argument():
     |) shouldBeThree""")
 
     context = ast[0].compile(CodeContext())
-    interpreter = Interpreter(context, universe=get_primitives())
+    interpreter = Interpreter(universe=get_primitives(), code_context=context)
 
     interpreter.interpret()
     assert interpreter.process.result == PrimitiveIntObject(3)
@@ -106,7 +106,7 @@ def test_calling_block_twice_with_argument():
     |) shouldBeThree""")
 
     context = ast[0].compile(CodeContext())
-    interpreter = Interpreter(context, universe=get_primitives())
+    interpreter = Interpreter(universe=get_primitives(), code_context=context)
 
     interpreter.interpret()
     assert interpreter.process.result == PrimitiveIntObject(7)
@@ -121,7 +121,7 @@ def test_resend():
     |) fetchXex""")
 
     context = ast[0].compile(CodeContext())
-    interpreter = Interpreter(context, universe=get_primitives())
+    interpreter = Interpreter(universe=get_primitives(), code_context=context)
 
     interpreter.interpret()
     assert interpreter.process.result == PrimitiveIntObject(2)
@@ -137,7 +137,7 @@ def test_resend_is_in_local_context():
     |) fetchXex""")
 
     context = ast[0].compile(CodeContext())
-    interpreter = Interpreter(context, universe=get_primitives())
+    interpreter = Interpreter(universe=get_primitives(), code_context=context)
 
     interpreter.interpret()
     assert interpreter.process.result == PrimitiveIntObject(2)
@@ -152,7 +152,7 @@ def test_resend_keyword():
     |) fetchXex""")
 
     context = ast[0].compile(CodeContext())
-    interpreter = Interpreter(context, universe=get_primitives())
+    interpreter = Interpreter(universe=get_primitives(), code_context=context)
 
     interpreter.interpret()
     assert interpreter.process.result == PrimitiveIntObject(2)
@@ -169,7 +169,7 @@ def test_parallelism():
     one_plus_one_ctx = one_plus_one_ast[0].compile(CodeContext())
     two_plus_two_ctx = two_plus_two_ast[0].compile(CodeContext())
 
-    interpreter = Interpreter(None, universe=get_primitives())
+    interpreter = Interpreter(universe=get_primitives())
     one_plus_one_process = interpreter.add_process(one_plus_one_ctx)
     two_plus_two_process = interpreter.add_process(two_plus_two_ctx)
 
@@ -194,7 +194,7 @@ def test_halt():
     |) test""")
 
     context = ast[0].compile(CodeContext())
-    interpreter = Interpreter(context, universe=get_primitives())
+    interpreter = Interpreter(universe=get_primitives(), code_context=context)
 
     interpreter.interpret()
     assert interpreter.process.finished
@@ -212,7 +212,7 @@ def test_setting_of_error_handler_works():
     |) test""")
 
     context = ast[0].compile(CodeContext())
-    interpreter = Interpreter(context, universe=get_primitives())
+    interpreter = Interpreter(universe=get_primitives(), code_context=context)
 
     interpreter.interpret()
 
@@ -225,7 +225,7 @@ def test_unhandled_error():
     |) test""")
 
     context = ast[0].compile(CodeContext())
-    interpreter = Interpreter(context, universe=get_primitives())
+    interpreter = Interpreter(universe=get_primitives(), code_context=context)
 
     interpreter.interpret()
     assert interpreter.process.finished
@@ -245,7 +245,7 @@ def test_set_error_handler_and_handle_error():
     |) test""")
 
     context = ast[0].compile(CodeContext())
-    interpreter = Interpreter(context, universe=get_primitives())
+    interpreter = Interpreter(universe=get_primitives(), code_context=context)
 
     interpreter.interpret()
     assert interpreter.process.finished
