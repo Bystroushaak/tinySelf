@@ -107,6 +107,17 @@ class ProcessCycler:
 
         return new_process
 
+    def restore_process(self, process_stack):
+        assert isinstance(process_stack, ProcessStack)
+
+        self.processes.append(process_stack)
+        self.process_count += 1
+
+        if not self.process:
+            self.process = process_stack
+
+        return process_stack
+
     def has_processes_to_run(self):
         return self.process_count != 0
 
@@ -117,7 +128,9 @@ class ProcessCycler:
         self.process_count -= 1
 
         if self.processes:
-            self.process = self.processes[-1]
+            self.process = self.processes[0]
+        else:
+            self.process = None
 
         return process
 
