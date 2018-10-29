@@ -62,11 +62,16 @@
         assert: [(msg: false) is: true].
     ).
 
+    test_double_return_from_block = (| test = (|| true ifTrue: [ ^true ]. ^false) |
+        assert: [test is: true].
+    ).
+
     run_tests = (||
         true_comparision.
         false_comparision.
         nil_comparision.
 
         test_that_parameters_are_rw_slots.
+        test_double_return_from_block.
     )
 |) run_tests.
