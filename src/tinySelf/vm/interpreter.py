@@ -99,12 +99,12 @@ def primitive_raise_error(interpreter, _, parameters):
         raise ValueError("Error handler must react to with:With: message!")
 
     new_code_context = error_handler.code_context
-    new_code_context.scope_parent = interpreter._create_intermediate_params_obj(
+    error_handler.scope_parent = interpreter._create_intermediate_params_obj(
         error_handler.scope_parent,
         error_handler,
         [msg, ErrorObject(msg, process)]
     )
-    new_code_context.self = error_handler.code_context.scope_parent
+    new_code_context.self = error_handler.scope_parent
 
     interpreter.add_process(new_code_context)
 
@@ -142,7 +142,6 @@ class Interpreter(ProcessCycler):
                              primitive_halt, ["obj"])
         add_primitive_method(self, interpreter, "restoreProcess:With:",
                              primitive_restore_process_with, ["msg", "err_obj"])
-
 
     def interpret(self):
         while self.process_count > 0:
@@ -205,9 +204,13 @@ class Interpreter(ProcessCycler):
             for i in range(len(parameter_names))
         ]
 
-    def _create_intermediate_params_obj(self, scope_parent, method_obj, parameters):
+    def _create_intermediate_params_obj(self, scope_parent, method_obj,
+                                        parameters, prev_scope_parent=None):
         intermediate_obj = Object()
         intermediate_obj.scope_parent = scope_parent
+
+        if prev_scope_parent is not None:
+            intermediate_obj.meta_add_parent("*", prev_scope_parent)
 
         parameter_pairs = self._put_together_parameters(
             parameter_names=method_obj.parameters,
@@ -223,32 +226,30 @@ class Interpreter(ProcessCycler):
         return intermediate_obj
 
     def _push_code_obj_for_interpretation(self, scope_parent, method_obj, parameters):
-        if parameters:
-            method_obj.scope_parent = self._create_intermediate_params_obj(
-                scope_parent,
-                method_obj,
-                parameters
-            )
-        else:
-            method_obj.scope_parent = scope_parent
+        old_scope_parent = method_obj.scope_parent
+        method_obj.scope_parent = self._create_intermediate_params_obj(
+            scope_parent,
+            method_obj,
+            parameters,
+            old_scope_parent,
+        )
 
         new_code_context = method_obj.code_context
         new_code_context.self = method_obj
-        new_code_context.scope_parent = scope_parent
 
         self.process.push_frame(new_code_context, method_obj)
 
     def _set_scope_parent_if_not_already_set(self, obj, code):
         if obj.scope_parent is None:
-            if code.scope_parent is None:
-                obj.scope_parent = self.universe
-            else:
-                obj.scope_parent = code.scope_parent
+            obj.scope_parent = self.universe
 
     def _resend_to_parent(self, obj, parent_name, message_name):
         resend_parent = obj.parent_slots.get(parent_name)
         if resend_parent is None and obj.scope_parent:
             resend_parent = obj.scope_parent.parent_slots.get(parent_name)
+        if resend_parent is None and "*" in obj.scope_parent.parent_slots:
+            star_parent = obj.scope_parent.parent_slots["*"]
+            resend_parent = star_parent.parent_slots.get(parent_name)
 
         if resend_parent is None:
             raise ValueError(
