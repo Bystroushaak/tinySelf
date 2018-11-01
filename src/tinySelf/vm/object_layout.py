@@ -19,7 +19,6 @@ class _BareObject(object):
 
         self.map = obj_map
         self.scope_parent = None
-        self.is_block = False
         self.slots_references = []
 
     @property
@@ -200,6 +199,14 @@ class _ObjectWithMapEncapsulation(_ObjectWithMetaOperations):
         return self.map.slots.keys()
 
     @property
+    def is_block(self):
+        return self.map.is_block
+
+    @is_block.setter
+    def is_block(self, is_block):
+        self.map.is_block = is_block
+
+    @property
     def visited(self):
         return self.map.visited
 
@@ -270,6 +277,7 @@ class ObjectMap(object):
         self.parent_slots = OrderedDict()
 
         self.visited = False
+        self.is_block = False
 
         self.ast = None
         self.code_context = None
