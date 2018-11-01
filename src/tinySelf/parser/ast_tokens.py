@@ -450,7 +450,7 @@ class Return(BaseBox):
 
     def compile(self, context):
         self.value.compile(context)
-        context.add_bytecode(BYTECODE_RETURNTOP)
+        context.add_bytecode(BYTECODE_RETURN_IMPLICIT)
 
         return context
 

@@ -5,7 +5,7 @@ BYTECODE_SEND = 0
 BYTECODE_PUSHSELF = 2
 BYTECODE_PUSHLITERAL = 3
 BYTECODE_RETURNTOP = 4
-# BYTECODE_RETURNIMPLICIT = 5
+BYTECODE_RETURN_IMPLICIT = 5
 BYTECODE_ADD_SLOT = 6
 
 LITERAL_TYPE_NIL = 0
@@ -77,6 +77,10 @@ def disassemble(bytecodes):
 
         elif bytecode == BYTECODE_RETURNTOP:
             disassembled.append(["RETURNTOP"])
+            continue
+
+        elif bytecode == BYTECODE_RETURN_IMPLICIT:
+            disassembled.append(["RETURN_IMPLICIT"])
             continue
 
         elif bytecode == BYTECODE_ADD_SLOT:

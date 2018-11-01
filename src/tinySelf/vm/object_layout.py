@@ -19,6 +19,7 @@ class _BareObject(object):
 
         self.map = obj_map
         self.scope_parent = None
+        self.is_block = False
         self.slots_references = []
 
     @property

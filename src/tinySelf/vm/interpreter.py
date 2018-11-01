@@ -176,6 +176,33 @@ class Interpreter(ProcessCycler):
                 self.next_process()
                 continue
 
+            elif bytecode == BYTECODE_RETURN_IMPLICIT:
+                if not self.process.is_nested_call():
+                    result = self.process.frame.pop_or_nil()
+                    process = self.remove_active_process()
+
+                    process.result = result
+                    process.finished = True
+
+                    if not self.has_processes_to_run():
+                        self.process = process
+                        return
+
+                method_obj = self.process.frame.tmp_method_obj_reference
+                if method_obj and method_obj.is_block:
+                    block_scope_parent = method_obj.parent_slots.get("*")
+
+                    while method_obj != block_scope_parent:
+                        self.process.pop_and_cleanup_frame()
+                        method_obj = self.process.frame.tmp_method_obj_reference
+
+                    self.next_process()
+                    continue
+
+                self.process.pop_and_cleanup_frame()
+                self.next_process()
+                continue
+
             elif bytecode == BYTECODE_ADD_SLOT:
                 bc_index += self._do_add_slot(bc_index, code_obj)
 
@@ -365,6 +392,7 @@ class Interpreter(ProcessCycler):
             assert isinstance(boxed_literal, ObjBox)
             block = boxed_literal.value.literal_copy()
             obj = add_block_trait(block)
+            block.is_block = True
             block.scope_parent = self.process.frame.pop()
         else:
             raise ValueError("Unknown literal type; %s" % literal_type)
