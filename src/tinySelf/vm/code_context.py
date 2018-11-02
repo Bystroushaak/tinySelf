@@ -75,7 +75,7 @@ class CodeContext(object):
 
         index = self.add_literal_str(literal)
 
-        self.add_bytecode(BYTECODE_PUSHLITERAL)
+        self.add_bytecode(BYTECODE_PUSH_LITERAL)
         self.add_bytecode(LITERAL_TYPE_STR)
         self.add_bytecode(index)
 
@@ -83,7 +83,7 @@ class CodeContext(object):
 
     def get_bytecode(self, index):
         if index >= len(self.bytecodes):
-            return BYTECODE_RETURNTOP
+            return BYTECODE_RETURN_TOP
 
         return self.bytecodes[index]
 

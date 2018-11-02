@@ -52,7 +52,7 @@ class Root(BaseBox):
 
 class Self(BaseBox):
     def compile(self, context):
-        context.add_bytecode(BYTECODE_PUSHSELF)
+        context.add_bytecode(BYTECODE_PUSH_SELF)
 
         return context
 
@@ -68,7 +68,7 @@ class Self(BaseBox):
 
 class Nil(Self):
     def compile(self, context):
-        context.add_bytecode(BYTECODE_PUSHLITERAL)
+        context.add_bytecode(BYTECODE_PUSH_LITERAL)
         context.add_bytecode(LITERAL_TYPE_NIL)
         context.add_bytecode(0)
 
@@ -108,7 +108,7 @@ class Object(BaseBox):
         obj.meta_set_parameters(self.params)
 
         index = context.add_literal_obj(obj)
-        context.add_bytecode(BYTECODE_PUSHLITERAL)
+        context.add_bytecode(BYTECODE_PUSH_LITERAL)
         context.add_bytecode(LITERAL_TYPE_OBJ)
         context.add_bytecode(index)
 
@@ -164,10 +164,10 @@ class Block(Object):
         block.meta_set_parameters(self.params)
 
         # push current scope
-        context.add_bytecode(BYTECODE_PUSHSELF)
+        context.add_bytecode(BYTECODE_PUSH_SELF)
 
         index = context.add_literal_obj(block)
-        context.add_bytecode(BYTECODE_PUSHLITERAL)
+        context.add_bytecode(BYTECODE_PUSH_LITERAL)
         context.add_bytecode(LITERAL_TYPE_BLOCK)
         context.add_bytecode(index)
 
@@ -196,7 +196,7 @@ class Number(BaseBox):  # TODO: remove
     def compile(self, context):
         index = context.add_literal_int(self.value)
 
-        context.add_bytecode(BYTECODE_PUSHLITERAL)
+        context.add_bytecode(BYTECODE_PUSH_LITERAL)
         context.add_bytecode(LITERAL_TYPE_INT)
         context.add_bytecode(index)
 
@@ -220,7 +220,7 @@ class String(BaseBox):  # TODO: remove?
     def compile(self, context):
         index = context.add_literal_str(self.value)
 
-        context.add_bytecode(BYTECODE_PUSHLITERAL)
+        context.add_bytecode(BYTECODE_PUSH_LITERAL)
         context.add_bytecode(LITERAL_TYPE_STR)
         context.add_bytecode(index)
 
@@ -386,7 +386,7 @@ class Resend(BaseBox):
         self.msg = msg
 
     def compile(self, context):
-        context.add_bytecode(BYTECODE_PUSHSELF)
+        context.add_bytecode(BYTECODE_PUSH_SELF)
         self.msg.compile(context)
 
         return context
@@ -467,7 +467,7 @@ class Return(BaseBox):
 
 class AssignmentPrimitive(BaseBox):
     def compile(self, context):
-        context.add_bytecode(BYTECODE_PUSHLITERAL)
+        context.add_bytecode(BYTECODE_PUSH_LITERAL)
         context.add_bytecode(LITERAL_TYPE_ASSIGNMENT)
         context.add_bytecode(0)
 

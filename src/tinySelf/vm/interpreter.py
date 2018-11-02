@@ -154,13 +154,13 @@ class Interpreter(ProcessCycler):
             if bytecode == BYTECODE_SEND:
                 bc_index += self._do_send(bc_index, code_obj)
 
-            elif bytecode == BYTECODE_PUSHSELF:
+            elif bytecode == BYTECODE_PUSH_SELF:
                 bc_index += self._do_push_self(bc_index, code_obj)
 
-            elif bytecode == BYTECODE_PUSHLITERAL:
+            elif bytecode == BYTECODE_PUSH_LITERAL:
                 bc_index += self._do_push_literal(bc_index, code_obj)
 
-            elif bytecode == BYTECODE_RETURNTOP:
+            elif bytecode == BYTECODE_RETURN_TOP:
                 if not self.process.is_nested_call():
                     result = self.process.frame.pop_or_nil()
                     process = self.remove_active_process()
@@ -206,11 +206,8 @@ class Interpreter(ProcessCycler):
             elif bytecode == BYTECODE_ADD_SLOT:
                 bc_index += self._do_add_slot(bc_index, code_obj)
 
-            # elif bytecode == BYTECODE_SELFSEND:
+            # elif bytecode == BYTECODE_SELF_SEND:
             #     self._do_selfSend(bc_index, code_obj, frame)
-
-            # elif bytecode == BYTECODE_RETURNIMPLICIT:
-            #     self._do_return_implicit(bc_index, code_obj, frame)
 
             else:
                 raise ValueError("Unknown bytecode!")

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 BYTECODE_SEND = 0
-# BYTECODE_SELFSEND = 1
-BYTECODE_PUSHSELF = 2
-BYTECODE_PUSHLITERAL = 3
-BYTECODE_RETURNTOP = 4
+# BYTECODE_SELF_SEND = 1
+BYTECODE_PUSH_SELF = 2
+BYTECODE_PUSH_LITERAL = 3
+BYTECODE_RETURN_TOP = 4
 BYTECODE_RETURN_IMPLICIT = 5
 BYTECODE_ADD_SLOT = 6
 
@@ -51,11 +51,11 @@ def disassemble(bytecodes):
             ])
             continue
 
-        elif bytecode == BYTECODE_PUSHSELF:
+        elif bytecode == BYTECODE_PUSH_SELF:
             disassembled.append(["PUSH_SELF"])
             continue
 
-        elif bytecode == BYTECODE_PUSHLITERAL:
+        elif bytecode == BYTECODE_PUSH_LITERAL:
             literal_type = bytecodes.pop(0)
             literal_index = bytecodes.pop(0)
 
@@ -75,8 +75,8 @@ def disassemble(bytecodes):
             ])
             continue
 
-        elif bytecode == BYTECODE_RETURNTOP:
-            disassembled.append(["RETURNTOP"])
+        elif bytecode == BYTECODE_RETURN_TOP:
+            disassembled.append(["RETURN_TOP"])
             continue
 
         elif bytecode == BYTECODE_RETURN_IMPLICIT:
