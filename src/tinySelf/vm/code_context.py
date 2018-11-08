@@ -58,6 +58,8 @@ class CodeContext(object):
         self.bytecodes = ""
         self._mutable_bytecodes = []
 
+        self.str_literal_cache = {}
+
         self.literals = []
 
     def add_literal(self, literal):
@@ -67,7 +69,14 @@ class CodeContext(object):
         return len(self.literals) - 1
 
     def add_literal_str(self, literal):
-        return self.add_literal(StrBox(literal))
+        index = self.str_literal_cache.get(literal, -1)
+        if index > -1:
+            return index
+
+        index = self.add_literal(StrBox(literal))
+        self.str_literal_cache[literal] = index
+
+        return index
 
     def add_literal_int(self, literal):
         return self.add_literal(IntBox(literal))
@@ -102,6 +111,7 @@ class CodeContext(object):
         # I would use bytearray(), but it behaves differently under rpython
         self.bytecodes = str("".join([chr(x) for x in self._mutable_bytecodes]))
         self._mutable_bytecodes = None
+        self.str_literal_cache.clear()
 
         for item in self.literals:
             item.finalize()
