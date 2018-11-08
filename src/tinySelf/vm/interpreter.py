@@ -20,6 +20,9 @@ from tinySelf.vm.object_layout import Object
 
 
 NIL = PrimitiveNilObject()
+ONE_BYTECODE_LONG = 1
+TWO_BYTECODES_LONG = 2
+THREE_BYTECODES_LONG = 3
 
 
 def primitive_get_number_of_processes(interpreter, _, parameters):
@@ -358,7 +361,7 @@ class Interpreter(ProcessCycler):
             return_value = slot
             self.process.frame.push(return_value)
 
-        return 3
+        return THREE_BYTECODES_LONG
 
     # def _do_selfSend(self, bc_index, code_obj, frame):
     #     pass
@@ -366,7 +369,7 @@ class Interpreter(ProcessCycler):
     def _do_push_self(self, bc_index, code_obj):
         self.process.frame.push(code_obj.self)
 
-        return 1
+        return ONE_BYTECODE_LONG
 
     def _do_push_literal(self, bc_index, code_obj):
         literal_type = ord(code_obj.bytecodes[bc_index + 1])
@@ -399,7 +402,7 @@ class Interpreter(ProcessCycler):
 
         self.process.frame.push(obj)
 
-        return 3
+        return THREE_BYTECODES_LONG
 
     def _do_add_slot(self, bc_index, code_obj):
         value = self.process.frame.pop()
@@ -423,4 +426,4 @@ class Interpreter(ProcessCycler):
         # keep the receiver on the top of the stack
         self.process.frame.push(obj)
 
-        return 2
+        return TWO_BYTECODES_LONG
