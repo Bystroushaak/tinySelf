@@ -98,6 +98,8 @@ class ProcessCycler:
     def add_process(self, code_context):
         assert isinstance(code_context, CodeContext)
 
+        code_context.finalize()
+
         new_process = ProcessStack(code_context)
         self.processes.append(new_process)
         self.process_count += 1

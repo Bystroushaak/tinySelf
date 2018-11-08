@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from rply.token import BaseBox
-from rpython.rlib.types import bytearray
 
 from tinySelf.vm.bytecodes import *
 from tinySelf.vm.object_layout import Object
 
 
 class LiteralBox(BaseBox):
-    pass
+    def finalize(self):
+        pass
 
 
 class IntBox(LiteralBox):
@@ -39,6 +39,10 @@ class ObjBox(LiteralBox):
         self.value = obj
         self.literal_type = LITERAL_TYPE_OBJ
 
+    def finalize(self):
+        if self.value and self.value.code_context:
+            self.value.code_context.finalize()
+
     def __str__(self):
         if self.value.ast is not None:
             return self.value.ast.__str__()
@@ -48,9 +52,13 @@ class ObjBox(LiteralBox):
 
 class CodeContext(object):
     def __init__(self):
-        self.bytecodes = []  # rewrite to bytearray or something like that?
-        self.literals = []
         self.self = None
+        self._finalized = False
+
+        self.bytecodes = ""
+        self._mutable_bytecodes = []
+
+        self.literals = []
 
     def add_literal(self, literal):
         assert isinstance(literal, LiteralBox)
@@ -68,7 +76,7 @@ class CodeContext(object):
         return self.add_literal(ObjBox(literal))
 
     def add_bytecode(self, bytecode):
-        self.bytecodes.append(bytecode)
+        self._mutable_bytecodes.append(bytecode)
 
     def add_literal_str_push_bytecode(self, literal):
         assert isinstance(literal, str)
@@ -81,11 +89,24 @@ class CodeContext(object):
 
         return index
 
-    def get_bytecode(self, index):
-        if index >= len(self.bytecodes):
-            return BYTECODE_RETURN_TOP
+    def finalize(self):
+        if self._finalized:
+            return
 
-        return self.bytecodes[index]
+        # 4x as 3 is maximum length of multi-bytecode instructions
+        self._mutable_bytecodes.append(BYTECODE_RETURN_TOP)
+        self._mutable_bytecodes.append(BYTECODE_RETURN_TOP)
+        self._mutable_bytecodes.append(BYTECODE_RETURN_TOP)
+        self._mutable_bytecodes.append(BYTECODE_RETURN_TOP)
+
+        # I would use bytearray(), but it behaves differently under rpython
+        self.bytecodes = str("".join([chr(x) for x in self._mutable_bytecodes]))
+        self._mutable_bytecodes = None
+
+        for item in self.literals:
+            item.finalize()
+
+        self._finalized = True
 
     def debug_json(self):
         out = '{\n"literals": {\n'
@@ -95,11 +116,11 @@ class CodeContext(object):
 
         out += '"disassembled": [\n'
         instructions = []
-        for instruction in disassemble(self.bytecodes[:]):
+        for instruction in disassemble(self.bytecodes):
             instructions.append('    %s' % str(instruction).replace("'", '"'))
         out += ",\n".join(instructions)
         out += '\n],\n\n'
 
-        out += '"bytecodes": {\n    %s\n}}' % str(self.bytecodes)
+        out += '"bytecodes": {\n    %s\n}}' % str([int(x) for x in self.bytecodes])
 
         return out

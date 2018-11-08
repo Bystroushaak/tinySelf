@@ -113,6 +113,9 @@ def primitive_raise_error(interpreter, _, parameters):
 
 class Interpreter(ProcessCycler):
     def __init__(self, universe, code_context=None):
+        if code_context is not None:
+            code_context.finalize()
+
         ProcessCycler.__init__(self, code_context)
         self.universe = universe
         self._add_reflection_to_universe()
@@ -149,7 +152,7 @@ class Interpreter(ProcessCycler):
             bc_index = frame.bc_index
             code_obj = frame.code_context
 
-            bytecode = code_obj.get_bytecode(bc_index)
+            bytecode = ord(code_obj.bytecodes[bc_index])
 
             if bytecode == BYTECODE_SEND:
                 bc_index += self._do_send(bc_index, code_obj)
@@ -291,8 +294,8 @@ class Interpreter(ProcessCycler):
         Returns:
             int: Index of next bytecode.
         """
-        message_type = code.get_bytecode(bc_index + 1)
-        number_of_parameters = code.get_bytecode(bc_index + 2)
+        message_type = ord(code.bytecodes[bc_index + 1])
+        number_of_parameters = ord(code.bytecodes[bc_index + 2])
 
         parameters_values = []
         if number_of_parameters > 0:
@@ -366,8 +369,8 @@ class Interpreter(ProcessCycler):
         return 1
 
     def _do_push_literal(self, bc_index, code_obj):
-        literal_type = code_obj.get_bytecode(bc_index + 1)
-        literal_index = code_obj.get_bytecode(bc_index + 2)
+        literal_type = ord(code_obj.bytecodes[bc_index + 1])
+        literal_index = ord(code_obj.bytecodes[bc_index + 2])
         boxed_literal = code_obj.literals[literal_index]
 
         if literal_type == LITERAL_TYPE_NIL:
@@ -398,9 +401,6 @@ class Interpreter(ProcessCycler):
 
         return 3
 
-    # def _do_return_implicit(self, bc_index, code_obj, frame):
-    #     pass
-
     def _do_add_slot(self, bc_index, code_obj):
         value = self.process.frame.pop()
         boxed_slot_name = self.process.frame.pop()
@@ -412,7 +412,7 @@ class Interpreter(ProcessCycler):
         if value.is_assignment_primitive:
             value.real_parent = obj
 
-        slot_type = code_obj.get_bytecode(bc_index + 1)
+        slot_type = ord(code_obj.bytecodes[bc_index + 1])
         if slot_type == SLOT_NORMAL:
             obj.meta_add_slot(slot_name=slot_name, value=value)
         elif slot_type == SLOT_PARENT:

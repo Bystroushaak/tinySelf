@@ -25,9 +25,10 @@ SLOT_NORMAL = 0
 SLOT_PARENT = 1
 
 
-def disassemble(bytecodes):
+def disassemble(bytecodes_bytearray):
     disassembled = []
 
+    bytecodes = [ord(c) for c in bytecodes_bytearray]
     while bytecodes:
         bytecode = bytecodes.pop(0)
 
@@ -95,7 +96,5 @@ def disassemble(bytecodes):
                 "type:" + slot_type_str,
             ])
             continue
-
-        # elif bytecode == BYTECODE_RETURNIMPLICIT:
 
     return disassembled
