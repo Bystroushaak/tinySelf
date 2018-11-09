@@ -53,6 +53,13 @@ class ErrorObject(Object):
         return "ErrorObject(%s)" % self.message
 
 
+class BlockTrait(Object):
+    pass
+
+
+_BLOCK_TRAIT = BlockTrait()
+
+
 def add_block_trait(block):
     obj = Object()
     obj.meta_add_slot("value", block)
@@ -61,6 +68,8 @@ def add_block_trait(block):
     obj.meta_add_slot("with:With:With:", block)
     obj.meta_add_slot("with:With:With:With:", block)
     obj.meta_add_slot("withAll:", block)
+
+    obj.scope_parent = _BLOCK_TRAIT
 
     return obj
 
@@ -86,6 +95,7 @@ def get_primitives():
     primitives.meta_add_slot("nil", PrimitiveNilObject())
     primitives.meta_add_slot("true", PrimitiveTrueObject())
     primitives.meta_add_slot("false", PrimitiveFalseObject())
+    primitives.meta_add_slot("block_traits", _BLOCK_TRAIT)
 
     add_primitive_fn(primitives, "mirrorOn:", _create_mirror, ["obj"])
 
