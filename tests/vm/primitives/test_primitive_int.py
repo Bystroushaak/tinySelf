@@ -46,7 +46,7 @@ def test_PrimitiveIntObject_modulo():
 def test_PrimitiveIntObject_as_primitive_string():
     o = PrimitiveIntObject(2)
 
-    plus_slot = o.slot_lookup("asPrimitiveString")
+    plus_slot = o.slot_lookup("asString")
     assert plus_slot.map.primitive_code
     result = plus_slot.map.primitive_code(None, o, [])
     assert result == PrimitiveStrObject("2")

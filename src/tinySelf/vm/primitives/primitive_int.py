@@ -72,7 +72,7 @@ class PrimitiveIntObject(Object):
         add_primitive_fn(self, "*", multiply, ["obj"])
         add_primitive_fn(self, "/", divide, ["obj"])
         add_primitive_fn(self, "%", modulo, ["obj"])
-        add_primitive_fn(self, "asPrimitiveString", as_string, [])
+        add_primitive_fn(self, "asString", as_string, [])
 
     def __eq__(self, obj):
         if not hasattr(obj, "value"):
