@@ -215,7 +215,7 @@ class Number(BaseBox):  # TODO: remove
 
 class String(BaseBox):  # TODO: remove?
     def __init__(self, value):
-        self.value = value
+        self.value = value.replace("\\n", "\n").replace("\\t", "\t")
 
     def compile(self, context):
         index = context.add_literal_str(self.value)
