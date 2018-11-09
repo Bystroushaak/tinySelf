@@ -41,7 +41,7 @@ def test_process_stack():
     ps.pop_frame_down()
     assert ps.frame
 
-    ps.pop_and_cleanup_frame()
+    ps.pop_down_and_cleanup_frame()
     assert ps.frame
 
 
@@ -65,7 +65,7 @@ def test_process_stack_push_frame_behavior():
     assert ps.frames[1].stack[-1] == retval
     assert ps.frames[0].stack[-1] != retval
 
-    ps.pop_and_cleanup_frame()
+    ps.pop_down_and_cleanup_frame()
     assert len(ps.frames) == 1
     assert ps.frame.stack[-1] == retval
     assert ps.frames[0].stack[-1] == retval

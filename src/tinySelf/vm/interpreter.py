@@ -178,7 +178,7 @@ class Interpreter(ProcessCycler):
                         self.process = process
                         return
 
-                self.process.pop_and_cleanup_frame()
+                self.process.pop_down_and_cleanup_frame()
                 self.next_process()
                 continue
 
@@ -199,13 +199,13 @@ class Interpreter(ProcessCycler):
                     block_scope_parent = method_obj.parent_slots.get("*")
 
                     while method_obj != block_scope_parent:
-                        self.process.pop_and_cleanup_frame()
+                        self.process.pop_down_and_cleanup_frame()
                         method_obj = self.process.frame.tmp_method_obj_reference
 
                     self.next_process()
                     continue
 
-                self.process.pop_and_cleanup_frame()
+                self.process.pop_down_and_cleanup_frame()
                 self.next_process()
                 continue
 
@@ -255,7 +255,15 @@ class Interpreter(ProcessCycler):
 
         return intermediate_obj
 
-    def _push_code_obj_for_interpretation(self, scope_parent, method_obj, parameters):
+    def _tco_possibility(self, next_bytecode):
+        if next_bytecode != BYTECODE_RETURN_TOP and \
+           next_bytecode != BYTECODE_RETURN_IMPLICIT:
+           return
+
+        self.pop_and_clean_frame()
+
+    def _push_code_obj_for_interpretation(self, next_bytecode, scope_parent,
+                                          method_obj, parameters):
         old_scope_parent = method_obj.scope_parent
         method_obj.scope_parent = self._create_intermediate_params_obj(
             scope_parent,
@@ -266,6 +274,8 @@ class Interpreter(ProcessCycler):
 
         new_code_context = method_obj.code_context
         new_code_context.self = method_obj
+
+        # self._tco_possibility(next_bytecode)
 
         self.process.push_frame(new_code_context, method_obj)
 
@@ -325,10 +335,14 @@ class Interpreter(ProcessCycler):
             slot = obj.slot_lookup(message_name)
 
         if slot is None:
-            raise ValueError("Missing slot error: " + message_name)
+            print code.debug_json()
+            print obj.ast.__str__()
+            print "Failed at bytecode number %d" % bc_index
+            raise ValueError("Missing slot error: `%s`" % message_name)
 
         if slot.has_code:
             self._push_code_obj_for_interpretation(
+                next_bytecode=code.bytecodes[bc_index + 4],
                 scope_parent=obj,
                 method_obj=slot,
                 parameters=parameters_values,
