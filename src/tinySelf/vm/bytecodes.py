@@ -25,10 +25,15 @@ SLOT_NORMAL = 0
 SLOT_PARENT = 1
 
 
+def _compute_index(bytecodes_len, bytecodes):
+    return bytecodes_len - len(bytecodes) - 3  # FIX later
+
+
 def disassemble(bytecodes_bytearray):
     disassembled = []
 
     bytecodes = [ord(c) for c in bytecodes_bytearray]
+    bytecodes_len = len(bytecodes)
     while bytecodes:
         bytecode = bytecodes.pop(0)
 
@@ -46,6 +51,7 @@ def disassemble(bytecodes_bytearray):
             number_of_params = bytecodes.pop(0)
 
             disassembled.append([
+                _compute_index(bytecodes_len, bytecodes),
                 "SEND",
                 "type:" + send_type_str,
                 "params:" + str(number_of_params)
@@ -53,7 +59,10 @@ def disassemble(bytecodes_bytearray):
             continue
 
         elif bytecode == BYTECODE_PUSH_SELF:
-            disassembled.append(["PUSH_SELF"])
+            disassembled.append([
+                _compute_index(bytecodes_len, bytecodes),
+                "PUSH_SELF"
+            ])
             continue
 
         elif bytecode == BYTECODE_PUSH_LITERAL:
@@ -70,6 +79,7 @@ def disassemble(bytecodes_bytearray):
             }[literal_type]
 
             disassembled.append([
+                _compute_index(bytecodes_len, bytecodes),
                 "PUSH_LITERAL",
                 "type:" + literal_type_str,
                 "index:" + str(literal_index)
@@ -77,11 +87,17 @@ def disassemble(bytecodes_bytearray):
             continue
 
         elif bytecode == BYTECODE_RETURN_TOP:
-            disassembled.append(["RETURN_TOP"])
+            disassembled.append([
+                _compute_index(bytecodes_len, bytecodes),
+                "RETURN_TOP"
+            ])
             continue
 
         elif bytecode == BYTECODE_RETURN_IMPLICIT:
-            disassembled.append(["RETURN_IMPLICIT"])
+            disassembled.append([
+                _compute_index(bytecodes_len, bytecodes),
+                "RETURN_IMPLICIT"
+            ])
             continue
 
         elif bytecode == BYTECODE_ADD_SLOT:
@@ -92,6 +108,7 @@ def disassemble(bytecodes_bytearray):
             }[slot_type]
 
             disassembled.append([
+                _compute_index(bytecodes_len, bytecodes),
                 "ADD_SLOT",
                 "type:" + slot_type_str,
             ])

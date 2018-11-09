@@ -121,7 +121,7 @@ class CodeContext(object):
     def debug_json(self):
         out = '{\n"literals": {\n'
         for cnt, i in enumerate(self.literals):
-            out += '    "%d": "%s",\n' % (cnt, i.__str__())
+            out += '    "%d": "%s(%s)",\n' % (cnt, i.__class__.__name__, i.__str__())
         out += '},\n\n'
 
         out += '"disassembled": [\n'
@@ -131,6 +131,6 @@ class CodeContext(object):
         out += ",\n".join(instructions)
         out += '\n],\n\n'
 
-        out += '"bytecodes": {\n    %s\n}}' % str([int(x) for x in self.bytecodes])
+        out += '"bytecodes": {\n    %s\n}}' % str([ord(x) for x in self.bytecodes])
 
         return out
