@@ -52,12 +52,27 @@ class ProcessStack(object):
     def top_frame(self):
         return self.frames[-1]
 
+    def _cleanup_frame(self):
+        if self.frame.code_context:
+            self.frame.code_context.self = None
+
+        if self.frame.tmp_method_obj_reference:
+            # blocks have local namespaces in scope_parents..
+            if not self.frame.tmp_method_obj_reference.is_block:
+                self.frame.tmp_method_obj_reference.scope_parent = None
+
+            self.frame.tmp_method_obj_reference = None
+
     def pop_frame(self):
         if len(self.frames) == 1:
             return
 
         self.frames.pop()
         self.frame = self.top_frame()
+
+    def pop_and_clean_frame(self):
+        self._cleanup_frame()
+        self.pop_frame()
 
     def pop_frame_down(self):
         if len(self.frames) == 1:
@@ -70,15 +85,8 @@ class ProcessStack(object):
 
         self.frame.push(result)
 
-    def pop_and_cleanup_frame(self):
-        if self.frame.code_context:
-            self.frame.code_context.self = None
-            self.frame.code_context.scope_parent = None
-
-        if self.frame.tmp_method_obj_reference:
-            self.frame.tmp_method_obj_reference.scope_parent = None
-            self.frame.tmp_method_obj_reference = None
-
+    def pop_down_and_cleanup_frame(self):
+        self._cleanup_frame()
         self.pop_frame_down()
 
     def as_tself_object(self):
