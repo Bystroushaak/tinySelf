@@ -63,10 +63,10 @@ class _BareObject(object):
             _visited_objects = {}
 
         parents = []
-        if self.scope_parent is not None:
+        if self.scope_parent is not None and not self.scope_parent.visited:
             parents.append(self.scope_parent)
 
-        parents.extend(self.map.parent_slots.values())
+        parents.extend(self.parent_slots.values())
 
         for parent in parents:
             if parent.visited:
@@ -75,7 +75,7 @@ class _BareObject(object):
             parent.visited = True
             _visited_objects[parent.map] = None
 
-            if slot_name in parent.map.slots:
+            if slot_name in parent.slot_keys:
                 unvisit(_visited_objects, first_level_call)
                 return parent.get_slot(slot_name)
 
