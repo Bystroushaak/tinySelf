@@ -25,9 +25,6 @@ TWO_BYTECODES_LONG = 2
 THREE_BYTECODES_LONG = 3
 
 
-import sys
-
-
 def primitive_get_number_of_processes(interpreter, _, parameters):
     return PrimitiveIntObject(len(interpreter.processes))
 
@@ -243,52 +240,6 @@ class Interpreter(ProcessCycler):
             for i in range(len(parameter_names))
         ]
 
-    def __create_intermediate_params_obj(self, scope_parent, method_obj,
-                                        parameters, prev_scope_parent=None,
-                                        tco_applied=False):
-        if not method_obj.parameters:
-            if prev_scope_parent:
-                return prev_scope_parent
-            return scope_parent
-
-        # if tco_applied:
-        #     # if prev_scope_parent:
-        #     #     intermediate_obj = prev_scope_parent
-        #     # else:
-        #     intermediate_obj = Object()
-        #     intermediate_obj.scope_parent = scope_parent
-
-        #     if prev_scope_parent is not None:
-        #         intermediate_obj.meta_add_parent("*", prev_scope_parent)
-        #     # sp = intermediate_obj.scope_parent
-        #     # if "*" in sp.scope_parent.parent_slots.keys() and len(sp.scope_parent.parent_slots) == 1:
-        #     #     print "okololoolo"
-        #     #     intermediate_obj = sp.scope_parent.parent_slots["*"]
-        # else:
-        intermediate_obj = Object()
-
-        # if scope_parent == method_obj:
-        #     return None
-
-        intermediate_obj.scope_parent = scope_parent
-        intermediate_obj.meta_add_slot("this is intermediate obj", Object())
-
-        if prev_scope_parent is not None:
-            intermediate_obj.meta_add_parent("*", prev_scope_parent)
-
-        parameter_pairs = self._put_together_parameters(
-            parameter_names=method_obj.parameters,
-            parameters=parameters
-        )
-        for name, value in parameter_pairs:
-            intermediate_obj.meta_add_slot(name, value)
-            intermediate_obj.meta_add_slot(
-                name + ":",
-                AssignmentPrimitive(intermediate_obj)
-            )
-
-        return intermediate_obj
-
     def _create_intermediate_params_obj(self, scope_parent, method_obj,
                                         parameters, prev_scope_parent=None,
                                         tco_applied=False):
@@ -370,61 +321,6 @@ class Interpreter(ProcessCycler):
 
         return resend_parent.slot_lookup(message_name)
 
-    def _dump(self, obj):
-        f = open("parent_map.plantuml", "w")
-        f.write("@startuml\n")
-
-        def dump_obj(o):
-            f.write('class %s as "%s (%s)" {\n' % (id(o), id(o), o.__class__.__name__))
-
-            if o:
-                for key in o.slot_keys:
-                    f.write("    %s (%s)\n" % (key, id(o.get_slot(key))))
-
-            f.write("}\n")
-
-            if o is None:
-                return None, {}
-
-            return o.scope_parent, o.map.parent_slots
-
-        objs_to_print = list()
-        parent_connections = {}
-        scope_parent_connections = {}
-
-        objs = [obj]
-        while objs:
-            o = objs.pop(0)
-
-            if o in objs_to_print:
-                continue
-
-            objs_to_print.append(o)
-            if o is None:
-                continue
-
-            objs.append(o.scope_parent)
-            objs.extend(o.map.parent_slots.values())
-
-        connections = []
-        for o in objs_to_print:
-            sp, slots = dump_obj(o)
-
-            connections.append("%s --> %s: scope_parent\n" % (id(o), id(sp)))
-            for key, val in slots.iteritems():
-                connections.append("%s --> %s: parent %s\n" % (id(o), id(val), key))
-
-        for connection in connections:
-            f.write(connection)
-
-        f.write("@enduml\n")
-        f.close()
-
-        # print
-        # print "depth", len(obj_to_process)
-        # print
-
-
     def _do_send(self, bc_index, code):
         """
         Args:
@@ -434,7 +330,6 @@ class Interpreter(ProcessCycler):
         Returns:
             int: Index of next bytecode.
         """
-        # sys.setrecursionlimit(36)
         message_type = ord(code.bytecodes[bc_index + 1])
         number_of_parameters = ord(code.bytecodes[bc_index + 2])
 
@@ -456,7 +351,6 @@ class Interpreter(ProcessCycler):
         obj = self.process.frame.pop()
         self._set_scope_parent_if_not_already_set(obj, code)
 
-        self._dump(obj)
         try:
             if boxed_resend_parent_name:
                 parent_name = boxed_resend_parent_name.value
@@ -470,8 +364,6 @@ class Interpreter(ProcessCycler):
             print code.debug_json()
             print obj.ast.__str__()
             print "Failed at bytecode number %d" % bc_index
-            import pdb
-            # pdb.set_trace()
             raise ValueError("Missing slot error: `%s`" % message_name)
 
         if slot.has_code:
