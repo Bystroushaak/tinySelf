@@ -25,8 +25,15 @@ TWO_BYTECODES_LONG = 2
 THREE_BYTECODES_LONG = 3
 
 
+import sys
+
+
 def primitive_get_number_of_processes(interpreter, _, parameters):
     return PrimitiveIntObject(len(interpreter.processes))
+
+
+def primitive_get_number_of_stack_frames(interpreter, _, parameters):
+    return PrimitiveIntObject(len(interpreter.process.frames))
 
 
 def primitive_set_error_handler(interpreter, _, parameters):
@@ -140,6 +147,8 @@ class Interpreter(ProcessCycler):
 
         add_primitive_method(self, interpreter, "numberOfProcesses",
                              primitive_get_number_of_processes, [])
+        add_primitive_method(self, interpreter, "numberOfFrames",
+                             primitive_get_number_of_stack_frames, [])
         add_primitive_method(self, interpreter, "setErrorHandler:",
                              primitive_set_error_handler, ["blck"])
         add_primitive_method(self, interpreter, "error:",
@@ -234,10 +243,35 @@ class Interpreter(ProcessCycler):
             for i in range(len(parameter_names))
         ]
 
-    def _create_intermediate_params_obj(self, scope_parent, method_obj,
-                                        parameters, prev_scope_parent=None):
+    def __create_intermediate_params_obj(self, scope_parent, method_obj,
+                                        parameters, prev_scope_parent=None,
+                                        tco_applied=False):
+        if not method_obj.parameters:
+            if prev_scope_parent:
+                return prev_scope_parent
+            return scope_parent
+
+        # if tco_applied:
+        #     # if prev_scope_parent:
+        #     #     intermediate_obj = prev_scope_parent
+        #     # else:
+        #     intermediate_obj = Object()
+        #     intermediate_obj.scope_parent = scope_parent
+
+        #     if prev_scope_parent is not None:
+        #         intermediate_obj.meta_add_parent("*", prev_scope_parent)
+        #     # sp = intermediate_obj.scope_parent
+        #     # if "*" in sp.scope_parent.parent_slots.keys() and len(sp.scope_parent.parent_slots) == 1:
+        #     #     print "okololoolo"
+        #     #     intermediate_obj = sp.scope_parent.parent_slots["*"]
+        # else:
         intermediate_obj = Object()
+
+        # if scope_parent == method_obj:
+        #     return None
+
         intermediate_obj.scope_parent = scope_parent
+        intermediate_obj.meta_add_slot("this is intermediate obj", Object())
 
         if prev_scope_parent is not None:
             intermediate_obj.meta_add_parent("*", prev_scope_parent)
@@ -255,27 +289,65 @@ class Interpreter(ProcessCycler):
 
         return intermediate_obj
 
-    def _tco_possibility(self, next_bytecode):
-        if next_bytecode != BYTECODE_RETURN_TOP and \
-           next_bytecode != BYTECODE_RETURN_IMPLICIT:
-           return
+    def _create_intermediate_params_obj(self, scope_parent, method_obj,
+                                        parameters, prev_scope_parent=None,
+                                        tco_applied=False):
+        if not method_obj.parameters:
+            if prev_scope_parent:
+                return prev_scope_parent
+            return scope_parent
 
-        self.pop_and_clean_frame()
+        intermediate_obj = Object()
+        intermediate_obj.meta_add_slot("this is intermediate obj", Object())
+
+        if scope_parent.parent_slots or scope_parent.scope_parent or scope_parent.slot_keys:
+            intermediate_obj.scope_parent = scope_parent
+
+        if scope_parent == method_obj:
+            intermediate_obj.scope_parent = None
+
+        if prev_scope_parent is not None:
+            prev_scope_parents_parent = prev_scope_parent.parent_slots.get("*", None)
+            if prev_scope_parents_parent and \
+               prev_scope_parent.scope_parent == prev_scope_parents_parent.scope_parent:
+                intermediate_obj.meta_add_parent("*", prev_scope_parents_parent)
+            else:
+                intermediate_obj.meta_add_parent("*", prev_scope_parent)
+
+        parameter_pairs = self._put_together_parameters(
+            parameter_names=method_obj.parameters,
+            parameters=parameters
+        )
+        for name, value in parameter_pairs:
+            intermediate_obj.meta_add_slot(name, value)
+            intermediate_obj.meta_add_slot(
+                name + ":",
+                AssignmentPrimitive(intermediate_obj)
+            )
+
+        return intermediate_obj
+
+    def _tco_applied(self, next_bytecode):
+        if not (next_bytecode == BYTECODE_RETURN_TOP or \
+                next_bytecode == BYTECODE_RETURN_IMPLICIT):
+            return False
+
+        self.process.pop_frame()
+        return True
 
     def _push_code_obj_for_interpretation(self, next_bytecode, scope_parent,
                                           method_obj, parameters):
-        old_scope_parent = method_obj.scope_parent
+        prev_scope_parent = method_obj.scope_parent
         method_obj.scope_parent = self._create_intermediate_params_obj(
-            scope_parent,
-            method_obj,
-            parameters,
-            old_scope_parent,
+            scope_parent=scope_parent,
+            method_obj=method_obj,
+            parameters=parameters,
+            prev_scope_parent=prev_scope_parent,
+            tco_applied=self._tco_applied(next_bytecode)
         )
 
         new_code_context = method_obj.code_context
         new_code_context.self = method_obj
-
-        # self._tco_possibility(next_bytecode)
 
         self.process.push_frame(new_code_context, method_obj)
 
@@ -298,6 +370,61 @@ class Interpreter(ProcessCycler):
 
         return resend_parent.slot_lookup(message_name)
 
+    def _dump(self, obj):
+        f = open("parent_map.plantuml", "w")
+        f.write("@startuml\n")
+
+        def dump_obj(o):
+            f.write('class %s as "%s (%s)" {\n' % (id(o), id(o), o.__class__.__name__))
+
+            if o:
+                for key in o.slot_keys:
+                    f.write("    %s (%s)\n" % (key, id(o.get_slot(key))))
+
+            f.write("}\n")
+
+            if o is None:
+                return None, {}
+
+            return o.scope_parent, o.map.parent_slots
+
+        objs_to_print = list()
+        parent_connections = {}
+        scope_parent_connections = {}
+
+        objs = [obj]
+        while objs:
+            o = objs.pop(0)
+
+            if o in objs_to_print:
+                continue
+
+            objs_to_print.append(o)
+            if o is None:
+                continue
+
+            objs.append(o.scope_parent)
+            objs.extend(o.map.parent_slots.values())
+
+        connections = []
+        for o in objs_to_print:
+            sp, slots = dump_obj(o)
+
+            connections.append("%s --> %s: scope_parent\n" % (id(o), id(sp)))
+            for key, val in slots.iteritems():
+                connections.append("%s --> %s: parent %s\n" % (id(o), id(val), key))
+
+        for connection in connections:
+            f.write(connection)
+
+        f.write("@enduml\n")
+        f.close()
+
+        # print
+        # print "depth", len(obj_to_process)
+        # print
+
+
     def _do_send(self, bc_index, code):
         """
         Args:
@@ -307,6 +434,7 @@ class Interpreter(ProcessCycler):
         Returns:
             int: Index of next bytecode.
         """
+        # sys.setrecursionlimit(36)
         message_type = ord(code.bytecodes[bc_index + 1])
         number_of_parameters = ord(code.bytecodes[bc_index + 2])
 
@@ -328,21 +456,27 @@ class Interpreter(ProcessCycler):
         obj = self.process.frame.pop()
         self._set_scope_parent_if_not_already_set(obj, code)
 
-        if boxed_resend_parent_name:
-            parent_name = boxed_resend_parent_name.value
-            slot = self._resend_to_parent(obj, parent_name, message_name)
-        else:
-            slot = obj.slot_lookup(message_name)
+        self._dump(obj)
+        try:
+            if boxed_resend_parent_name:
+                parent_name = boxed_resend_parent_name.value
+                slot = self._resend_to_parent(obj, parent_name, message_name)
+            else:
+                slot = obj.slot_lookup(message_name)
+        except:
+            raise
 
         if slot is None:
             print code.debug_json()
             print obj.ast.__str__()
             print "Failed at bytecode number %d" % bc_index
+            import pdb
+            # pdb.set_trace()
             raise ValueError("Missing slot error: `%s`" % message_name)
 
         if slot.has_code:
             self._push_code_obj_for_interpretation(
-                next_bytecode=code.bytecodes[bc_index + 4],
+                next_bytecode=ord(code.bytecodes[bc_index + 4]),
                 scope_parent=obj,
                 method_obj=slot,
                 parameters=parameters_values,
