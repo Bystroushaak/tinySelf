@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from tinySelf.vm.object_layout import Object
+from tinySelf.vm.primitives.primitive_true import PrimitiveTrueObject
+from tinySelf.vm.primitives.primitive_false import PrimitiveFalseObject
 from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
@@ -55,6 +57,58 @@ def modulo(_, self, parameters):
     return PrimitiveIntObject(self.value % obj.value)
 
 
+def lt(_, self, parameters):
+    obj = parameters[0]
+    assert isinstance(self, PrimitiveIntObject)
+    assert isinstance(obj, PrimitiveIntObject)
+    assert isinstance(self.value, int)
+    assert isinstance(obj.value, int)
+
+    if self.value < obj.value:
+        return PrimitiveTrueObject()
+    else:
+        return PrimitiveFalseObject()
+
+
+def lte(_, self, parameters):
+    obj = parameters[0]
+    assert isinstance(self, PrimitiveIntObject)
+    assert isinstance(obj, PrimitiveIntObject)
+    assert isinstance(self.value, int)
+    assert isinstance(obj.value, int)
+
+    if self.value <= obj.value:
+        return PrimitiveTrueObject()
+    else:
+        return PrimitiveFalseObject()
+
+
+def gt(_, self, parameters):
+    obj = parameters[0]
+    assert isinstance(self, PrimitiveIntObject)
+    assert isinstance(obj, PrimitiveIntObject)
+    assert isinstance(self.value, int)
+    assert isinstance(obj.value, int)
+
+    if self.value > obj.value:
+        return PrimitiveTrueObject()
+    else:
+        return PrimitiveFalseObject()
+
+
+def gte(_, self, parameters):
+    obj = parameters[0]
+    assert isinstance(self, PrimitiveIntObject)
+    assert isinstance(obj, PrimitiveIntObject)
+    assert isinstance(self.value, int)
+    assert isinstance(obj.value, int)
+
+    if self.value >= obj.value:
+        return PrimitiveTrueObject()
+    else:
+        return PrimitiveFalseObject()
+
+
 def as_string(_, self, parameters):
     assert isinstance(self, PrimitiveIntObject)
     return PrimitiveStrObject(str(self.value))
@@ -72,6 +126,10 @@ class PrimitiveIntObject(Object):
         add_primitive_fn(self, "*", multiply, ["obj"])
         add_primitive_fn(self, "/", divide, ["obj"])
         add_primitive_fn(self, "%", modulo, ["obj"])
+        add_primitive_fn(self, "<", lt, ["obj"])
+        add_primitive_fn(self, "<=", lte, ["obj"])
+        add_primitive_fn(self, ">", gt, ["obj"])
+        add_primitive_fn(self, ">=", gte, ["obj"])
         add_primitive_fn(self, "asString", as_string, [])
 
     def __eq__(self, obj):
