@@ -293,6 +293,7 @@ class ObjectMap(object):
         new_map.ast = self.ast
         new_map.code_context = self.code_context  # TODO: deep copy / recompile
         new_map.primitive_code = self.primitive_code
+        new_map.is_block = self.is_block
 
         return new_map
 

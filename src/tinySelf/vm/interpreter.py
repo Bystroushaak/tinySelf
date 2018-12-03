@@ -200,13 +200,16 @@ class Interpreter(ProcessCycler):
                         self.process = process
                         return
 
+                # support for nonlocal return
                 method_obj = self.process.frame.tmp_method_obj_reference
                 if method_obj and method_obj.is_block:
                     block_scope_parent = method_obj.parent_slots.get("*")
 
-                    while method_obj != block_scope_parent:
+                    while block_scope_parent != method_obj:
                         self.process.pop_down_and_cleanup_frame()
                         method_obj = self.process.frame.tmp_method_obj_reference
+
+                    self.process.pop_down_and_cleanup_frame()
 
                     self.next_process()
                     continue
@@ -241,11 +244,22 @@ class Interpreter(ProcessCycler):
         ]
 
     def _create_intermediate_params_obj(self, scope_parent, method_obj,
-                                        parameters, prev_scope_parent=None,
-                                        tco_applied=False):
+                                        parameters, prev_scope_parent=None):
+        # do not create empty intermediate objects
         if not method_obj.parameters:
+            # this is used to remember in what context is the block executed,
+            # so in case of indirect return, it is possible to return from
+            # this context and not just block
+            # if method_obj.is_block and prev_scope_parent:
+
             if prev_scope_parent:
+                method_obj.meta_add_parent("*", prev_scope_parent)
+
+                if not method_obj.is_block and method_obj.has_code:
+                    return scope_parent
+
                 return prev_scope_parent
+
             return scope_parent
 
         intermediate_obj = Object()
@@ -289,12 +303,12 @@ class Interpreter(ProcessCycler):
     def _push_code_obj_for_interpretation(self, next_bytecode, scope_parent,
                                           method_obj, parameters):
         prev_scope_parent = method_obj.scope_parent
+        self._tco_applied(next_bytecode)
         method_obj.scope_parent = self._create_intermediate_params_obj(
             scope_parent=scope_parent,
             method_obj=method_obj,
             parameters=parameters,
             prev_scope_parent=prev_scope_parent,
-            tco_applied=self._tco_applied(next_bytecode)
         )
 
         new_code_context = method_obj.code_context

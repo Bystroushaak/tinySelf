@@ -77,3 +77,12 @@ def test_clone():
     assert not cloned.visited
     assert cloned.slots == om.slots
     assert cloned.slots is not om.slots
+
+
+def test_clone_is_block():
+    o = Object()
+    o.is_block = True
+
+    o.meta_add_parent("xe", Object())  # creates new map
+
+    assert o.is_block

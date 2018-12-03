@@ -24,7 +24,7 @@
         ).
     ).
 
-    init = (| universe_mirror |
+    init = (| universe_mirror. block_traits_mirror |
         init_true.
         init_false.
 
@@ -34,6 +34,13 @@
         ).
         universe_mirror toSlot: 'assertNot:' Add: (| :what |
             what value ifTrue: [primitives interpreter error: 'Assertion failed!'].
+        ).
+
+        block_traits_mirror: primitives mirrorOn: block_traits.
+        block_traits_mirror toSlot: 'whileTrue:' Add: (| :blck |
+            self value ifFalse: [ ^nil ].
+            blck value.
+            ^self whileTrue: blck.
         ).
     ).
 |) init.
@@ -63,7 +70,22 @@
     ).
 
     test_double_return_from_block = (| test = (|| true ifTrue: [ ^true ]. ^false) |
-        assert: [test is: true].
+        assert: [ test is: true. ].
+    ).
+
+    test_while = (| i <- 0. |
+        [ i < 500 ] whileTrue: [
+            # 'i: ' print.
+            # i asString print.
+            # '\n' print.
+            # 'number of frames: ' print.
+            # primitives interpreter numberOfFrames asString print.
+            # '\n\n' print.
+
+            i: i + 1.
+        ].
+
+        assert: [ true ].
     ).
 
     run_tests = (||
@@ -73,5 +95,9 @@
 
         test_that_parameters_are_rw_slots.
         test_double_return_from_block.
+
+        test_while.
+
+        "all tests ok\n" print.
     )
 |) run_tests.
