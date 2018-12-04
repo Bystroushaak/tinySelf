@@ -3,15 +3,20 @@ import pytest
 
 from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveStrObject
+from tinySelf.vm.primitives import PrimitiveTrueObject
+from tinySelf.vm.primitives import PrimitiveFalseObject
 
 
 def call_primitive_int_binary_op(first, op, second, equals):
     o = PrimitiveIntObject(first)
 
+    if isinstance(equals, (int, long)):
+        equals = PrimitiveIntObject(equals)
+
     primitive_slot = o.slot_lookup(op)
     assert primitive_slot.map.primitive_code
     result = primitive_slot.map.primitive_code(None, o, [PrimitiveIntObject(second)])
-    assert result == PrimitiveIntObject(equals)
+    assert result == equals
 
 
 def test_PrimitiveIntObject_plus():
@@ -41,6 +46,30 @@ def test_PrimitiveIntObject_divide_by_zero():
 
 def test_PrimitiveIntObject_modulo():
     call_primitive_int_binary_op(4, "%", 3, equals=1)
+
+
+def test_PrimitiveIntObject_greater():
+    call_primitive_int_binary_op(4, ">", 3, equals=PrimitiveTrueObject())
+    call_primitive_int_binary_op(1, ">", 5, equals=PrimitiveFalseObject())
+    call_primitive_int_binary_op(1, ">", 1, equals=PrimitiveFalseObject())
+
+
+def test_PrimitiveIntObject_lower():
+    call_primitive_int_binary_op(1, "<", 5, equals=PrimitiveTrueObject())
+    call_primitive_int_binary_op(5, "<", 1, equals=PrimitiveFalseObject())
+    call_primitive_int_binary_op(1, "<", 1, equals=PrimitiveFalseObject())
+
+
+def test_PrimitiveIntObject_greater_or_equal():
+    call_primitive_int_binary_op(5, ">=", 1, equals=PrimitiveTrueObject())
+    call_primitive_int_binary_op(1, ">=", 5, equals=PrimitiveFalseObject())
+    call_primitive_int_binary_op(1, ">=", 1, equals=PrimitiveTrueObject())
+
+
+def test_PrimitiveIntObject_lower_or_equal():
+    call_primitive_int_binary_op(1, "<=", 5, equals=PrimitiveTrueObject())
+    call_primitive_int_binary_op(5, "<=", 1, equals=PrimitiveFalseObject())
+    call_primitive_int_binary_op(1, "<=", 1, equals=PrimitiveTrueObject())
 
 
 def test_PrimitiveIntObject_as_primitive_string():
