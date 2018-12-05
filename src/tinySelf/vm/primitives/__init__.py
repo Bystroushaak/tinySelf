@@ -13,6 +13,9 @@ from tinySelf.vm.primitives.primitive_false import PrimitiveFalseObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_method
 
+from tinySelf.vm.primitives.interpreter_primitives import ErrorObject
+from tinySelf.vm.primitives.interpreter_primitives import gen_interpreter_primitives
+
 
 class AssignmentPrimitive(Object):
     def __init__(self, real_parent=None):
@@ -33,24 +36,6 @@ class AssignmentPrimitive(Object):
 
     def __str__(self):
         return "AssignmentPrimitive()"
-
-
-class ErrorObject(Object):
-    def __init__(self, message, process_stack):
-        Object.__init__(self)
-        self.message = message
-        self.process_stack = process_stack
-
-    @property
-    def has_code(self):
-        return False
-
-    @property
-    def has_primitive_code(self):
-        return False
-
-    def __str__(self):
-        return "ErrorObject(%s)" % self.message
 
 
 class BlockTrait(Object):

@@ -3,13 +3,13 @@ from collections import OrderedDict
 
 from tinySelf.vm.bytecodes import *
 
-from tinySelf.vm.primitives import ErrorObject
 from tinySelf.vm.primitives import add_block_trait
 from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveStrObject
 from tinySelf.vm.primitives import AssignmentPrimitive
 from tinySelf.vm.primitives import add_primitive_method
+from tinySelf.vm.primitives import gen_interpreter_primitives
 
 from tinySelf.vm.code_context import IntBox
 from tinySelf.vm.code_context import StrBox
@@ -23,99 +23,6 @@ NIL = PrimitiveNilObject()
 ONE_BYTECODE_LONG = 1
 TWO_BYTECODES_LONG = 2
 THREE_BYTECODES_LONG = 3
-
-
-def primitive_get_number_of_processes(interpreter, _, parameters):
-    return PrimitiveIntObject(len(interpreter.processes))
-
-
-def primitive_get_number_of_stack_frames(interpreter, _, parameters):
-    return PrimitiveIntObject(len(interpreter.process.frames))
-
-
-def primitive_set_error_handler(interpreter, _, parameters):
-    blck = parameters[0]
-    assert isinstance(blck, Object)
-
-    interpreter.process.frame.error_handler = blck
-
-    return NIL
-
-
-def _get_frame_with_error_handler(frames):
-    while frames:
-        frame = frames.pop()
-        if frame.error_handler is not None:
-            frames.append(frame)
-            return frame
-
-    return None
-
-
-def primitive_halt(interpreter, _, parameters):
-    obj = parameters[0]
-    assert isinstance(obj, Object)
-
-    process = interpreter.remove_active_process()
-
-    if interpreter.process_count == 0:
-        interpreter.process = process
-
-    process.result = obj
-    process.finished = True
-    process.finished_with_error = False
-
-    return obj
-
-
-def primitive_restore_process_with(interpreter, _, parameters):
-    obj = parameters[0]
-    assert isinstance(obj, Object)
-    with_obj = parameters[1]
-    assert isinstance(with_obj, Object)
-
-    if not isinstance(obj, ErrorObject):
-        raise ValueError("This is not instance of error object!")
-
-    obj.process_stack.frame.push(with_obj)
-    interpreter.restore_process(obj.process_stack)
-
-    return None
-
-
-def primitive_raise_error(interpreter, _, parameters):
-    msg = parameters[0]
-    assert isinstance(msg, Object)
-
-    poped_frames = interpreter.process.frames[:]
-    frame_with_handler = _get_frame_with_error_handler(poped_frames)
-    process = interpreter.remove_active_process()
-
-    if frame_with_handler is None:
-        process.result = msg
-        process.finished = True
-        process.finished_with_error = True
-
-        if interpreter.process_count == 0:
-            interpreter.process = process
-
-        return None
-
-    error_handler = frame_with_handler.error_handler.get_slot("with:With:")
-    if error_handler is None:
-        raise ValueError("Error handler must react to with:With: message!")
-
-    new_code_context = error_handler.code_context
-    error_handler.scope_parent = interpreter._create_intermediate_params_obj(
-        error_handler.scope_parent,
-        error_handler,
-        [msg, ErrorObject(msg, process)]
-    )
-    new_code_context.self = error_handler.scope_parent
-
-    interpreter.add_process(new_code_context)
-
-    return None
 
 
 class Interpreter(ProcessCycler):
@@ -139,21 +46,7 @@ class Interpreter(ProcessCycler):
         for slot in primitives.map.slots.keys():
             self.universe.meta_add_slot(slot, primitives.get_slot(slot))
 
-        interpreter = Object()
-        primitives.meta_add_slot("interpreter", interpreter)
-
-        add_primitive_method(self, interpreter, "numberOfProcesses",
-                             primitive_get_number_of_processes, [])
-        add_primitive_method(self, interpreter, "numberOfFrames",
-                             primitive_get_number_of_stack_frames, [])
-        add_primitive_method(self, interpreter, "setErrorHandler:",
-                             primitive_set_error_handler, ["blck"])
-        add_primitive_method(self, interpreter, "error:",
-                             primitive_raise_error, ["obj"])
-        add_primitive_method(self, interpreter, "halt:",
-                             primitive_halt, ["obj"])
-        add_primitive_method(self, interpreter, "restoreProcess:With:",
-                             primitive_restore_process_with, ["msg", "err_obj"])
+        primitives.meta_add_slot("interpreter", gen_interpreter_primitives(self))
 
     def interpret(self):
         while self.process_count > 0:
@@ -172,7 +65,8 @@ class Interpreter(ProcessCycler):
             elif bytecode == BYTECODE_PUSH_LITERAL:
                 bc_index += self._do_push_literal(bc_index, code_obj)
 
-            elif bytecode == BYTECODE_RETURN_TOP:
+            elif bytecode == BYTECODE_RETURN_TOP or \
+                 bytecode == BYTECODE_RETURN_IMPLICIT:
                 if not self.process.is_nested_call():
                     result = self.process.frame.pop_or_nil()
                     process = self.remove_active_process()
@@ -184,35 +78,8 @@ class Interpreter(ProcessCycler):
                         self.process = process
                         return
 
-                self.process.pop_down_and_cleanup_frame()
-                self.next_process()
-                continue
-
-            elif bytecode == BYTECODE_RETURN_IMPLICIT:
-                if not self.process.is_nested_call():
-                    result = self.process.frame.pop_or_nil()
-                    process = self.remove_active_process()
-
-                    process.result = result
-                    process.finished = True
-
-                    if not self.has_processes_to_run():
-                        self.process = process
-                        return
-
-                # support for nonlocal return
-                method_obj = self.process.frame.tmp_method_obj_reference
-                if method_obj and method_obj.is_block:
-                    block_scope_parent = method_obj.parent_slots.get("*")
-
-                    while block_scope_parent != method_obj:
-                        self.process.pop_down_and_cleanup_frame()
-                        method_obj = self.process.frame.tmp_method_obj_reference
-
-                    self.process.pop_down_and_cleanup_frame()
-
-                    self.next_process()
-                    continue
+                if bytecode == BYTECODE_RETURN_IMPLICIT:
+                    self._handle_nonlocal_return()
 
                 self.process.pop_down_and_cleanup_frame()
                 self.next_process()
@@ -229,6 +96,23 @@ class Interpreter(ProcessCycler):
 
             frame.bc_index = bc_index
             self.next_process()
+
+    def _handle_nonlocal_return(self):
+        """
+        If the item at the top of the process frame is block which triggered
+        nonlocal return, pop frames down until you reach frame where the block
+        was defined.
+        
+        Returns:
+            bool: True if the nonlocal return was triggered.
+        """
+        method_obj = self.process.frame.tmp_method_obj_reference
+        if method_obj and method_obj.is_block:
+            block_scope_parent = method_obj.parent_slots.get("*")
+
+            while block_scope_parent != method_obj:
+                self.process.pop_down_and_cleanup_frame()
+                method_obj = self.process.frame.tmp_method_obj_reference
 
     def _put_together_parameters(self, parameter_names, parameters):
         if len(parameter_names) < len(parameters):
