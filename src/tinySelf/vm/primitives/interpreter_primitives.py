@@ -27,15 +27,15 @@ class ErrorObject(Object):
         return "ErrorObject(%s)" % self.message
 
 
-def primitive_get_number_of_processes(interpreter, _, parameters):
+def _get_number_of_processes(interpreter, _, parameters):
     return PrimitiveIntObject(len(interpreter.processes))
 
 
-def primitive_get_number_of_stack_frames(interpreter, _, parameters):
+def _get_number_of_stack_frames(interpreter, _, parameters):
     return PrimitiveIntObject(len(interpreter.process.frames))
 
 
-def primitive_set_error_handler(interpreter, _, parameters):
+def _set_error_handler(interpreter, _, parameters):
     blck = parameters[0]
     assert isinstance(blck, Object)
 
@@ -54,7 +54,7 @@ def _get_frame_with_error_handler(frames):
     return None
 
 
-def primitive_halt(interpreter, _, parameters):
+def _halt(interpreter, _, parameters):
     obj = parameters[0]
     assert isinstance(obj, Object)
 
@@ -70,7 +70,7 @@ def primitive_halt(interpreter, _, parameters):
     return obj
 
 
-def primitive_restore_process_with(interpreter, _, parameters):
+def _restore_process_with(interpreter, _, parameters):
     obj = parameters[0]
     assert isinstance(obj, Object)
     with_obj = parameters[1]
@@ -85,7 +85,7 @@ def primitive_restore_process_with(interpreter, _, parameters):
     return None
 
 
-def primitive_raise_error(interpreter, _, parameters):
+def _raise_error(interpreter, _, parameters):
     msg = parameters[0]
     assert isinstance(msg, Object)
 
@@ -124,16 +124,16 @@ def gen_interpreter_primitives(interpreter):
     interpreter_namespace = Object()
 
     add_primitive_method(interpreter, interpreter_namespace, "numberOfProcesses",
-                         primitive_get_number_of_processes, [])
+                         _get_number_of_processes, [])
     add_primitive_method(interpreter, interpreter_namespace, "numberOfFrames",
-                         primitive_get_number_of_stack_frames, [])
+                         _get_number_of_stack_frames, [])
     add_primitive_method(interpreter, interpreter_namespace, "setErrorHandler:",
-                         primitive_set_error_handler, ["blck"])
+                         _set_error_handler, ["blck"])
     add_primitive_method(interpreter, interpreter_namespace, "error:",
-                         primitive_raise_error, ["obj"])
+                         _raise_error, ["obj"])
     add_primitive_method(interpreter, interpreter_namespace, "halt:",
-                         primitive_halt, ["obj"])
+                         _halt, ["obj"])
     add_primitive_method(interpreter, interpreter_namespace, "restoreProcess:With:",
-                         primitive_restore_process_with, ["msg", "err_obj"])
+                         _restore_process_with, ["msg", "err_obj"])
 
     return interpreter_namespace
