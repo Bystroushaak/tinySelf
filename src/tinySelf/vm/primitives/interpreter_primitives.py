@@ -92,6 +92,19 @@ def _restore_process_with(interpreter, _, parameters):
     return None
 
 
+def _restore_process(interpreter, _, parameters):
+    obj = parameters[0]
+    assert isinstance(obj, Object)
+
+    if not isinstance(obj, ErrorObject):
+        raise ValueError("This is not instance of error object!")
+
+    obj.process_stack.push_frame(CodeContext(), NIL)  # it is immediatelly poped anyway
+    interpreter.restore_process(obj.process_stack)
+
+    return None
+
+
 def _raise_error(interpreter, _, parameters):
     msg = parameters[0]
     assert isinstance(msg, Object)
@@ -181,6 +194,8 @@ def gen_interpreter_primitives(interpreter):
                          _raise_error, ["obj"])
     add_primitive_method(interpreter, interpreter_namespace, "halt:",
                          _halt, ["obj"])
+    add_primitive_method(interpreter, interpreter_namespace, "restoreProcess:",
+                         _restore_process, ["err_obj"])
     add_primitive_method(interpreter, interpreter_namespace, "restoreProcess:With:",
                          _restore_process_with, ["msg", "err_obj"])
     add_primitive_method(interpreter, interpreter_namespace, "runScript:",
