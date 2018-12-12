@@ -74,7 +74,7 @@
     ).
 
     test_while = (| i <- 0. |
-        [ i < 500 ] whileTrue: [
+        [ i < 100 ] whileTrue: [
             # 'i: ' print.
             # i asString print.
             # '\n' print.
