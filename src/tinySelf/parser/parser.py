@@ -752,3 +752,10 @@ def lex_and_parse(i):
     assert isinstance(tree, Root)
 
     return tree.ast
+
+
+def lex_and_parse_as_root(i):
+    tree = parser.parse(lexer.lex(i))
+    assert isinstance(tree, Root)
+
+    return tree

@@ -1,0 +1,7 @@
+(|
+    create_global_variable = (| universe_mirror |
+        universe_mirror: primitives mirrorOn: universe.
+        universe_mirror toSlot: 'flag' Add: 1.
+        '[1;32mContent was included![0m\n' print.
+    )
+|) create_global_variable

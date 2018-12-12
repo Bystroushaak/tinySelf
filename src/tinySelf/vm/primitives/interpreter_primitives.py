@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
+from tinySelf.vm.primitives import PrimitiveStrObject
 from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_method
 
 from tinySelf.vm.object_layout import Object
+
+from tinySelf.vm.code_context import CodeContext
+
+from tinySelf.parser import lex_and_parse_as_root
 
 
 NIL = PrimitiveNilObject()
@@ -45,10 +50,12 @@ def _set_error_handler(interpreter, _, parameters):
 
 
 def _get_frame_with_error_handler(frames):
-    while frames:
-        frame = frames.pop()
+    shallow_copy = frames[:]
+
+    while shallow_copy:
+        frame = shallow_copy.pop()
         if frame.error_handler is not None:
-            frames.append(frame)
+            shallow_copy.append(frame)
             return frame
 
     return None
@@ -89,7 +96,7 @@ def _raise_error(interpreter, _, parameters):
     msg = parameters[0]
     assert isinstance(msg, Object)
 
-    poped_frames = interpreter.process.frames[:]
+    poped_frames = interpreter.process.frames
     frame_with_handler = _get_frame_with_error_handler(poped_frames)
     process = interpreter.remove_active_process()
 
@@ -111,13 +118,54 @@ def _raise_error(interpreter, _, parameters):
     error_handler.scope_parent = interpreter._create_intermediate_params_obj(
         error_handler.scope_parent,
         error_handler,
-        [msg, ErrorObject(msg, process)]
+        [msg, ErrorObject(msg, process)]  # process is passed to the error_handler
     )
     new_code_context.self = error_handler.scope_parent
 
     interpreter.add_process(new_code_context)
 
     return None
+
+
+def _run_script(interpreter, scope_parent, parameters):
+    path = parameters[0]
+    assert isinstance(path, Object)
+
+    if not isinstance(path, PrimitiveStrObject):
+        return _raise_error(
+            interpreter,
+            scope_parent,
+            [PrimitiveStrObject("runScript: str parameter expected")]
+        )
+
+    try:
+        with open(path.value) as f:
+            source = f.read()
+    except Exception as e:
+        return _raise_error(
+            interpreter,
+            scope_parent,
+            [PrimitiveStrObject("runScript: %s" % str(e))]
+        )
+
+    ast_root = lex_and_parse_as_root(source)
+
+    if not ast_root.ast:
+        return
+
+    code = ast_root.compile(CodeContext())
+    code.finalize()
+
+    method_obj = Object()
+    method_obj.code_context = code
+    code.self = scope_parent
+
+    interpreter._push_code_obj_for_interpretation(
+        next_bytecode=0,  # disable TCO
+        scope_parent=scope_parent,
+        method_obj=method_obj,
+        parameters=[],
+    )
 
 
 def gen_interpreter_primitives(interpreter):
@@ -135,5 +183,7 @@ def gen_interpreter_primitives(interpreter):
                          _halt, ["obj"])
     add_primitive_method(interpreter, interpreter_namespace, "restoreProcess:With:",
                          _restore_process_with, ["msg", "err_obj"])
+    add_primitive_method(interpreter, interpreter_namespace, "runScript:",
+                         _run_script, ["path"])
 
     return interpreter_namespace
