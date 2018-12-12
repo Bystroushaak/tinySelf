@@ -109,6 +109,19 @@ def gte(_, self, parameters):
         return PrimitiveFalseObject()
 
 
+def compare(_, self, parameters):
+    obj = parameters[0]
+    assert isinstance(self, PrimitiveIntObject)
+    assert isinstance(obj, PrimitiveIntObject)
+    assert isinstance(self.value, int)
+    assert isinstance(obj.value, int)
+
+    if self.value == obj.value:
+        return PrimitiveTrueObject()
+    else:
+        return PrimitiveFalseObject()
+
+
 def as_string(_, self, parameters):
     assert isinstance(self, PrimitiveIntObject)
     return PrimitiveStrObject(str(self.value))
@@ -130,6 +143,7 @@ class PrimitiveIntObject(Object):
         add_primitive_fn(self, "<=", lte, ["obj"])
         add_primitive_fn(self, ">", gt, ["obj"])
         add_primitive_fn(self, ">=", gte, ["obj"])
+        add_primitive_fn(self, "==", compare, ["obj"])
         add_primitive_fn(self, "asString", as_string, [])
 
     def __eq__(self, obj):
