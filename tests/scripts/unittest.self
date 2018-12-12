@@ -75,17 +75,45 @@
 
     test_while = (| i <- 0. |
         [ i < 100 ] whileTrue: [
-            # 'i: ' print.
-            # i asString print.
-            # '\n' print.
-            # 'number of frames: ' print.
-            # primitives interpreter numberOfFrames asString print.
-            # '\n\n' print.
-
+            assert: [ primitives interpreter numberOfFrames < 10 ].
             i: i + 1.
         ].
 
         assert: [ true ].
+    ).
+
+    test_run_script = (||
+        primitives interpreter runScript: '/home/bystrousak/Plocha/Syncthing/c0d3z/self/tinySelf/tests/scripts/to_test_include.txt'.
+
+        assert: [ run_script_flag == 1 ].
+    ).
+    test_run_script_invalid_obj = (| raised_error <- false. |
+        primitives interpreter setErrorHandler: [:obj. :stack |
+           raised_error: true.
+        ].
+        primitives interpreter runScript: 1.
+
+        assert: [raise_error is: True].
+    ).
+
+    test_run_script_invalid_obj = (| raised_error <- false. |
+        primitives interpreter setErrorHandler: [:msg. :err_process |
+           raised_error: true.
+           primitives interpreter restoreProcess: err_process.
+        ].
+        primitives interpreter runScript: 1.
+
+        ^raised_error.
+    ).
+
+    test_run_script_invalid_path = (| raised_error <- false. |
+        primitives interpreter setErrorHandler: [:msg. :err_process |
+           raised_error: true.
+           primitives interpreter restoreProcess: err_process.
+        ].
+        primitives interpreter runScript: '/azgabash::--!'.
+
+        ^raised_error.
     ).
 
     run_tests = (||
@@ -97,6 +125,10 @@
         test_double_return_from_block.
 
         test_while.
+
+        assert: [ test_run_script_invalid_obj is: true ].
+        assert: [ test_run_script_invalid_path is: true ].
+        test_run_script.
 
         "all tests ok\n" print.
     )
