@@ -213,9 +213,20 @@ class Number(BaseBox):  # TODO: remove
         return "Number(%s)" % self.value
 
 
+def _escape_sequences(s):
+    escape_sequences = {
+        "n": "\n",
+        "t": "\t",
+    }
+
+    # for c in s:
+    return s
+
+
 class String(BaseBox):  # TODO: remove?
     def __init__(self, value):
-        self.value = value.replace("\\n", "\n").replace("\\t", "\t")
+        # self.value = value.replace("\\n", "\n").replace("\\t", "\t")
+        self.value = _escape_sequences(value)
 
     def compile(self, context):
         index = context.add_literal_str(self.value)
