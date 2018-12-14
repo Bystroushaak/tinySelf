@@ -213,19 +213,41 @@ class Number(BaseBox):  # TODO: remove
         return "Number(%s)" % self.value
 
 
-def _escape_sequences(s):
-    escape_sequences = {
-        "n": "\n",
-        "t": "\t",
-    }
+def _escape_sequences(inp):
+    if len(inp) < 2:
+        return inp
 
-    # for c in s:
-    return s
+    out = ""
+    last = inp[0]
+    inp = inp[1:] + "-"
+
+    escape = last == "\\"
+    for c in inp:
+        if escape:
+            if c == "n":
+                last = "\n"
+            elif c == "t":
+                last = "\t"
+            else:
+                last = c
+
+        out += last
+
+        if escape:
+            last = ""
+        else:
+            last = c
+
+        if c == "\\":
+            escape = not escape
+        else:
+            escape = False
+
+    return out
 
 
 class String(BaseBox):  # TODO: remove?
     def __init__(self, value):
-        # self.value = value.replace("\\n", "\n").replace("\\t", "\t")
         self.value = _escape_sequences(value)
 
     def compile(self, context):
