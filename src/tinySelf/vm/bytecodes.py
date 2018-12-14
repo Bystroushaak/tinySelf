@@ -26,7 +26,7 @@ SLOT_PARENT = 1
 
 
 def _compute_index(bytecodes_len, bytecodes):
-    return bytecodes_len - len(bytecodes) - 3  # FIX later
+    return str(bytecodes_len - len(bytecodes) - 3)  # FIX later
 
 
 def disassemble(bytecodes_bytearray):
