@@ -1,0 +1,53 @@
+(|
+    init_true = (| true_mirror |
+        true_mirror: primitives mirrorOn: true.
+
+        true_mirror toSlot: 'ifTrue:' Add: (| :blck | blck value).
+        true_mirror toSlot: 'ifFalse:' Add: (| :blck | nil.).
+        true_mirror toSlot: 'ifTrue:False:' Add: (| :true_blck. :false_blck |
+            true_blck value
+        ).
+        true_mirror toSlot: 'ifFalse:True:' Add: (| :false_blck. :true_blck |
+            true_blck value.
+        ).
+    ).
+    init_false = (| false_mirror |
+        false_mirror: primitives mirrorOn: false.
+
+        false_mirror toSlot: 'ifTrue:' Add: (| :blck | nil).
+        false_mirror toSlot: 'ifFalse:' Add: (| :blck | blck value.).
+        false_mirror toSlot: 'ifTrue:False:' Add: (| :true_blck. :false_blck |
+            false_blck value
+        ).
+        false_mirror toSlot: 'ifFalse:True:' Add: (| :false_blck. :true_blck |
+            false_blck value.
+        ).
+    ).
+    init_nil = (| nil_mirror |
+        nil.
+    ).
+    init_asserts = (| universe_mirror |
+        universe_mirror: primitives mirrorOn: universe.
+        universe_mirror toSlot: 'assert:' Add: (| :what |
+            what value ifFalse: [primitives interpreter error: 'Assertion failed!'].
+        ).
+        universe_mirror toSlot: 'assertNot:' Add: (| :what |
+            what value ifTrue: [primitives interpreter error: 'Assertion failed!'].
+        ).
+    ).
+    init_blocks = (| block_traits_mirror |
+        block_traits_mirror: primitives mirrorOn: block_traits.
+        block_traits_mirror toSlot: 'whileTrue:' Add: (| :blck |
+            self value ifFalse: [ ^nil ].
+            blck value.
+            ^self whileTrue: blck.
+        ).
+    ).
+
+    init = (| universe_mirror. block_traits_mirror |
+        init_true.
+        init_false.
+        init_nil.
+        init_asserts.
+    ).
+|) init.
