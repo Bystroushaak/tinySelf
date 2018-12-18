@@ -83,7 +83,7 @@
     ).
 
     test_run_script = (||
-        primitives interpreter runScript: '/home/bystrousak/Plocha/Syncthing/c0d3z/self/tinySelf/tests/scripts/to_test_include.txt'.
+        primitives interpreter runScript: 'tests/scripts/to_test_include.txt'.
 
         assert: [ run_script_flag == 1 ].
     ).
