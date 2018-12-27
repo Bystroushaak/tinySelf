@@ -18,10 +18,14 @@ from tinySelf.parser import lex_and_parse
 from tinySelf.vm.object_layout import Object
 from tinySelf.vm.code_context import CodeContext
 from tinySelf.vm.virtual_machine import virtual_machine
+from tinySelf.vm.primitives import PrimitiveNilObject
+
+
+NIL = PrimitiveNilObject()
 
 
 def run_interactive():
-    o = Object()
+    _, interpreter = virtual_machine("()")
 
     while True:
         line = stdin_readline(":> ")
@@ -30,16 +34,22 @@ def run_interactive():
             writeln()
             return 0
 
-        if line.strip() == "p":
-            writeln("o: " + str(o))
-            writeln("o.slots_references: " + str(o.slots_references))
-            writeln("o.map: " + str(o.map))
-            # writeln("o.map.slots: " + str(o.map.slots))
-            continue
-
         try:
             for expr in lex_and_parse(line):
-                print expr.__str__()
+                code = expr.compile(CodeContext())
+                process = interpreter.add_process(code)
+                interpreter.interpret()
+
+                if process.finished_with_error:
+                    print "Error:", process.result.__str__()
+                    print
+                    print "Code object:"
+                    print
+                    print code.debug_json()
+                else:
+                    if process.result != NIL:
+                        print process.result.__str__()
+
         except ParsingError as e:
             ewriteln("Parse error.")
             if e.message:
