@@ -100,7 +100,7 @@ class CodeContext(object):
 
     def finalize(self):
         if self._finalized:
-            return
+            return self
 
         # 4x as 3 is maximum length of multi-bytecode instructions
         self._mutable_bytecodes.append(BYTECODE_RETURN_TOP)
@@ -117,6 +117,8 @@ class CodeContext(object):
             item.finalize()
 
         self._finalized = True
+
+        return self
 
     def debug_json(self):
         out = '{\n"literals": {\n'
