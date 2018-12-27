@@ -42,9 +42,24 @@
             blck value.
             ^self whileTrue: blck.
         ).
+        block_traits_mirror toSlot: 'whileFalse:' Add: (| :blck |
+            self value ifTrue: [ ^nil ].
+            blck value.
+            ^self whileFalse: blck.
+        ).
+        block_traits_mirror toSlot: 'untilTrue:' Add: (| :blck |
+            blck value.
+            self value ifTrue: [ ^nil ].
+            ^self untilTrue: blck.
+        ).
+        block_traits_mirror toSlot: 'untilFalse:' Add: (| :blck |
+            blck value.
+            self value ifFalse: [ ^nil ].
+            ^self untilFalse: blck.
+        ).
     ).
 
-    init = (| universe_mirror. block_traits_mirror |
+    init = (||
         init_true.
         init_false.
         init_nil.
