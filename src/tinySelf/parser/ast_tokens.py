@@ -189,7 +189,7 @@ class Block(Object):
         return context
 
 
-class Number(BaseBox):  # TODO: remove
+class IntNumber(BaseBox):
     def __init__(self, value):
         self.value = value
 
@@ -210,7 +210,31 @@ class Number(BaseBox):  # TODO: remove
         return not self.__eq__(obj)
 
     def __str__(self):
-        return "Number(%s)" % self.value
+        return "IntNumber(%s)" % self.value
+
+
+class FloatNumber(BaseBox):
+    def __init__(self, value):
+        self.value = value
+
+    def compile(self, context):
+        index = context.add_literal_float(self.value)
+
+        context.add_bytecode(BYTECODE_PUSH_LITERAL)
+        context.add_bytecode(LITERAL_TYPE_FLOAT)
+        context.add_bytecode(index)
+
+        return context
+
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and \
+               self.value == obj.value
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
+    def __str__(self):
+        return "FloatNumber(%s)" % self.value
 
 
 def _escape_sequences(inp):
@@ -233,15 +257,8 @@ def _escape_sequences(inp):
 
         out += last
 
-        if escape:
-            last = ""
-        else:
-            last = c
-
-        if c == "\\":
-            escape = not escape
-        else:
-            escape = False
+        last = "" if escape else c
+        escape = not escape if c == "\\" else False
 
     return out
 
