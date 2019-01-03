@@ -9,7 +9,8 @@ from tinySelf.parser.ast_tokens import Send
 from tinySelf.parser.ast_tokens import Self
 from tinySelf.parser.ast_tokens import Block
 from tinySelf.parser.ast_tokens import Object
-from tinySelf.parser.ast_tokens import Number
+from tinySelf.parser.ast_tokens import IntNumber
+from tinySelf.parser.ast_tokens import FloatNumber
 from tinySelf.parser.ast_tokens import String
 from tinySelf.parser.ast_tokens import Resend
 from tinySelf.parser.ast_tokens import Return
@@ -39,10 +40,22 @@ def rw_slots(slot_dict):
     return out
 
 
-def test_parse_number():
+def test_parse_int_number():
     result = lex_and_parse('1')
 
-    assert result == [Number(1)]
+    assert result == [IntNumber(1)]
+
+
+def test_parse_float_number():
+    result = lex_and_parse('1.2')
+
+    assert result == [FloatNumber(1.2)]
+
+
+def test_parse_hex_number():
+    result = lex_and_parse('0x2222')
+
+    assert result == [IntNumber(8738)]
 
 
 def test_self_eq():
@@ -101,10 +114,10 @@ def test_parse_binary_message():
     result = lex_and_parse('1 + 1')
 
     assert result == [Send(
-        obj=Number(1),
+        obj=IntNumber(1),
         msg=BinaryMessage(
             name='+',
-            parameter=Number(1)
+            parameter=IntNumber(1)
         )
     )]
 
@@ -116,7 +129,7 @@ def test_parse_keyword_message():
         obj=Self(),
         msg=KeywordMessage(
             name='set:',
-            parameters=[Number(1)]
+            parameters=[IntNumber(1)]
         )
     )]
 
@@ -129,10 +142,10 @@ def test_parse_keyword_message_with_parameters():
         msg=KeywordMessage(
             name='set:And:Also:So:',
             parameters=[
-                Number(1),
-                Number(2),
-                Number(3),
-                Number(4)
+                IntNumber(1),
+                IntNumber(2),
+                IntNumber(3),
+                IntNumber(4)
             ]
         )
     )]
@@ -148,7 +161,7 @@ def test_parse_keyword_message_to_obj_with_parameters():
         ),
         msg=KeywordMessage(
             name='set:',
-            parameters=[Number(1)]
+            parameters=[IntNumber(1)]
         )
     )]
 
@@ -164,10 +177,10 @@ def test_parse_keyword_message_to_obj_with_multiple_parameters():
         msg=KeywordMessage(
             name='set:And:Also:So:',
             parameters=[
-                Number(1),
-                Number(2),
-                Number(3),
-                Number(4)
+                IntNumber(1),
+                IntNumber(2),
+                IntNumber(3),
+                IntNumber(4)
             ]
         )
     )]
@@ -191,7 +204,7 @@ def test_parse_chained_messages():
 
     assert result == [Send(
         obj=Send(
-            obj=Number(2),
+            obj=IntNumber(2),
             msg=Message('minus'),
         ),
         msg=Message('minus')
@@ -203,7 +216,7 @@ def test_parse_chained_messages_kw():
 
     assert result == [Send(
         obj=Send(
-            obj=Number(2),
+            obj=IntNumber(2),
             msg=Message('minus')
         ),
         msg=KeywordMessage(
@@ -251,7 +264,7 @@ def test_parse_cascade_kw_to_self():
     assert result == [Cascade(
         obj=Self(),
         msgs=[
-            KeywordMessage("a:", [Number(1)]),
+            KeywordMessage("a:", [IntNumber(1)]),
             Message("b"),
         ]
     )]
@@ -275,7 +288,7 @@ def test_parse_cascade_kw():
     assert result == [Cascade(
         obj=Send(Self(), Message("s")),
         msgs=[
-            KeywordMessage("a:B:", [Number(1), Number(2)]),
+            KeywordMessage("a:B:", [IntNumber(1), IntNumber(2)]),
             Message("b"),
         ]
     )]
@@ -287,8 +300,8 @@ def test_parse_cascade_to_kw():
     assert result == [Cascade(
         obj=Self(),
         msgs=[
-            KeywordMessage("x:Y:", [Number(1), Number(2)]),
-            KeywordMessage("a:B:", [Number(1), Number(2)]),
+            KeywordMessage("x:Y:", [IntNumber(1), IntNumber(2)]),
+            KeywordMessage("a:B:", [IntNumber(1), IntNumber(2)]),
             Message("b"),
         ]
     )]
@@ -371,26 +384,26 @@ def test_parse_object_with_multiple_nil_slots():
 
 def test_parse_slot_assignment():
     result = lex_and_parse('(| asd <- 2 |)')
-    assert result == [Object(slots=_rw_slot("asd", Number(2)))]
+    assert result == [Object(slots=_rw_slot("asd", IntNumber(2)))]
 
     result = lex_and_parse('(| asd <- 2. |)')
-    assert result == [Object(slots=_rw_slot("asd", Number(2)))]
+    assert result == [Object(slots=_rw_slot("asd", IntNumber(2)))]
 
 
 def test_parse_multiple_slot_assignment():
     result = lex_and_parse('(asd <- 2. bsd <- 4 |)')
     assert result == [Object(
         slots=rw_slots(OrderedDict((
-            ("asd", Number(2)),
-            ("bsd", Number(4))
+            ("asd", IntNumber(2)),
+            ("bsd", IntNumber(4))
         )))
     )]
 
     result = lex_and_parse('(| asd <- 2. bsd <- 4. |)')
     assert result == [Object(
         slots=rw_slots(OrderedDict((
-            ("asd", Number(2)),
-            ("bsd", Number(4))
+            ("asd", IntNumber(2)),
+            ("bsd", IntNumber(4))
         )))
     )]
 
@@ -398,7 +411,7 @@ def test_parse_multiple_slot_assignment():
 def test_parse_rw_slot_assignment():
     result = lex_and_parse('( a <- 2 |)')
 
-    assert result == [Object(slots=_rw_slot("a", Number(2)))]
+    assert result == [Object(slots=_rw_slot("a", IntNumber(2)))]
 
 
 def test_parse_kwd_slot_assignment():
@@ -629,24 +642,24 @@ def test_block_slots():
     # assert result == Block(slots={"asd": None})
 
     result = lex_and_parse('[| asd <- 2 |]')
-    assert result == [Block(slots=_rw_slot("asd", Number(2)))]
+    assert result == [Block(slots=_rw_slot("asd", IntNumber(2)))]
 
     result = lex_and_parse('[| asd <- 2. |]')
-    assert result == [Block(slots=_rw_slot("asd", Number(2)))]
+    assert result == [Block(slots=_rw_slot("asd", IntNumber(2)))]
 
     result = lex_and_parse('[asd <- 2. bsd <- 4 |]')
     assert result == [Block(slots=rw_slots(OrderedDict(
         (
-            ("asd", Number(2)),
-            ("bsd", Number(4)))
+            ("asd", IntNumber(2)),
+            ("bsd", IntNumber(4)))
         )
     ))]
 
     result = lex_and_parse('[| asd <- 2. bsd <- 4. |]')
     assert result == [Block(slots=rw_slots(OrderedDict(
         (
-            ("asd", Number(2)),
-            ("bsd", Number(4))
+            ("asd", IntNumber(2)),
+            ("bsd", IntNumber(4))
         )
     )))]
 
@@ -811,14 +824,14 @@ def test_parens_for_priority():
     assert result == [Object(code=[
         Send(
             obj=Send(
-                obj=Number(1),
+                obj=IntNumber(1),
                 msg=BinaryMessage(
                     name='>',
                     parameter=Send(
-                        obj=Number(2),
+                        obj=IntNumber(2),
                         msg=KeywordMessage(
                             name='xex:',
-                            parameters=[Number(1)]
+                            parameters=[IntNumber(1)]
                         )
                     )
                 )
@@ -836,14 +849,14 @@ def test_parens_for_priority():
     assert result == [Object(code=[
         Send(
             obj=Send(
-                obj=Number(1),
-                msg=BinaryMessage(name='>', parameter=Number(2))
+                obj=IntNumber(1),
+                msg=BinaryMessage(name='>', parameter=IntNumber(2))
             ),
             msg=KeywordMessage(
                 name='xex:',
                 parameters=[
                     Send(
-                        obj=Number(1),
+                        obj=IntNumber(1),
                         msg=KeywordMessage(
                             name='ifTrue:', parameters=[Block()]
                         )
@@ -888,7 +901,7 @@ def test_multiple_statements_make_code():
     assert result == [
         Send(obj=Self(), msg=Message('xe')),
         Object(code=[Self()]),
-        Number(1)
+        IntNumber(1)
     ]
 
 

@@ -13,8 +13,9 @@ from ast_tokens import Comment
 from ast_tokens import Object
 from ast_tokens import Block
 
-from ast_tokens import Number
 from ast_tokens import String
+from ast_tokens import IntNumber
+from ast_tokens import FloatNumber
 
 from ast_tokens import Message
 from ast_tokens import KeywordMessage
@@ -121,10 +122,17 @@ def self_parser(p):
     return Self()
 
 
-# Number ######################################################################
+# Numbers #####################################################################
 @pg.production('numbers : NUMBER')
 def expression_number(p):
-    return Number(int(p[0].getstr()))
+    number_str = p[0].getstr()
+
+    if "." in number_str:
+        return FloatNumber(float(number_str))
+    elif number_str.startswith("0x"):
+        return IntNumber(int(number_str, 16))
+
+    return IntNumber(int(number_str))
 
 
 # Strings #####################################################################

@@ -21,6 +21,17 @@ class IntBox(LiteralBox):
         return str(self.value)
 
 
+class FloatBox(LiteralBox):
+    def __init__(self, value):
+        assert isinstance(value, float)
+
+        self.value = value
+        self.literal_type = LITERAL_TYPE_FLOAT
+
+    def __str__(self):
+        return str(self.value)
+
+
 class StrBox(LiteralBox):
     def __init__(self, value):
         assert isinstance(value, str)
@@ -80,6 +91,9 @@ class CodeContext(object):
 
     def add_literal_int(self, literal):
         return self.add_literal(IntBox(literal))
+
+    def add_literal_float(self, literal):
+        return self.add_literal(FloatBox(literal))
 
     def add_literal_obj(self, literal):
         return self.add_literal(ObjBox(literal))

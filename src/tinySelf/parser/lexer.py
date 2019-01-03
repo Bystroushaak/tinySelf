@@ -7,7 +7,7 @@ lg.ignore(r'\s+')
 
 lg.add('SELF', r'self')
 
-lg.add('NUMBER', r'((\-)?\d+(\.\d)?)|(\\x[0-9a-fA-F]+)')
+lg.add('NUMBER', r'(0x[0-9a-fA-F]+)|((\-)?\d+(\.\d)?)')
 
 lg.add('OBJ_START', r'\(')
 lg.add('OBJ_END', r'\)')
