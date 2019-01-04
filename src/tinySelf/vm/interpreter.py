@@ -7,6 +7,7 @@ from tinySelf.vm.primitives import add_block_trait
 from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveStrObject
+from tinySelf.vm.primitives import PrimitiveFloatObject
 from tinySelf.vm.primitives import AssignmentPrimitive
 from tinySelf.vm.primitives import add_primitive_method
 from tinySelf.vm.primitives import gen_interpreter_primitives
@@ -14,6 +15,7 @@ from tinySelf.vm.primitives import gen_interpreter_primitives
 from tinySelf.vm.code_context import IntBox
 from tinySelf.vm.code_context import StrBox
 from tinySelf.vm.code_context import ObjBox
+from tinySelf.vm.code_context import FloatBox
 
 from tinySelf.vm.frames import ProcessCycler
 from tinySelf.vm.object_layout import Object
@@ -321,6 +323,9 @@ class Interpreter(ProcessCycler):
         elif literal_type == LITERAL_TYPE_INT:
             assert isinstance(boxed_literal, IntBox)
             obj = PrimitiveIntObject(boxed_literal.value)
+        elif literal_type == LITERAL_TYPE_FLOAT:
+            assert isinstance(boxed_literal, FloatBox)
+            obj = PrimitiveFloatObject(boxed_literal.value)
         elif literal_type == LITERAL_TYPE_STR:
             assert isinstance(boxed_literal, StrBox)
             obj = PrimitiveStrObject(boxed_literal.value)

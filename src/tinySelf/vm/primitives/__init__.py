@@ -5,6 +5,7 @@ from tinySelf.vm.primitives.mirror import Mirror
 
 from tinySelf.vm.primitives.primitive_int import PrimitiveIntObject
 from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
+from tinySelf.vm.primitives.primitive_float import PrimitiveFloatObject
 
 from tinySelf.vm.primitives.primitive_nil import PrimitiveNilObject
 from tinySelf.vm.primitives.primitive_true import PrimitiveTrueObject
