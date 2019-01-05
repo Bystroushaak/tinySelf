@@ -7,6 +7,7 @@ from rply import ParsingError
 from rpython.jit.codewriter.policy import JitPolicy
 from rpython.rlib.compilerinfo import get_compiler_info
 
+from tinySelf.r_io import ewrite
 from tinySelf.r_io import writeln
 from tinySelf.r_io import ewriteln
 from tinySelf.r_io import stdin_readline
@@ -61,7 +62,16 @@ def run_interactive():
 
 def run_script(path):
     with open(path) as f:
-        virtual_machine(f.read())
+        process, interpreter = virtual_machine(f.read())
+
+    if process.finished_with_error:
+        ewrite("Error: ")
+        ewriteln(process.result.__str__())
+        ewriteln("\n")
+        ewriteln("CodeContext debug:")
+        ewriteln(process.frame.code_context.debug_json())
+
+        return 1
 
     return 0
 
