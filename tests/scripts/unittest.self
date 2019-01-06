@@ -30,10 +30,18 @@
 
         universe_mirror: primitives mirrorOn: universe.
         universe_mirror toSlot: 'assert:' Add: (| :what |
-            what value ifFalse: [primitives interpreter error: 'Assertion failed!'].
+            what value ifFalse: [
+                primitives interpreter error: (
+                    '`assert:` failed (line ' + (what getLineNumber asString) + '):\n\n\t' + (what asString)
+                )
+            ].
         ).
         universe_mirror toSlot: 'assertNot:' Add: (| :what |
-            what value ifTrue: [primitives interpreter error: 'Assertion failed!'].
+            what value ifTrue: [
+                primitives interpreter error: (
+                    '`assertNot:` failed (line ' + (what getLineNumber asString) + '):\n\n\t' + (what asString)
+                )
+            ].
         ).
 
         block_traits_mirror: primitives mirrorOn: block_traits.
@@ -129,6 +137,8 @@
         assert: [ test_run_script_invalid_obj is: true ].
         assert: [ test_run_script_invalid_path is: true ].
         test_run_script.
+
+        assert: [ primitives time timestamp < 1546723901.1 ].
 
         "all tests ok\n" print.
     )

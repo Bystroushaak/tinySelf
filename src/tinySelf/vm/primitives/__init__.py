@@ -17,6 +17,8 @@ from tinySelf.vm.primitives.add_primitive_fn import add_primitive_method
 from tinySelf.vm.primitives.interpreter_primitives import ErrorObject
 from tinySelf.vm.primitives.interpreter_primitives import gen_interpreter_primitives
 
+from tinySelf.vm.primitives.primitive_time import get_primitive_time_object
+
 
 class AssignmentPrimitive(Object):
     def __init__(self, real_parent=None):
@@ -46,6 +48,16 @@ class BlockTrait(Object):
 _BLOCK_TRAIT = BlockTrait()
 
 
+def _print_block_source(context, block_obj, parameters):
+    ast = block_obj.get_slot("value").ast
+    return PrimitiveStrObject(ast.source_pos.source_snippet)
+
+
+def _get_lineno(context, block_obj, parameters):
+    ast = block_obj.get_slot("value").ast
+    return PrimitiveIntObject(ast.source_pos.start_line)
+
+
 def add_block_trait(block):
     obj = Object()
     obj.meta_add_slot("value", block)
@@ -54,6 +66,8 @@ def add_block_trait(block):
     obj.meta_add_slot("with:With:With:", block)
     obj.meta_add_slot("with:With:With:With:", block)
     obj.meta_add_slot("withAll:", block)
+    add_primitive_fn(block, "asString", _print_block_source, [])
+    add_primitive_fn(block, "getLineNumber", _get_lineno, [])
 
     obj.scope_parent = _BLOCK_TRAIT
 
@@ -82,6 +96,8 @@ def get_primitives():
     primitives.meta_add_slot("true", PrimitiveTrueObject())
     primitives.meta_add_slot("false", PrimitiveFalseObject())
     primitives.meta_add_slot("block_traits", _BLOCK_TRAIT)
+
+    primitives.meta_add_slot("time", get_primitive_time_object())
 
     add_primitive_fn(primitives, "mirrorOn:", _create_mirror, ["obj"])
 

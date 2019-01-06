@@ -29,10 +29,18 @@
     init_asserts = (| universe_mirror |
         universe_mirror: primitives mirrorOn: universe.
         universe_mirror toSlot: 'assert:' Add: (| :what |
-            what value ifFalse: [primitives interpreter error: 'Assertion failed!'].
+            what value ifFalse: [
+                primitives interpreter error: (
+                    '`assert:` failed (line ' + (what getLineNumber asString) + '):\n\n\t' + (what asString)
+                )
+            ].
         ).
         universe_mirror toSlot: 'assertNot:' Add: (| :what |
-            what value ifTrue: [primitives interpreter error: 'Assertion failed!'].
+            what value ifTrue: [
+                primitives interpreter error: (
+                    '`assertNot:` failed (line ' + (what getLineNumber asString) + '):\n\n\t' + (what asString)
+                )
+            ].
         ).
     ).
     init_blocks = (| block_traits_mirror |
