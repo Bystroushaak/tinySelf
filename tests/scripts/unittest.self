@@ -138,7 +138,7 @@
         assert: [ test_run_script_invalid_path is: true ].
         test_run_script.
 
-        assert: [ primitives time timestamp < 1546723901.1 ].
+        assert: [ primitives time timestamp > 1546723901.1 ].
 
         "all tests ok\n" print.
     )
