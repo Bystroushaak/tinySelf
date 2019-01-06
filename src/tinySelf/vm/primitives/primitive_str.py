@@ -37,7 +37,7 @@ class PrimitiveStrObject(Object):
         add_primitive_fn(self, "print", print_string, [])
 
     def __str__(self):
-        return "PrimitiveStrObject(%s)" % self.value
+        return self.value
 
     def __eq__(self, obj):
         if not isinstance(obj, PrimitiveStrObject):
