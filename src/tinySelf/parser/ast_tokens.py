@@ -49,17 +49,26 @@ class SourcePos(BaseBox):
         source_lines = source.splitlines()
 
         if self.start_line == self.end_line:
+            from_index = self.start_column - 1
+            to_index = self.end_column
+            assert from_index >= 0
+            assert to_index >= 0
+
             line = source_lines[self.start_line - 1]
-            return line[self.start_column-1:self.end_column].strip()
+            return line[from_index:to_index].strip()
 
         relevant_lines = []
         for i in range(self.start_line, self.end_line):
             line = source_lines[i - 1]
 
             if i == self.start_line:
-                relevant_lines.append(line[self.start_column:])
+                index = self.start_column - 1
+                assert index >= 0
+                relevant_lines.append(line[index:])
             elif i == self.end_line:
-                relevant_lines.append(line[:self.end_line - 1])
+                index = self.end_column
+                assert index >= 0
+                relevant_lines.append(line[:index])
             else:
                 relevant_lines.append(line)
 
