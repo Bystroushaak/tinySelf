@@ -173,4 +173,4 @@ class PrimitiveFloatObject(_NumberObject):
         return self.value == obj.value
 
     def __str__(self):
-        return "PrimitiveFloatObject(%f)" % self.value
+        return str(self.value)

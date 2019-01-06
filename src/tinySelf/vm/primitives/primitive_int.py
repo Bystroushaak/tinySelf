@@ -149,4 +149,4 @@ class PrimitiveIntObject(_NumberObject):
         return self.value == obj.value
 
     def __str__(self):
-        return "PrimitiveIntObject(%d)" % int(self.value)
+        return str(int(self.value))
