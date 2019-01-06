@@ -72,5 +72,6 @@
         init_false.
         init_nil.
         init_asserts.
+        init_blocks.
     ).
 |) init.
