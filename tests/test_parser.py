@@ -231,19 +231,20 @@ def test_parse_chained_messages_kw():
 def test_parse_chained_kw_and_unary_msgs():
     result = lex_and_parse('ifTrue: [] not not')
 
-    assert result == [Send(
-        obj=Send(
-            obj=Send(
-                obj=Self(),
-                msg=KeywordMessage(
-                    name='ifTrue:',
-                    parameters=[Block()]
+    assert result == [
+        Send(
+            obj=Self(),
+            msg=KeywordMessage(name='ifTrue:', parameters=[
+                Send(
+                    obj=Send(
+                        obj=Block(),
+                        msg=Message('not')
+                    ),
+                    msg=Message('not')
                 )
-            ),
-            msg=Message('not')
+            ])
         ),
-        msg=Message('not')
-    )]
+    ]
 
 
 def test_parse_cascade_to_self():
@@ -426,7 +427,9 @@ def test_parse_kwd_slots_assignment():
     result = lex_and_parse('(| asd: a Bsd: b = () |)')
     assert result == [Object(slots={"asd:Bsd:": Object(params=["a", "b"])})]
 
-    result = lex_and_parse('(asd: a Bsd: b = (). |)')
+
+def test_parse_kwd_slots_assignment_without_openning_slots():
+    result = lex_and_parse('(| asd: a Bsd: b = (). |)')
     assert result == [Object(slots={"asd:Bsd:": Object(params=["a", "b"])})]
 
 

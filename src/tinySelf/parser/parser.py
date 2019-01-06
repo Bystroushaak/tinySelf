@@ -53,8 +53,8 @@ pg = ParserGenerator(
         "SELF",
     ),
     precedence=(
-        ("right", ["IDENTIFIER"]),
         ("right", ["FIRST_KW", "KEYWORD"]),
+        ("right", ["IDENTIFIER"]),
         ("right", ["OPERATOR"]),
     )
 )
