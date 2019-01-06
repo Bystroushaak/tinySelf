@@ -7,6 +7,7 @@ from rply.token import BaseBox
 
 from lexer import lexer
 
+from ast_tokens import SourcePos
 from ast_tokens import Root
 from ast_tokens import Comment
 
@@ -57,6 +58,14 @@ pg = ParserGenerator(
         ("right", ["OPERATOR"]),
     )
 )
+
+
+class SourceHolderToGoAroundRPythonsGlobalConstants(object):
+    def __init__(self):
+        self.source = ""
+
+
+SOURCE_REF = SourceHolderToGoAroundRPythonsGlobalConstants()
 
 
 # data types used because of rPython ##########################################
@@ -286,7 +295,7 @@ def expression_is_message(p):
     return p[0]
 
 
-# # Cascades ####################################################################
+# Cascades ####################################################################
 def parse_cascade_messages(msgs):
     out = []
     for msg in msgs:
@@ -338,7 +347,7 @@ def expression_cascade(p):
     return p[0]
 
 
-# # Slot definition #############################################################
+# Slot definition #############################################################
 def _value_from_token(token):
     # rpython ballast
     assert isinstance(token, Token)
@@ -534,11 +543,24 @@ def slots_definition(p):
 
 
 # Object definition ###########################################################
+def get_source_pos(p):
+    if not p:
+        return SourcePos(0, 0, 0, 0)
+
+    return SourcePos(
+        p[0].getsourcepos().lineno,
+        p[0].getsourcepos().colno,
+        p[-1].getsourcepos().lineno,
+        p[-1].getsourcepos().colno,
+        SOURCE_REF.source
+    )
+
+
 @pg.production('obj : OBJ_START OBJ_END')
 @pg.production('obj : OBJ_START SEPARATOR OBJ_END')
 @pg.production('obj : OBJ_START SEPARATOR SEPARATOR OBJ_END')
 def empty_object(p):
-    return Object()
+    return Object(source_pos=get_source_pos(p))
 
 
 def parse_slots_params_parents(slots):
@@ -567,6 +589,8 @@ def parse_slots_params_parents(slots):
 
 
 def remove_tokens_from_beginning(token_list, token_names):
+    token_list = token_list[:]
+
     def is_token_and_has_name(item, name):
         if not isinstance(item, Token):
             return False
@@ -588,25 +612,30 @@ def remove_obj_tokens_from_beginning(token_list):
 # @pg.production('obj : OBJ_START SEPARATOR code OBJ_END')  # doesn't work - why?
 @pg.production('obj : OBJ_START SEPARATOR SEPARATOR code OBJ_END')
 def object_with_just_code(p):
-    p = remove_obj_tokens_from_beginning(p)
+    q = remove_obj_tokens_from_beginning(p)
 
-    code_container = p[0]
+    code_container = q[0]
     assert isinstance(code_container, ListContainer)
 
-    return Object(code=code_container.list)
+    return Object(code=code_container.list, source_pos=get_source_pos(p))
 
 
 @pg.production('obj : OBJ_START slot_definition SEPARATOR OBJ_END')
 @pg.production('obj : OBJ_START SEPARATOR slot_definition SEPARATOR OBJ_END')
 def object_with_slots(p):
-    p = remove_obj_tokens_from_beginning(p)
+    q = remove_obj_tokens_from_beginning(p)
 
-    slot_dict = p[0]
+    slot_dict = q[0]
     assert isinstance(slot_dict, OrderedDictContainer)
 
     slots, params, parents = parse_slots_params_parents(slot_dict.dict)
 
-    return Object(slots=slots, params=params, parents=parents)
+    return Object(
+        slots=slots,
+        params=params,
+        parents=parents,
+        source_pos=get_source_pos(p)
+    )
 
 
 # Object with code
@@ -632,20 +661,21 @@ def code_definitions(p):
 @pg.production('obj : OBJ_START slot_definition SEPARATOR code OBJ_END')
 @pg.production('obj : OBJ_START SEPARATOR slot_definition SEPARATOR code OBJ_END')
 def object_with_slots_and_code(p):
-    p = remove_obj_tokens_from_beginning(p)
+    content = remove_obj_tokens_from_beginning(p)
 
-    slot_dict = p[0]
+    slot_dict = content[0]
     assert isinstance(slot_dict, OrderedDictContainer)
     slots, params, parents = parse_slots_params_parents(slot_dict.dict)
 
-    code_container = p[2]
+    code_container = content[2]
     assert isinstance(code_container, ListContainer)
 
     return Object(
         slots=slots,
         params=params,
         code=code_container.list,
-        parents=parents
+        parents=parents,
+        source_pos=get_source_pos(p)
     )
 
 
@@ -660,7 +690,7 @@ def expression_object(p):
 @pg.production('block : BLOCK_START SEPARATOR BLOCK_END')
 @pg.production('block : BLOCK_START SEPARATOR SEPARATOR BLOCK_END')
 def empty_block(p):
-    return Block()
+    return Block(source_pos=get_source_pos(p))
 
 
 @pg.production('block : BLOCK_START code BLOCK_END')
@@ -668,7 +698,7 @@ def block_with_code(p):
     code_container = p[1]
     assert isinstance(code_container, ListContainer)  # rpython type hint
 
-    return Block(code=code_container.list)
+    return Block(code=code_container.list, source_pos=get_source_pos(p))
 
 
 def remove_block_tokens_from_beginning(token_list):
@@ -678,40 +708,45 @@ def remove_block_tokens_from_beginning(token_list):
 # @pg.production('obj : BLOCK_START SEPARATOR code BLOCK_END')  # doesn't work - why?
 @pg.production('block : BLOCK_START SEPARATOR SEPARATOR code BLOCK_END')
 def block_with_empty_slots_and_code(p):
-    p = remove_block_tokens_from_beginning(p)
+    q = remove_block_tokens_from_beginning(p)
 
-    code_container = p[0]
+    code_container = q[0]
     assert isinstance(code_container, ListContainer)
 
-    return Block(code=code_container.list)
+    return Block(code=code_container.list, source_pos=get_source_pos(p))
 
 
 @pg.production('block : BLOCK_START slot_definition SEPARATOR BLOCK_END')
 @pg.production('block : BLOCK_START SEPARATOR slot_definition SEPARATOR BLOCK_END')
 def block_with_slots(p):
-    p = remove_block_tokens_from_beginning(p)
+    q = remove_block_tokens_from_beginning(p)
 
-    slot_dict = p[0]
+    slot_dict = q[0]
     assert isinstance(slot_dict, OrderedDictContainer)
 
     slots, params, _ = parse_slots_params_parents(slot_dict.dict)
 
-    return Block(slots=slots, params=params)
+    return Block(slots=slots, params=params, source_pos=get_source_pos(p))
 
 
 @pg.production('block : BLOCK_START slot_definition SEPARATOR code BLOCK_END')
 @pg.production('block : BLOCK_START SEPARATOR slot_definition SEPARATOR code BLOCK_END')
 def block_with_slots_and_code(p):
-    p = remove_block_tokens_from_beginning(p)
+    q = remove_block_tokens_from_beginning(p)
 
-    slot_dict = p[0]
+    slot_dict = q[0]
     assert isinstance(slot_dict, OrderedDictContainer)
     slots, params, _ = parse_slots_params_parents(slot_dict.dict)
 
-    code_container = p[2]
+    code_container = q[2]
     assert isinstance(code_container, ListContainer)
 
-    return Block(slots=slots, params=params, code=code_container.list)
+    return Block(
+        slots=slots,
+        params=params,
+        code=code_container.list,
+        source_pos=get_source_pos(p)
+    )
 
 
 # TODO: remove later?
@@ -755,15 +790,23 @@ def parse_comment(p):
 parser = pg.build()
 
 
-def lex_and_parse(i):
-    tree = parser.parse(lexer.lex(i))
+def lex_and_parse(source):
+    SOURCE_REF.source = source
+
+    tree = parser.parse(lexer.lex(source))
     assert isinstance(tree, Root)
+
+    SOURCE_REF.source = ""
 
     return tree.ast
 
 
-def lex_and_parse_as_root(i):
-    tree = parser.parse(lexer.lex(i))
+def lex_and_parse_as_root(source):
+    SOURCE_REF.source = source
+
+    tree = parser.parse(lexer.lex(source))
     assert isinstance(tree, Root)
+
+    SOURCE_REF.source = ""
 
     return tree

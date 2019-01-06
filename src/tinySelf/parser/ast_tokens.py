@@ -36,6 +36,36 @@ def _repr_dict(d):
     return "{" + ", ".join(results) + "}"
 
 
+class SourcePos(BaseBox):
+    def __init__(self, start_line, start_column, end_line, end_column, source=""):
+        self.start_line = start_line
+        self.start_column = start_column
+        self.end_line = end_line
+        self.end_column = end_column
+
+        self.source_snippet = self._parse_source(source)
+
+    def _parse_source(self, source):
+        source_lines = source.splitlines()
+
+        if self.start_line == self.end_line:
+            line = source_lines[self.start_line - 1]
+            return line[self.start_column-1:self.end_column].strip()
+
+        relevant_lines = []
+        for i in range(self.start_line, self.end_line):
+            line = source_lines[i - 1]
+
+            if i == self.start_line:
+                relevant_lines.append(line[self.start_column:])
+            elif i == self.end_line:
+                relevant_lines.append(line[:self.end_line - 1])
+            else:
+                relevant_lines.append(line)
+
+        return "\n".join(relevant_lines)
+
+
 class Root(BaseBox):
     def __init__(self, tree=[]):
         self.ast = tree
@@ -79,11 +109,13 @@ class Nil(Self):
 
 
 class Object(BaseBox):
-    def __init__(self, slots=None, params=None, code=None, parents=None):
+    def __init__(self, slots=None, params=None, code=None, parents=None,
+                 source_pos=None):
         self.slots = OrderedDict()
         self.params = []
         self.code = []
         self.parents = OrderedDict()
+        self.source_pos = source_pos
 
         if slots is not None:
             self.slots.update(slots)
