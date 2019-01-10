@@ -15,6 +15,7 @@ from tinySelf.r_io import stdin_readline
 from tinySelf.version import VERSION
 
 from tinySelf.parser import lex_and_parse
+from tinySelf.parser import lex_and_parse_as_root
 
 from tinySelf.vm.object_layout import Object
 from tinySelf.vm.code_context import CodeContext
@@ -93,18 +94,16 @@ def show_ast(path):
 def compile_file(path):
     with open(path) as f:
         try:
-            contexts = [
-                expr.compile(CodeContext())
-                for expr in lex_and_parse(f.read())
-            ]
+            ast = lex_and_parse_as_root(f.read())
+            code = ast.compile(CodeContext())
+            code.finalize()
         except ParsingError as e:
             ewriteln("Parse error.")
             if e.message:
                 ewriteln(e.message)
             return 1
 
-    for context in contexts:
-        print context.debug_json()
+    print code.debug_json()
 
     return 0
 
