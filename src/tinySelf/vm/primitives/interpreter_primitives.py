@@ -127,15 +127,14 @@ def _raise_error(interpreter, _, parameters):
     if error_handler is None:
         raise ValueError("Error handler must react to with:With: message!")
 
-    new_code_context = error_handler.code_context
     error_handler.scope_parent = interpreter._create_intermediate_params_obj(
         error_handler.scope_parent,
         error_handler,
         [msg, ErrorObject(msg, process)]  # process is passed to the error_handler
     )
-    new_code_context.self = error_handler.scope_parent
 
-    interpreter.add_process(new_code_context)
+    process = interpreter.add_process(error_handler.code_context)
+    process.frame.self = error_handler.scope_parent
 
     return None
 
@@ -171,7 +170,6 @@ def _run_script(interpreter, scope_parent, parameters):
 
     method_obj = Object()
     method_obj.code_context = code
-    code.self = scope_parent
 
     interpreter._push_code_obj_for_interpretation(
         next_bytecode=0,  # disable TCO

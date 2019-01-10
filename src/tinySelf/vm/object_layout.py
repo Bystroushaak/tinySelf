@@ -116,7 +116,8 @@ class _BareObject(object):
         """
         obj = Object()
         obj.slots_references = self.slots_references[:]
-        obj.map = self.map.clone()
+        # obj.map = self.map.clone()
+        obj.map = self.map
 
         return obj
 
@@ -291,7 +292,7 @@ class ObjectMap(object):
         new_map.parameters = self.parameters[:]
         new_map.parent_slots = self.parent_slots.copy()
         new_map.ast = self.ast
-        new_map.code_context = self.code_context  # TODO: deep copy / recompile
+        new_map.code_context = self.code_context
         new_map.primitive_code = self.primitive_code
         new_map.is_block = self.is_block
 

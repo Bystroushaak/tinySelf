@@ -197,10 +197,7 @@ class Interpreter(ProcessCycler):
             prev_scope_parent=prev_scope_parent,
         )
 
-        new_code_context = method_obj.code_context
-        new_code_context.self = method_obj
-
-        self.process.push_frame(new_code_context, method_obj)
+        self.process.push_frame(method_obj.code_context, method_obj)
 
     def _set_scope_parent_if_not_already_set(self, obj, code):
         if obj.scope_parent is None:
@@ -261,9 +258,18 @@ class Interpreter(ProcessCycler):
             raise
 
         if slot is None:
-            print code.debug_json()
-            print obj.ast.__str__()
+            if obj.ast:
+                print "Missing slot `%s` on (line %s):" % (message_name, obj.ast.source_pos.start_line)
+                print
+                print obj.ast.source_pos.source_snippet
+            else:
+                print "Missing slot `%s`:" % message_name
+                print
+                print obj.__str__()
+
+            print
             print "Failed at bytecode number %d" % bc_index
+            print code.debug_json()
             raise ValueError("Missing slot error: `%s`" % message_name)
 
         if slot.has_code:
@@ -307,7 +313,7 @@ class Interpreter(ProcessCycler):
     #     pass
 
     def _do_push_self(self, bc_index, code_obj):
-        self.process.frame.push(code_obj.self)
+        self.process.frame.push(self.process.frame.self)
 
         return ONE_BYTECODE_LONG
 
@@ -332,8 +338,8 @@ class Interpreter(ProcessCycler):
         elif literal_type == LITERAL_TYPE_OBJ:
             assert isinstance(boxed_literal, ObjBox)
             obj = boxed_literal.value.literal_copy()
-            if code_obj.self is None:
-                code_obj.self = obj
+            if self.process.frame.self is None:
+                self.process.frame.self = obj
         elif literal_type == LITERAL_TYPE_BLOCK:
             assert isinstance(boxed_literal, ObjBox)
             block = boxed_literal.value.literal_copy()

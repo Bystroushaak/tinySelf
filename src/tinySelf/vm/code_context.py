@@ -63,7 +63,6 @@ class ObjBox(LiteralBox):
 
 class CodeContext(object):
     def __init__(self):
-        self.self = None
         self._finalized = False
 
         self.bytecodes = ""

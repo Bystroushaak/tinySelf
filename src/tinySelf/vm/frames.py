@@ -13,6 +13,7 @@ class MethodStack(object):
         self.bc_index = 0
         self.code_context = code_context
         self.error_handler = None
+        self.self = None
 
         # used to remove scope parent from the method later
         self.tmp_method_obj_reference = None
@@ -45,6 +46,7 @@ class ProcessStack(object):
 
     def push_frame(self, code_context, method_obj):
         self.frame = MethodStack(code_context)
+        self.frame.self = method_obj
         self.frame.tmp_method_obj_reference = method_obj
 
         self.frames.append(self.frame)
