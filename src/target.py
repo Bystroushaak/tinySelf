@@ -47,7 +47,7 @@ def run_interactive():
                     print
                     print "Code object:"
                     print
-                    print code.debug_json()
+                    print code.debug_repr()
                 else:
                     if process.result != NIL:
                         print process.result.__str__()
@@ -70,7 +70,7 @@ def run_script(path):
         ewriteln(process.result.__str__())
         ewriteln("\n")
         ewriteln("CodeContext debug:")
-        ewriteln(process.frame.code_context.debug_json())
+        ewriteln(process.frame.code_context.debug_repr())
 
         return 1
 
@@ -103,7 +103,7 @@ def compile_file(path):
                 ewriteln(e.message)
             return 1
 
-    print code.debug_json()
+    print code.debug_repr()
 
     return 0
 

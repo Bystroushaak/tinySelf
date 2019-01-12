@@ -133,19 +133,26 @@ class CodeContext(object):
 
         return self
 
-    def debug_json(self):
-        out = '{\n"literals": {\n'
+    def debug_repr(self):
+        out = '(|\n  literals = (| l <- dict clone. |\n    l\n'
         for cnt, i in enumerate(self.literals):
-            out += '    "%d": "%s(%s)",\n' % (cnt, i.__class__.__name__, i.__str__())
-        out += '},\n\n'
+            out += '      at: %d Put: "%s(%s)";\n' % (cnt, i.__class__.__name__, i.__str__())
 
-        out += '"disassembled": [\n'
+        # meh, rpython and his proven non-negative bounds..
+        index = len(out) - 2
+        assert index >= 0
+        out = out[:index] + '.\n  ).\n\n'
+
+        out += '  disassembled = (||\n'
         instructions = []
         for instruction in disassemble(self.bytecodes):
-            instructions.append('    %s' % str(instruction).replace("'", '"'))
-        out += ",\n".join(instructions)
-        out += '\n],\n\n'
+            instruction_as_obj = ", ".join(['"%s"' % str(x) for x in instruction])
+            instruction_as_obj = str(instruction_as_obj).replace("'", '"')
+            instructions.append('    (%s)' % instruction_as_obj)
+        out += ", \n".join(instructions)
+        out += '\n  ).\n\n'
 
-        out += '"bytecodes": {\n    %s\n}}' % str([ord(x) for x in self.bytecodes])
+        bytecodes_list = ", ".join([str(ord(x)) for x in self.bytecodes])
+        out += 'bytecodes = (||\n    %s\n).' % bytecodes_list
 
         return out

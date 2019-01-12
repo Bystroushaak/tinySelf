@@ -269,7 +269,7 @@ class Interpreter(ProcessCycler):
 
             print
             print "Failed at bytecode number %d" % bc_index
-            print code.debug_json()
+            print code.debug_repr()
             raise ValueError("Missing slot error: `%s`" % message_name)
 
         if slot.has_code:
