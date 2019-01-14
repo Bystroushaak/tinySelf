@@ -66,20 +66,10 @@ class Interpreter(ProcessCycler):
 
             bytecode = ord(code_obj.bytecodes[bc_index])
 
-            jitdriver.can_enter_jit(
-                bc_index=bc_index,
-                bytecode=bytecode,
-                code_obj=code_obj,
-                # process=self.process,
-                frame=frame,
-                self=self,
-            )
-
             jitdriver.jit_merge_point(
                 bc_index=bc_index,
                 bytecode=bytecode,
                 code_obj=code_obj,
-                # process=self.process,
                 frame=frame,
                 self=self,
             )
