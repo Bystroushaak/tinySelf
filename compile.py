@@ -8,7 +8,7 @@ import argparse
 import sh
 
 
-def compile_project(quit_pdb, optimize, output):
+def compile_project(quit_pdb, optimize, jit, output):
     target_path = os.path.join(
         os.path.dirname(__file__),
         "src/target.py"
@@ -18,6 +18,9 @@ def compile_project(quit_pdb, optimize, output):
         "gc": "incminimark",
         "output": output,
     }
+
+    if jit:
+        args["translation-jit"] = True
 
     rpython_path = "rpython"
     if "RPYTHON_PATH" in os.environ:
@@ -71,6 +74,12 @@ if __name__ == '__main__':
         metavar="NAME",
         help="Name of the output file. Default %s." % default_name
     )
+    parser.add_argument(
+        "-j",
+        "--jit",
+        action="store_true",
+        help="Add support for JIT. Warning: slow."
+    )
 
     args = parser.parse_args()
 
@@ -78,6 +87,7 @@ if __name__ == '__main__':
         compile_project(
             args.quit_pdb,
             args.optimize,
+            args.jit,
             args.output,
         )
     except Exception as e:

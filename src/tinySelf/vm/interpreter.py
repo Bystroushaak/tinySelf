@@ -20,11 +20,19 @@ from tinySelf.vm.code_context import FloatBox
 from tinySelf.vm.frames import ProcessCycler
 from tinySelf.vm.object_layout import Object
 
+from rpython.rlib.jit import JitDriver
+
 
 NIL = PrimitiveNilObject()
 ONE_BYTECODE_LONG = 1
 TWO_BYTECODES_LONG = 2
 THREE_BYTECODES_LONG = 3
+
+jitdriver = JitDriver(
+    greens=['code_obj'],
+    reds=['bytecode', 'bc_index', 'frame', 'self'],
+    is_recursive=True  # I have no idea why is this required
+)
 
 
 class Interpreter(ProcessCycler):
@@ -57,6 +65,24 @@ class Interpreter(ProcessCycler):
             code_obj = frame.code_context
 
             bytecode = ord(code_obj.bytecodes[bc_index])
+
+            jitdriver.can_enter_jit(
+                bc_index=bc_index,
+                bytecode=bytecode,
+                code_obj=code_obj,
+                # process=self.process,
+                frame=frame,
+                self=self,
+            )
+
+            jitdriver.jit_merge_point(
+                bc_index=bc_index,
+                bytecode=bytecode,
+                code_obj=code_obj,
+                # process=self.process,
+                frame=frame,
+                self=self,
+            )
 
             if bytecode == BYTECODE_SEND:
                 bc_index += self._do_send(bc_index, code_obj)
