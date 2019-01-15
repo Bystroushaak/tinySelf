@@ -116,6 +116,7 @@ def as_float(_, self, parameters):
 
 
 class PrimitiveIntObject(_NumberObject):
+    _immutable_fields_ = ["value"]
     def __init__(self, value, obj_map=None):
         _NumberObject.__init__(self, obj_map)
 

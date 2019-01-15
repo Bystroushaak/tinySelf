@@ -7,6 +7,7 @@ from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 
 class _NumberObject(Object):
+    _immutable_fields_ = ["value"]
     def __init__(self, obj_map=None):
         Object.__init__(self, obj_map)
 
@@ -142,6 +143,7 @@ def as_int(_, self, parameters):
 
 
 class PrimitiveFloatObject(_NumberObject):
+    _immutable_fields_ = ["value"]
     def __init__(self, value, obj_map=None):
         _NumberObject.__init__(self, obj_map)
 
