@@ -11,6 +11,7 @@ from tinySelf.vm.primitives import PrimitiveFloatObject
 from tinySelf.vm.primitives import AssignmentPrimitive
 from tinySelf.vm.primitives import add_primitive_method
 from tinySelf.vm.primitives import gen_interpreter_primitives
+from tinySelf.vm.primitives.interpreter_primitives import ErrorObject
 
 from tinySelf.vm.code_context import IntBox
 from tinySelf.vm.code_context import StrBox
@@ -110,7 +111,19 @@ class Interpreter(ProcessCycler):
             #     self._do_selfSend(bc_index, code_obj, frame)
 
             else:
-                raise ValueError("Unknown bytecode!")
+                self.process.result = ErrorObject(
+                    PrimitiveStrObject("Unknown bytecode: %s!" % bytecode),
+                    self.process
+                )
+                self.process.finished = True
+                self.process.finished_with_errors = True
+
+                process = self.remove_active_process()
+                if not self.has_processes_to_run():
+                    self.process = process
+                    return
+
+                continue
 
             frame.bc_index = bc_index
             self.next_process()
@@ -120,7 +133,7 @@ class Interpreter(ProcessCycler):
         If the item at the top of the process frame is block which triggered
         nonlocal return, pop frames down until you reach frame where the block
         was defined.
-        
+
         Returns:
             bool: True if the nonlocal return was triggered.
         """
@@ -264,14 +277,11 @@ class Interpreter(ProcessCycler):
         obj = self.process.frame.pop()
         self._set_scope_parent_if_not_already_set(obj, code)
 
-        try:
-            if boxed_resend_parent_name:
-                parent_name = boxed_resend_parent_name.value
-                slot = self._resend_to_parent(obj, parent_name, message_name)
-            else:
-                slot = obj.slot_lookup(message_name)
-        except:
-            raise
+        if boxed_resend_parent_name:
+            parent_name = boxed_resend_parent_name.value
+            slot = self._resend_to_parent(obj, parent_name, message_name)
+        else:
+            slot = obj.slot_lookup(message_name)
 
         if slot is None:
             if obj.ast:
