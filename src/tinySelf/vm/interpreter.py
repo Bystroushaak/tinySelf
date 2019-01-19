@@ -67,7 +67,7 @@ class Interpreter(ProcessCycler):
 
             bytecode = ord(code_obj.bytecodes[bc_index])
 
-            jitdriver.jit_merge_point(
+            jitdriver.can_enter_jit(
                 bc_index=bc_index,
                 bytecode=bytecode,
                 code_obj=code_obj,
@@ -126,6 +126,15 @@ class Interpreter(ProcessCycler):
                 continue
 
             frame.bc_index = bc_index
+
+            jitdriver.jit_merge_point(
+                bc_index=bc_index,
+                bytecode=bytecode,
+                code_obj=code_obj,
+                frame=frame,
+                self=self,
+            )
+
             self.next_process()
 
     def _handle_nonlocal_return(self):
