@@ -31,7 +31,7 @@ THREE_BYTECODES_LONG = 3
 
 jitdriver = JitDriver(
     greens=['code_obj'],
-    reds=['bytecode', 'bc_index', 'frame', 'self'],
+    reds=['bc_index', 'bytecode', 'frame', 'self'],
     is_recursive=True  # I have no idea why is this required
 )
 
@@ -62,19 +62,19 @@ class Interpreter(ProcessCycler):
     def interpret(self):
         while self.process_count > 0:
             frame = self.process.frame
-            bc_index = frame.bc_index
             code_obj = frame.code_context
 
-            bytecode = ord(code_obj.bytecodes[bc_index])
+            bytecode = ord(code_obj.bytecodes[frame.bc_index])
 
+            bc_len = 0
             if bytecode == BYTECODE_SEND:
-                bc_index += self._do_send(bc_index, code_obj)
+                bc_len = self._do_send(frame.bc_index, code_obj)
 
             elif bytecode == BYTECODE_PUSH_SELF:
-                bc_index += self._do_push_self(bc_index, code_obj)
+                bc_len = self._do_push_self(frame.bc_index, code_obj)
 
             elif bytecode == BYTECODE_PUSH_LITERAL:
-                bc_index += self._do_push_literal(bc_index, code_obj)
+                bc_len = self._do_push_literal(frame.bc_index, code_obj)
 
             elif bytecode == BYTECODE_RETURN_TOP or \
                  bytecode == BYTECODE_RETURN_IMPLICIT:
@@ -97,7 +97,7 @@ class Interpreter(ProcessCycler):
                 continue
 
             elif bytecode == BYTECODE_ADD_SLOT:
-                bc_index += self._do_add_slot(bc_index, code_obj)
+                bc_len = self._do_add_slot(frame.bc_index, code_obj)
 
             # elif bytecode == BYTECODE_SELF_SEND:
             #     self._do_selfSend(bc_index, code_obj, frame)
@@ -117,16 +117,19 @@ class Interpreter(ProcessCycler):
 
                 continue
 
-            frame.bc_index = bc_index
-            self.next_process()
+            frame.bc_index += bc_len
 
             jitdriver.jit_merge_point(
-                bc_index=bc_index,
+                bc_index=frame.bc_index,
                 bytecode=bytecode,
                 code_obj=code_obj,
                 frame=frame,
                 self=self,
             )
+
+            if (frame.bc_index % 10) == 0:
+                self.next_process()
+
 
 
     def _handle_nonlocal_return(self):
