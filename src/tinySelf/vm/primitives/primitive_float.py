@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from tinySelf.vm.object_layout import Object
+
+from tinySelf.vm.primitives.cache import ObjCache
 from tinySelf.vm.primitives.primitive_true import PrimitiveTrueObject
 from tinySelf.vm.primitives.primitive_false import PrimitiveFalseObject
 from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
@@ -143,11 +145,17 @@ def as_int(_, self, parameters):
 
 
 class PrimitiveFloatObject(_NumberObject):
+
+    _OBJ_CACHE = ObjCache()
     _immutable_fields_ = ["value"]
     def __init__(self, value, obj_map=None):
-        _NumberObject.__init__(self, obj_map)
+        _NumberObject.__init__(self, PrimitiveFloatObject._OBJ_CACHE.map)
 
         self.value = value
+
+        if PrimitiveFloatObject._OBJ_CACHE.map is not None:
+            self.slots_references = PrimitiveFloatObject._OBJ_CACHE.slots
+            return
 
         add_primitive_fn(self, "+", add, ["obj"])
         add_primitive_fn(self, "-", substract, ["obj"])
@@ -160,6 +168,9 @@ class PrimitiveFloatObject(_NumberObject):
         add_primitive_fn(self, "==", compare, ["obj"])
         add_primitive_fn(self, "asString", as_string, [])
         add_primitive_fn(self, "asInt", as_int, [])
+
+        if PrimitiveFloatObject._OBJ_CACHE.map is None:
+            PrimitiveFloatObject._OBJ_CACHE.store(self)
 
     @property
     def float_value(self):

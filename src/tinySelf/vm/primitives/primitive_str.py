@@ -3,6 +3,8 @@ from tinySelf.r_io import write
 from tinySelf.r_io import writeln
 
 from tinySelf.vm.object_layout import Object
+
+from tinySelf.vm.primitives.cache import ObjCache
 from tinySelf.vm.primitives.primitive_nil import PrimitiveNilObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
@@ -27,14 +29,23 @@ def print_string(_, self, parameters):
 
 
 class PrimitiveStrObject(Object):
+    _OBJ_CACHE = ObjCache()
+    _immutable_fields_ = ["value"]
     def __init__(self, value, obj_map=None):
-        Object.__init__(self, obj_map)
+        Object.__init__(self, PrimitiveStrObject._OBJ_CACHE.map)
 
         assert isinstance(value, str)
         self.value = value
 
+        if PrimitiveStrObject._OBJ_CACHE.map is not None:
+            self.slots_references = PrimitiveStrObject._OBJ_CACHE.slots
+            return
+
         add_primitive_fn(self, "+", add_strings, ["obj"])
         add_primitive_fn(self, "print", print_string, [])
+
+        if PrimitiveStrObject._OBJ_CACHE.map is None:
+            PrimitiveStrObject._OBJ_CACHE.store(self)
 
     def __str__(self):
         return self.value
