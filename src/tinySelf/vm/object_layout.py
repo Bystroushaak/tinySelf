@@ -36,6 +36,8 @@ class _BareObject(object):
     def clone(self):
         o = Object(obj_map=self.map)
         o.slots_references = self.slots_references[:]
+        self.map.used_in_multiple_objects = True
+
         return o
 
     def set_slot(self, slot_name, value):
@@ -116,8 +118,10 @@ class _BareObject(object):
         """
         obj = Object()
         obj.slots_references = self.slots_references[:]
+
         # obj.map = self.map.clone()
         obj.map = self.map
+        self.map.used_in_multiple_objects = True
 
         return obj
 
@@ -126,6 +130,10 @@ class _BareObject(object):
 
 
 class _ObjectWithMetaOperations(_BareObject):
+    def _clone_map_if_used_by_multiple_objects(self):
+        if self.map.used_in_multiple_objects:
+            self.map = self.map.clone()
+
     def meta_add_slot(self, slot_name, value):
         assert isinstance(value, Object)
 
@@ -135,19 +143,17 @@ class _ObjectWithMetaOperations(_BareObject):
             self.set_slot(slot_name, value)
             return
 
-        new_map = self.map.clone()
-        new_map.add_slot(slot_name, len(self.slots_references))
-
+        self._clone_map_if_used_by_multiple_objects()
+        self.map.add_slot(slot_name, len(self.slots_references))
         self.slots_references.append(value)
-        self.map = new_map
 
     def meta_remove_slot(self, slot_name):
         if slot_name not in self.map.slots:
             return
 
-        new_map = self.map.clone()
-        slot_index = new_map.slots[slot_name]
-        new_map.remove_slot(slot_name)
+        self._clone_map_if_used_by_multiple_objects()
+        slot_index = self.map.slots[slot_name]
+        self.map.remove_slot(slot_name)
 
         self.slots_references = [
             self.slots_references[i]
@@ -155,42 +161,36 @@ class _ObjectWithMetaOperations(_BareObject):
             if i != slot_index
         ]
 
-        for name, reference in new_map.slots.iteritems():
+        for name, reference in self.map.slots.iteritems():
             if reference >= slot_index:
-                new_map.slots[name] -= 1
-
-        self.map = new_map
+                self.map.slots[name] -= 1
 
     def meta_insert_slot(self, slot_index, slot_name, value):
         if slot_name in self.map.slots:
             self.set_slot(slot_name, value)
 
-        new_map = self.map.clone()
-        new_map.insert_slot(slot_index, slot_name, len(self.slots_references))
-        self.map = new_map
+        self._clone_map_if_used_by_multiple_objects()
+        self.map.insert_slot(slot_index, slot_name, len(self.slots_references))
 
         self.slots_references.append(value)
 
     def meta_add_parent(self, parent_name, value):
         assert isinstance(value, Object)
 
-        new_map = self.map.clone()
-        new_map.add_parent(parent_name, value)
-        self.map = new_map
+        self._clone_map_if_used_by_multiple_objects()
+        self.map.add_parent(parent_name, value)
 
     def meta_set_parameters(self, parameters):
-        new_map = self.map.clone()
-        new_map.parameters = parameters
-        self.map = new_map
+        self._clone_map_if_used_by_multiple_objects()
+        self.map.parameters = parameters
 
     def meta_set_ast(self, ast):
         assert isinstance(ast, BaseBox)
         self.map.ast = ast
 
     def meta_set_code_context(self, code_context):
-        new_map = self.map.clone()
-        new_map.code_context = code_context
-        self.map = new_map
+        self._clone_map_if_used_by_multiple_objects()
+        self.map.code_context = code_context
 
 
 class _ObjectWithMapEncapsulation(_ObjectWithMetaOperations):
@@ -272,18 +272,19 @@ class Object(_ObjectWithMapEncapsulation):
 
 class ObjectMap(object):
     def __init__(self):
-        self.parameters = []
-
         self.slots = OrderedDict()
         self.parent_slots = OrderedDict()
 
         self.visited = False
         self.is_block = False
+        self.used_in_multiple_objects = False
 
         self.ast = None
         self.code_context = None
         self.primitive_code = None
         self.primitive_code_self = None
+
+        self.parameters = []
 
     def clone(self):
         new_map = ObjectMap()
