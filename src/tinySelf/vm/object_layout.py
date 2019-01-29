@@ -36,6 +36,7 @@ class _BareObject(object):
     def clone(self):
         o = Object(obj_map=self.map)
         o.slots_references = self.slots_references[:]
+        o.scope_parent = self.scope_parent
         self.map.used_in_multiple_objects = True
 
         return o
@@ -134,7 +135,7 @@ class _ObjectWithMetaOperations(_BareObject):
         if self.map.used_in_multiple_objects:
             self.map = self.map.clone()
 
-    def meta_add_slot(self, slot_name, value):
+    def meta_add_slot(self, slot_name, value, check_duplicates=False):
         assert isinstance(value, Object)
 
         value.scope_parent = self
@@ -144,8 +145,17 @@ class _ObjectWithMetaOperations(_BareObject):
             return
 
         self._clone_map_if_used_by_multiple_objects()
-        self.map.add_slot(slot_name, len(self.slots_references))
-        self.slots_references.append(value)
+
+        if not check_duplicates:
+            self.map.add_slot(slot_name, len(self.slots_references))
+            self.slots_references.append(value)
+            return
+
+        if value in self.slots_references:
+            self.map.add_slot(slot_name, self.slots_references.index(value))
+        else:
+            self.map.add_slot(slot_name, len(self.slots_references))
+            self.slots_references.append(value)
 
     def meta_remove_slot(self, slot_name):
         if slot_name not in self.map.slots:

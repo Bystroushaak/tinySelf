@@ -15,6 +15,36 @@ def test_meta_add_slot():
     assert o.slots_references[0] == val
 
 
+def test_meta_add_slot_dont_check_duplicates():
+    xx = PrimitiveStrObject("xx")
+    zz = PrimitiveStrObject("zz")
+
+    o = Object()
+    assert not o.slots_references
+
+    o.meta_add_slot("xx", xx)
+    o.meta_add_slot("zz", zz)
+    assert len(o.slots_references) == 2
+
+    o.meta_add_slot("xx2", xx)
+    assert len(o.slots_references) == 3
+
+
+def test_meta_add_slot_do_check_duplicates():
+    xx = PrimitiveStrObject("xx")
+    zz = PrimitiveStrObject("zz")
+
+    o = Object()
+    assert not o.slots_references
+
+    o.meta_add_slot("xx", xx)
+    o.meta_add_slot("zz", zz)
+    assert len(o.slots_references) == 2
+
+    o.meta_add_slot("xx2", xx, check_duplicates=True)
+    assert len(o.slots_references) == 2
+
+
 def test_set_slot():
     o = Object()
 
