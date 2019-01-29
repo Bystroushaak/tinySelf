@@ -45,7 +45,7 @@ class BlockTrait(Object):
     pass
 
 
-_BLOCK_TRAIT = BlockTrait()
+_USER_EDITABLE_BLOCK_TRAIT = BlockTrait()
 
 
 def _print_block_source(context, block_obj, parameters):
@@ -58,18 +58,32 @@ def _get_lineno(context, block_obj, parameters):
     return PrimitiveIntObject(ast.source_pos.start_line)
 
 
-def add_block_trait(block):
+def _create_block_trait_prototype():
     obj = Object()
-    obj.meta_add_slot("value", block)
-    obj.meta_add_slot("with:", block)
-    obj.meta_add_slot("with:With:", block)
-    obj.meta_add_slot("with:With:With:", block)
-    obj.meta_add_slot("with:With:With:With:", block)
-    obj.meta_add_slot("withAll:", block)
+
+    placer = PrimitiveNilObject()
+
+    obj.meta_add_slot("value", placer, check_duplicates=True)
+    obj.meta_add_slot("with:", placer, check_duplicates=True)
+    obj.meta_add_slot("with:With:", placer, check_duplicates=True)
+    obj.meta_add_slot("with:With:With:", placer, check_duplicates=True)
+    obj.meta_add_slot("with:With:With:With:", placer, check_duplicates=True)
+    obj.meta_add_slot("withAll:", placer, check_duplicates=True)
+
+    obj.scope_parent = _USER_EDITABLE_BLOCK_TRAIT
+
+    return obj
+
+
+_BLOCK_TRAIT_PROTOTYPE = _create_block_trait_prototype()
+
+
+def add_block_trait(block):
+    obj = _BLOCK_TRAIT_PROTOTYPE.clone()
+    obj.set_slot("value", block)
+
     add_primitive_fn(block, "asString", _print_block_source, [])
     add_primitive_fn(block, "getLineNumber", _get_lineno, [])
-
-    obj.scope_parent = _BLOCK_TRAIT
 
     return obj
 
@@ -88,14 +102,16 @@ def get_primitives():
     Returns:
         obj: Instance of tinySelf's Object.
     """
+
     primitives = Object()
 
     # add_primitive_fn(primitives, "primitiveInt", lambda x: PrimitiveIntObject(x), ["literal"])
     # add_primitive_fn(primitives, "primitiveStr", lambda x: PrimitiveStrObject(x), ["literal"])
+
     primitives.meta_add_slot("nil", PrimitiveNilObject())
     primitives.meta_add_slot("true", PrimitiveTrueObject())
     primitives.meta_add_slot("false", PrimitiveFalseObject())
-    primitives.meta_add_slot("block_traits", _BLOCK_TRAIT)
+    primitives.meta_add_slot("block_traits", _USER_EDITABLE_BLOCK_TRAIT)
 
     primitives.meta_add_slot("time", get_primitive_time_object())
 
