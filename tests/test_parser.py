@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+import pytest
 from collections import OrderedDict
+
+import rply
 
 from tinySelf.parser import lex_and_parse
 from tinySelf.parser.parser import _rw_slot
@@ -184,6 +187,11 @@ def test_parse_keyword_message_to_obj_with_multiple_parameters():
             ]
         )
     )]
+
+
+def test_parse_keyword_fails_if_first_is_not_uppercase():
+    with pytest.raises(rply.ParsingError):
+        lex_and_parse('asd Set: 1 And: 2')
 
 
 def test_parse_string():
