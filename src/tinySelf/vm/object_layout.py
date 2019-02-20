@@ -243,12 +243,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
         self._clone_map_if_used_by_multiple_objects()
         slot_index = self.map._slots[slot_name]
         self.map.remove_slot(slot_name)
-
-        self._slot_values = [
-            self._slot_values[i]
-            for i in range(len(self._slot_values))
-            if i != slot_index
-        ]
+        self._slot_values.pop(slot_index)
 
         for name, reference in self.map._slots.iteritems():
             if reference >= slot_index:
@@ -292,12 +287,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 
         parent_index = self.map._parent_slots[parent_name]
         self.map.remove_parent(parent_name)
-
-        self._parent_slot_values = [  # TODO: rewrite to .pop() for fucks sake
-            self._parent_slot_values[i]
-            for i in range(len(self._parent_slot_values))
-            if i != parent_index
-        ]
+        self._parent_slot_values.pop(parent_index)
 
         for name, reference in self.map._parent_slots.iteritems():
             if reference >= parent_index:
