@@ -19,7 +19,9 @@ class _BareObject(object):
 
         self.map = obj_map
         self.scope_parent = None
-        self.slots_references = []
+
+        self._parent_slot_values = []
+        self._slot_values = []
 
     @property
     def has_code(self):
@@ -35,25 +37,26 @@ class _BareObject(object):
 
     def clone(self):
         o = Object(obj_map=self.map)
-        o.slots_references = self.slots_references[:]
+        o._slot_values = self._slot_values[:]
+        o._parent_slot_values = self._parent_slot_values
         o.scope_parent = self.scope_parent
         self.map.used_in_multiple_objects = True
 
         return o
 
     def set_slot(self, slot_name, value):
-        slot_index = self.map.slots.get(slot_name, -1)
+        slot_index = self.map._slots.get(slot_name, -1)
 
         if slot_index is -1:
             return False
 
-        self.slots_references[slot_index] = value
+        self._slot_values[slot_index] = value
         return True
 
     def get_slot(self, slot_name):
-        slot_index = self.map.slots.get(slot_name, -1)
+        slot_index = self.map._slots.get(slot_name, -1)
         if slot_index is not -1:
-            return self.slots_references[slot_index]
+            return self._slot_values[slot_index]
 
         return None
 
@@ -69,7 +72,7 @@ class _BareObject(object):
         if self.scope_parent is not None and not self.scope_parent.visited:
             parents.append(self.scope_parent)
 
-        parents.extend(self.parent_slots.values())
+        parents.extend(self._parent_slot_values)
 
         for parent in parents:
             if parent.visited:
@@ -93,10 +96,10 @@ class _BareObject(object):
     def slot_lookup(self, slot_name):
         assert isinstance(slot_name, str)
 
-        slot_index = self.map.slots.get(slot_name, -1)
+        slot_index = self.map._slots.get(slot_name, -1)
 
         if slot_index != -1:
-            return self.slots_references[slot_index]
+            return self._slot_values[slot_index]
 
         if self.scope_parent is not None:
             obj = self.scope_parent.get_slot(slot_name)
@@ -118,96 +121,27 @@ class _BareObject(object):
             Object: Copy of this object.
         """
         obj = Object()
-        obj.slots_references = self.slots_references[:]
+        obj._slot_values = self._slot_values[:]
+        obj._parent_slot_values = self._parent_slot_values[:]
 
-        # obj.map = self.map.clone()
         obj.map = self.map
         self.map.used_in_multiple_objects = True
 
         return obj
 
     def __str__(self):
-        return "Object(%s)" % ", ".join(self.map.slots.keys())
+        return "Object(%s)" % ", ".join(self.map._slots.keys())
 
 
-class _ObjectWithMetaOperations(_BareObject):
-    def _clone_map_if_used_by_multiple_objects(self):
-        if self.map.used_in_multiple_objects:
-            self.map = self.map.clone()
-
-    def meta_add_slot(self, slot_name, value, check_duplicates=False):
-        assert isinstance(value, Object)
-
-        value.scope_parent = self
-
-        if slot_name in self.map.slots:
-            self.set_slot(slot_name, value)
-            return
-
-        self._clone_map_if_used_by_multiple_objects()
-
-        if not check_duplicates:
-            self.map.add_slot(slot_name, len(self.slots_references))
-            self.slots_references.append(value)
-            return
-
-        if value in self.slots_references:
-            self.map.add_slot(slot_name, self.slots_references.index(value))
-        else:
-            self.map.add_slot(slot_name, len(self.slots_references))
-            self.slots_references.append(value)
-
-    def meta_remove_slot(self, slot_name):
-        if slot_name not in self.map.slots:
-            return
-
-        self._clone_map_if_used_by_multiple_objects()
-        slot_index = self.map.slots[slot_name]
-        self.map.remove_slot(slot_name)
-
-        self.slots_references = [
-            self.slots_references[i]
-            for i in range(len(self.slots_references))
-            if i != slot_index
-        ]
-
-        for name, reference in self.map.slots.iteritems():
-            if reference >= slot_index:
-                self.map.slots[name] -= 1
-
-    def meta_insert_slot(self, slot_index, slot_name, value):
-        if slot_name in self.map.slots:
-            self.set_slot(slot_name, value)
-
-        self._clone_map_if_used_by_multiple_objects()
-        self.map.insert_slot(slot_index, slot_name, len(self.slots_references))
-
-        self.slots_references.append(value)
-
-    def meta_add_parent(self, parent_name, value):
-        assert isinstance(value, Object)
-
-        self._clone_map_if_used_by_multiple_objects()
-        self.map.add_parent(parent_name, value)
-
-    def meta_set_parameters(self, parameters):
-        self._clone_map_if_used_by_multiple_objects()
-        self.map.parameters = parameters
-
-    def meta_set_ast(self, ast):
-        assert isinstance(ast, BaseBox)
-        self.map.ast = ast
-
-    def meta_set_code_context(self, code_context):
-        self._clone_map_if_used_by_multiple_objects()
-        self.map.code_context = code_context
-
-
-class _ObjectWithMapEncapsulation(_ObjectWithMetaOperations):
+class _ObjectWithMapEncapsulation(_BareObject):
     # map encapsulation - lets pretend that map is not present at all
     @property
     def slot_keys(self):
-        return self.map.slots.keys()
+        return self.map._slots.keys()
+
+    @property
+    def parent_slot_keys(self):
+        return self.map._parent_slots.keys()
 
     @property
     def is_block(self):
@@ -224,18 +158,6 @@ class _ObjectWithMapEncapsulation(_ObjectWithMetaOperations):
     @visited.setter
     def visited(self, visited):
         self.map.visited = visited
-
-    @property
-    def parent_slots(self):
-        return self.map.parent_slots
-
-    @parent_slots.setter
-    def parent_slots(self, new_parent_slots):
-        assert isinstance(new_parent_slots)
-
-        new_map = self.map.clone()
-        new_map.parent_slots = new_parent_slots
-        self.map = new_map
 
     @property
     def parameters(self):
@@ -275,15 +197,133 @@ class _ObjectWithMapEncapsulation(_ObjectWithMetaOperations):
     def primitive_code_self(self):
         return self.map.primitive_code_self
 
+    @property
+    def has_slots(self):
+        return bool(self._slot_values)
 
-class Object(_ObjectWithMapEncapsulation):
+    @property
+    def has_parents(self):
+        return bool(self._parent_slot_values)
+
+
+class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
+    def _clone_map_if_used_by_multiple_objects(self):
+        if self.map.used_in_multiple_objects:
+            self.map = self.map.clone()
+
+    def meta_add_slot(self, slot_name, value, check_duplicates=False):
+        """
+        check_duplicates: make sure that one value is stored only once
+        """
+        assert isinstance(value, Object)
+
+        value.scope_parent = self
+
+        if slot_name in self.map._slots:
+            self.set_slot(slot_name, value)
+            return
+
+        self._clone_map_if_used_by_multiple_objects()
+
+        if not check_duplicates:
+            self.map.add_slot(slot_name, len(self._slot_values))
+            self._slot_values.append(value)
+            return
+
+        if value in self._slot_values:
+            self.map.add_slot(slot_name, self._slot_values.index(value))
+        else:
+            self.map.add_slot(slot_name, len(self._slot_values))
+            self._slot_values.append(value)
+
+    def meta_remove_slot(self, slot_name):
+        if slot_name not in self.map._slots:
+            return
+
+        self._clone_map_if_used_by_multiple_objects()
+        slot_index = self.map._slots[slot_name]
+        self.map.remove_slot(slot_name)
+
+        self._slot_values = [
+            self._slot_values[i]
+            for i in range(len(self._slot_values))
+            if i != slot_index
+        ]
+
+        for name, reference in self.map._slots.iteritems():
+            if reference >= slot_index:
+                self.map._slots[name] -= 1
+
+    def meta_insert_slot(self, slot_index, slot_name, value):  # TODO: wtf?
+        if slot_name in self.map._slots:
+            self.set_slot(slot_name, value)
+
+        self._clone_map_if_used_by_multiple_objects()
+        self.map.insert_slot(slot_index, slot_name, len(self._slot_values))
+
+        self._slot_values.append(value)
+
+    def meta_add_parent(self, parent_name, value):
+        assert isinstance(value, Object)
+
+        if parent_name in self.map._parent_slots:
+            index = self.map._parent_slots[parent_name]
+            self._parent_slot_values[index] = value
+            return
+
+        self._clone_map_if_used_by_multiple_objects()
+
+        self.map.add_parent(parent_name, len(self._parent_slot_values))
+        self._parent_slot_values.append(value)
+
+    def meta_get_parent(self, parent_name, alt=None):
+        index = self.map._parent_slots.get(parent_name, -1)
+
+        if index == -1:
+            return alt
+
+        return self._parent_slot_values[index]
+
+    def meta_remove_parent(self, parent_name):
+        if parent_name not in self.map._parent_slots:
+            return False
+
+        self._clone_map_if_used_by_multiple_objects()
+
+        parent_index = self.map._parent_slots[parent_name]
+        self.map.remove_parent(parent_name)
+
+        self._parent_slot_values = [  # TODO: rewrite to .pop() for fucks sake
+            self._parent_slot_values[i]
+            for i in range(len(self._parent_slot_values))
+            if i != parent_index
+        ]
+
+        for name, reference in self.map._parent_slots.iteritems():
+            if reference >= parent_index:
+                self.map._parent_slots[name] -= 1
+
+    def meta_set_parameters(self, parameters):
+        self._clone_map_if_used_by_multiple_objects()
+        self.map.parameters = parameters
+
+    def meta_set_ast(self, ast):
+        assert isinstance(ast, BaseBox)
+        self.map.ast = ast
+
+    def meta_set_code_context(self, code_context):
+        self._clone_map_if_used_by_multiple_objects()
+        self.map.code_context = code_context
+
+
+class Object(_ObjectWithMetaOperations):
     pass
 
 
 class ObjectMap(object):
     def __init__(self):
-        self.slots = OrderedDict()
-        self.parent_slots = OrderedDict()
+        self._slots = OrderedDict()
+        self._parent_slots = OrderedDict()
 
         self.visited = False
         self.is_block = False
@@ -299,13 +339,13 @@ class ObjectMap(object):
     def clone(self):
         new_map = ObjectMap()
 
-        new_map.slots = self.slots.copy()
-        new_map.parameters = self.parameters[:]
-        new_map.parent_slots = self.parent_slots.copy()
         new_map.ast = self.ast
-        new_map.code_context = self.code_context
-        new_map.primitive_code = self.primitive_code
+        new_map._slots = self._slots.copy()
         new_map.is_block = self.is_block
+        new_map.parameters = self.parameters[:]
+        new_map.code_context = self.code_context
+        new_map._parent_slots = self._parent_slots.copy()
+        new_map.primitive_code = self.primitive_code
 
         return new_map
 
@@ -313,38 +353,39 @@ class ObjectMap(object):
     def add_slot(self, slot_name, index):
         assert isinstance(index, int)
 
-        self.slots[slot_name] = index
+        self._slots[slot_name] = index
 
     def remove_slot(self, slot_name):
-        if slot_name not in self.slots:
+        if slot_name not in self._slots:
             return False
 
-        del self.slots[slot_name]
+        del self._slots[slot_name]
         return True
 
     def insert_slot(self, slot_index, slot_name, index):
         if slot_index < 0:
             slot_index = 0
 
-        if slot_index > len(self.slots):
+        if slot_index > len(self._slots):
             self.add_slot(slot_name, index)
 
         new_slots = OrderedDict()
-        for cnt, key in enumerate(self.slots.keys()):
+        for cnt, key in enumerate(self._slots.keys()):
             if cnt == slot_index:
                 new_slots[slot_name] = index
 
-            new_slots[key] = self.slots[key]
+            new_slots[key] = self._slots[key]
 
-        self.slots = new_slots
+        self._slots = new_slots
 
-    def add_parent(self, parent_name, value):
-        assert isinstance(value, Object)
+    def add_parent(self, parent_name, index):
+        assert isinstance(index, int)
 
-        self.parent_slots[parent_name] = value
+        self._parent_slots[parent_name] = index
 
     def remove_parent(self, parent_name):
-        if parent_name not in self.parent_slots:
-            return
+        if parent_name not in self._parent_slots:
+            return False
 
-        del self.parent_slots[parent_name]
+        del self._parent_slots[parent_name]
+        return True

@@ -11,18 +11,18 @@ def test_add_slot():
     om = ObjectMap()
 
     om.add_slot("test", 1)
-    assert "test" in om.slots
-    assert om.slots["test"] == 1
+    assert "test" in om._slots
+    assert om._slots["test"] == 1
 
 
 def test_remove_slot():
     om = ObjectMap()
 
     om.add_slot("test", 1)
-    assert "test" in om.slots
+    assert "test" in om._slots
 
     om.remove_slot("test")
-    assert "test" not in om.slots
+    assert "test" not in om._slots
 
     om.remove_slot("azgabash")
 
@@ -32,39 +32,37 @@ def test_insert_slot():
 
     om.add_slot("first", 1)
     om.add_slot("third", 1)
-    assert om.slots.keys() == ["first", "third"]
+    assert om._slots.keys() == ["first", "third"]
 
     om.insert_slot(1, "second", 1)
-    assert om.slots.keys() == ["first", "second", "third"]
+    assert om._slots.keys() == ["first", "second", "third"]
 
     om.insert_slot(0, "zero", 1)
-    assert om.slots.keys() == ["zero", "first", "second", "third"]
+    assert om._slots.keys() == ["zero", "first", "second", "third"]
 
     om.insert_slot(10, "tenth", 1)
-    assert om.slots.keys() == ["zero", "first", "second", "third", "tenth"]
+    assert om._slots.keys() == ["zero", "first", "second", "third", "tenth"]
 
     om.insert_slot(-1, "-1", 1)
-    assert om.slots.keys() == ["-1", "zero", "first", "second", "third", "tenth"]
+    assert om._slots.keys() == ["-1", "zero", "first", "second", "third", "tenth"]
 
 
-def test_add_parent():
-    val = Object()
-
+def test_set_or_add_parent():
     om = ObjectMap()
-    om.add_parent("test", val)
+    om.add_parent("test", 1)
 
-    assert "test" in om.parent_slots
-    assert om.parent_slots["test"] == val
+    assert "test" in om._parent_slots
+    assert om._parent_slots["test"] == 1
 
 
 def test_remove_parent():
     om = ObjectMap()
 
-    om.add_parent("test", Object())
-    assert "test" in om.parent_slots
+    om.add_parent("test", 1)
+    assert "test" in om._parent_slots
 
     om.remove_parent("test")
-    assert "test" not in om.parent_slots
+    assert "test" not in om._parent_slots
 
 
 def test_clone():
@@ -75,8 +73,8 @@ def test_clone():
 
     cloned = om.clone()
     assert not cloned.visited
-    assert cloned.slots == om.slots
-    assert cloned.slots is not om.slots
+    assert cloned._slots == om._slots
+    assert cloned._slots is not om._slots
 
 
 def test_clone_is_block():

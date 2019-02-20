@@ -16,4 +16,4 @@ class ObjCache(object):
 
     def store(self, obj):
         self.map = obj.map
-        self.slots = obj.slots_references
+        self.slots = obj._slot_values

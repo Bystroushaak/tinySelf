@@ -21,7 +21,7 @@ def dump_obj_to_plantuml(f, o):
     if o is None:
         return None, {}
 
-    return o.scope_parent, o.map.parent_slots
+    return o.scope_parent, o.map._parent_slots
 
 
 def _get_object_graph(obj):
@@ -39,7 +39,7 @@ def _get_object_graph(obj):
             continue
 
         objs.append(o.scope_parent)
-        objs.extend(o.map.parent_slots.values())
+        objs.extend(o.map._parent_slots.values())
 
     return objs_to_print
 
@@ -85,10 +85,10 @@ def _render_object(obj, name=None):
     o = Object(name)
     o.add_property("scope_parent: %s" % id(obj.scope_parent))
 
-    if obj.parent_slots:
+    if obj._parent_slots:
         o.add_property("---")
         o.add_property("Parents:")
-        for key, val in obj.parent_slots.items():
+        for key, val in obj._parent_slots.items():
             o.add_property("%s: %s" % (key, id(val)))
 
     if obj.slot_keys:

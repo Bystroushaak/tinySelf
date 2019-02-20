@@ -54,7 +54,7 @@ class Interpreter(ProcessCycler):
             self.universe.meta_add_slot("primitives", primitives)
 
         # transport values from primitives to global level
-        for slot in primitives.map.slots.keys():
+        for slot in primitives.slot_keys:
             self.universe.meta_add_slot(slot, primitives.get_slot(slot))
 
         primitives.meta_add_slot("interpreter", gen_interpreter_primitives(self))
@@ -130,8 +130,6 @@ class Interpreter(ProcessCycler):
             if (frame.bc_index % 10) == 0:
                 self.next_process()
 
-
-
     def _handle_nonlocal_return(self):
         """
         If the item at the top of the process frame is block which triggered
@@ -143,7 +141,7 @@ class Interpreter(ProcessCycler):
         """
         method_obj = self.process.frame.tmp_method_obj_reference
         if method_obj and method_obj.is_block:
-            block_scope_parent = method_obj.parent_slots.get("*")
+            block_scope_parent = method_obj.meta_get_parent("*")
 
             while block_scope_parent != method_obj:
                 self.process.pop_down_and_cleanup_frame()
@@ -184,14 +182,14 @@ class Interpreter(ProcessCycler):
         intermediate_obj = Object()
         intermediate_obj.meta_add_slot("this is intermediate obj", Object())
 
-        if scope_parent.parent_slots or scope_parent.scope_parent or scope_parent.slot_keys:
+        if scope_parent.has_parents or scope_parent.scope_parent or scope_parent.has_slots:
             intermediate_obj.scope_parent = scope_parent
 
         if scope_parent == method_obj:
             intermediate_obj.scope_parent = None
 
         if prev_scope_parent is not None:
-            prev_scope_parents_parent = prev_scope_parent.parent_slots.get("*", None)
+            prev_scope_parents_parent = prev_scope_parent.meta_get_parent("*", None)
             if prev_scope_parents_parent and \
                prev_scope_parent.scope_parent == prev_scope_parents_parent.scope_parent:
                 intermediate_obj.meta_add_parent("*", prev_scope_parents_parent)
@@ -237,12 +235,12 @@ class Interpreter(ProcessCycler):
             obj.scope_parent = self.universe
 
     def _resend_to_parent(self, obj, parent_name, message_name):
-        resend_parent = obj.parent_slots.get(parent_name)
+        resend_parent = obj.meta_get_parent(parent_name)
         if resend_parent is None and obj.scope_parent:
-            resend_parent = obj.scope_parent.parent_slots.get(parent_name)
-        if resend_parent is None and "*" in obj.scope_parent.parent_slots:
-            star_parent = obj.scope_parent.parent_slots["*"]
-            resend_parent = star_parent.parent_slots.get(parent_name)
+            resend_parent = obj.scope_parent.meta_get_parent(parent_name)
+        if resend_parent is None and "*" in obj.scope_parent.map._parent_slots:
+            star_parent = obj.scope_parent.meta_get_parent("*")
+            resend_parent = star_parent.meta_get_parent(parent_name)
 
         if resend_parent is None:
             raise ValueError(
@@ -281,7 +279,7 @@ class Interpreter(ProcessCycler):
         obj = self.process.frame.pop()
         self._set_scope_parent_if_not_already_set(obj, code)
 
-        if boxed_resend_parent_name:
+        if boxed_resend_parent_name is not None:
             parent_name = boxed_resend_parent_name.value
             slot = self._resend_to_parent(obj, parent_name, message_name)
         else:

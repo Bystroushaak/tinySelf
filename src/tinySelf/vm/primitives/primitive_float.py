@@ -154,7 +154,7 @@ class PrimitiveFloatObject(_NumberObject):
         self.value = value
 
         if PrimitiveFloatObject._OBJ_CACHE.map is not None:
-            self.slots_references = PrimitiveFloatObject._OBJ_CACHE.slots
+            self._slot_values = PrimitiveFloatObject._OBJ_CACHE.slots
             return
 
         add_primitive_fn(self, "+", add, ["obj"])

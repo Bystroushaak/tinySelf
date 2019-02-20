@@ -9,10 +9,10 @@ def test_meta_add_slot():
     val = PrimitiveStrObject("xe")
 
     o = Object()
-    assert not o.slots_references
+    assert not o._slot_values
 
     o.meta_add_slot("test", val)
-    assert o.slots_references[0] == val
+    assert o._slot_values[0] == val
 
 
 def test_meta_add_slot_dont_check_duplicates():
@@ -20,14 +20,14 @@ def test_meta_add_slot_dont_check_duplicates():
     zz = PrimitiveStrObject("zz")
 
     o = Object()
-    assert not o.slots_references
+    assert not o._slot_values
 
     o.meta_add_slot("xx", xx)
     o.meta_add_slot("zz", zz)
-    assert len(o.slots_references) == 2
+    assert len(o._slot_values) == 2
 
     o.meta_add_slot("xx2", xx)
-    assert len(o.slots_references) == 3
+    assert len(o._slot_values) == 3
 
 
 def test_meta_add_slot_do_check_duplicates():
@@ -35,14 +35,14 @@ def test_meta_add_slot_do_check_duplicates():
     zz = PrimitiveStrObject("zz")
 
     o = Object()
-    assert not o.slots_references
+    assert not o._slot_values
 
     o.meta_add_slot("xx", xx)
     o.meta_add_slot("zz", zz)
-    assert len(o.slots_references) == 2
+    assert len(o._slot_values) == 2
 
     o.meta_add_slot("xx2", xx, check_duplicates=True)
-    assert len(o.slots_references) == 2
+    assert len(o._slot_values) == 2
 
 
 def test_set_slot():
@@ -67,15 +67,15 @@ def test_get_slot_missing():
 
 def test_meta_remove_slot():
     o = Object()
-    assert not o.slots_references
+    assert not o._slot_values
 
     o.meta_add_slot("test", Object())
-    assert o.slots_references
-    assert "test" in o.map.slots
+    assert o._slot_values
+    assert "test" in o.map._slots
 
     o.meta_remove_slot("test")
-    assert not o.slots_references
-    assert "test" not in o.map.slots
+    assert not o._slot_values
+    assert "test" not in o.map._slots
 
 
 def test_meta_remove_missing_slot():
@@ -91,7 +91,7 @@ def test_meta_remove_slot_shift_map_pointers():
     third = PrimitiveStrObject("third")
 
     o = Object()
-    assert not o.slots_references
+    assert not o._slot_values
 
     o.meta_add_slot("first", first)
     o.meta_add_slot("second", second)
@@ -103,10 +103,10 @@ def test_meta_remove_slot_shift_map_pointers():
 
     o.meta_remove_slot("first")
 
-    assert len(o.slots_references) == 2
-    assert len(o.map.slots) == 2
-    assert o.map.slots["second"] == 0
-    assert o.map.slots["third"] == 1
+    assert len(o._slot_values) == 2
+    assert len(o.map._slots) == 2
+    assert o.map._slots["second"] == 0
+    assert o.map._slots["third"] == 1
 
     assert o.get_slot("first") is None
     assert o.get_slot("second") == second
@@ -119,7 +119,7 @@ def test_meta_insert_slot():
     third = PrimitiveStrObject("third")
 
     o = Object()
-    assert not o.slots_references
+    assert not o._slot_values
 
     o.meta_add_slot("first", first)
     o.meta_add_slot("third", third)
@@ -128,7 +128,7 @@ def test_meta_insert_slot():
     assert o.get_slot("third") is third
 
     o.meta_insert_slot(1, "second", second)
-    assert o.map.slots.keys() == ["first", "second", "third"]
+    assert o.map._slots.keys() == ["first", "second", "third"]
 
     # make sure that objects didn't shifted
     assert o.get_slot("first") is first
@@ -143,17 +143,17 @@ def test_clone():
     # clones share same map
     clone = o.clone()
     assert clone.map is o.map
-    assert clone.slots_references == o.slots_references
+    assert clone._slot_values == o._slot_values
 
     # clones with updated slot value share same map
     clone.set_slot("test", Object())
     assert clone.map is o.map
-    assert clone.slots_references != o.slots_references
+    assert clone._slot_values != o._slot_values
 
     # clones with different structure don't share maps
     clone.meta_add_slot("another", Object())
     assert clone.map is not o.map
-    assert clone.slots_references != o.slots_references
+    assert clone._slot_values != o._slot_values
 
 
 def test_meta_add_parent():
@@ -162,7 +162,77 @@ def test_meta_add_parent():
     o = Object()
     o.meta_add_parent("p*", val)
 
-    assert "p*" in o.map.parent_slots
+    assert "p*" in o.map._parent_slots
+    assert val in o._parent_slot_values
+
+
+def test_meta_add_parent_cloned_objects_use_same_map():
+    o = Object()
+    o.meta_add_parent("a", PrimitiveStrObject("value"))
+    x = o.clone()
+
+    assert "a" in o.parent_slot_keys
+
+    assert o.map == x.map
+
+
+def test_meta_add_parent_cloned_objects_dont_change_when_parent_is_changed():
+    o = Object()
+    o.meta_add_parent("a", PrimitiveStrObject("value"))
+    x = o.clone()
+
+    assert o.map == x.map
+
+    x.meta_add_parent("a", PrimitiveStrObject("another"))
+
+    assert o.map == x.map
+    assert o != x
+
+
+def test_meta_add_parent_structural_change_creates_new_map_add():
+    o = Object()
+    o.meta_add_parent("a", PrimitiveStrObject("value"))
+    x = o.clone()
+
+    assert o.map == x.map
+
+    x.meta_add_parent("*", PrimitiveStrObject("another"))
+    assert o.map != x.map
+    assert o != x
+
+
+def test_meta_add_parent_structural_change_creates_new_map_remove():
+    o = Object()
+    o.meta_add_parent("a", PrimitiveStrObject("value"))
+    x = o.clone()
+
+    assert o.map == x.map
+
+    x.meta_remove_parent("a")
+
+    assert o.map != x.map
+    assert o != x
+    assert "a" in o.parent_slot_keys
+
+
+def test_meta_remove_parent():
+    a_slot = PrimitiveStrObject("value a")
+    b_slot = PrimitiveStrObject("value b")
+
+    o = Object()
+    o.meta_add_parent("a", a_slot)
+    o.meta_add_parent("b", b_slot)
+
+    assert "a" in o.parent_slot_keys
+    assert "b" in o.parent_slot_keys
+
+    assert o.meta_get_parent("a") is a_slot
+    assert o.meta_get_parent("b") is b_slot
+
+    o.meta_remove_parent("a")
+
+    assert o.meta_get_parent("b") is b_slot
+    assert len(o._parent_slot_values) == 1
 
 
 def test_get_slot_from_one_parent():
@@ -283,3 +353,4 @@ def test_is_assignment_primitive():
     o = AssignmentPrimitive()
     assert o.is_assignment_primitive
     assert not o.has_code
+

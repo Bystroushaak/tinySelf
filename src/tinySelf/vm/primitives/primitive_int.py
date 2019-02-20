@@ -124,7 +124,7 @@ class PrimitiveIntObject(_NumberObject):
         self.value = value
 
         if PrimitiveIntObject._OBJ_CACHE.map is not None:
-            self.slots_references = PrimitiveIntObject._OBJ_CACHE.slots
+            self._slot_values = PrimitiveIntObject._OBJ_CACHE.slots
             return
 
         add_primitive_fn(self, "+", add, ["obj"])
