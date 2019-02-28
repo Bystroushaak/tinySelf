@@ -180,7 +180,7 @@ class Interpreter(ProcessCycler):
             return scope_parent
 
         intermediate_obj = Object()
-        intermediate_obj.meta_add_slot("this is intermediate obj", Object())
+        intermediate_obj.meta_add_slot("this is intermediate obj", intermediate_obj)
 
         if scope_parent.has_parents or scope_parent.scope_parent or scope_parent.has_slots:
             intermediate_obj.scope_parent = scope_parent
@@ -210,12 +210,8 @@ class Interpreter(ProcessCycler):
         return intermediate_obj
 
     def _tco_applied(self, next_bytecode):
-        if not (next_bytecode == BYTECODE_RETURN_TOP or \
-                next_bytecode == BYTECODE_RETURN_IMPLICIT):
-            return False
-
-        self.process.pop_frame()
-        return True
+        if next_bytecode == BYTECODE_RETURN_TOP or next_bytecode == BYTECODE_RETURN_IMPLICIT:
+            self.process.pop_frame()
 
     def _push_code_obj_for_interpretation(self, next_bytecode, scope_parent,
                                           method_obj, parameters):

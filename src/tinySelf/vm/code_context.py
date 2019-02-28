@@ -115,11 +115,12 @@ class CodeContext(object):
         if self._finalized:
             return self
 
-        # 4x as 3 is maximum length of multi-bytecode instructions
-        self._mutable_bytecodes.append(BYTECODE_RETURN_TOP)
-        self._mutable_bytecodes.append(BYTECODE_RETURN_TOP)
-        self._mutable_bytecodes.append(BYTECODE_RETURN_TOP)
-        self._mutable_bytecodes.append(BYTECODE_RETURN_TOP)
+        if self._mutable_bytecodes:
+            # 4x as 3 is maximum length of multi-bytecode instructions
+            self._mutable_bytecodes.append(BYTECODE_RETURN_TOP)
+            self._mutable_bytecodes.append(BYTECODE_RETURN_TOP)
+            self._mutable_bytecodes.append(BYTECODE_RETURN_TOP)
+            self._mutable_bytecodes.append(BYTECODE_RETURN_TOP)
 
         # I would use bytearray(), but it behaves differently under rpython
         self.bytecodes = str("".join([chr(x) for x in self._mutable_bytecodes]))

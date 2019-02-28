@@ -35,15 +35,6 @@ class _BareObject(object):
     def is_assignment_primitive(self):
         return False
 
-    def clone(self):
-        o = Object(obj_map=self.map)
-        o._slot_values = self._slot_values[:]
-        o._parent_slot_values = self._parent_slot_values
-        o.scope_parent = self.scope_parent
-        self.map.used_in_multiple_objects = True
-
-        return o
-
     def set_slot(self, slot_name, value):
         slot_index = self.map._slots.get(slot_name, -1)
 
@@ -108,6 +99,15 @@ class _BareObject(object):
                 return obj
 
         return self.parent_lookup(slot_name)
+
+    def clone(self):
+        o = Object(obj_map=self.map)
+        o._slot_values = self._slot_values[:]
+        o._parent_slot_values = self._parent_slot_values[:]
+        o.scope_parent = self.scope_parent
+        self.map.used_in_multiple_objects = True
+
+        return o
 
     def literal_copy(self):
         """
