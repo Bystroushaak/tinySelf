@@ -101,30 +101,10 @@ class _BareObject(object):
         return self.parent_lookup(slot_name)
 
     def clone(self):
-        o = Object(obj_map=self.map)
-        o._slot_values = self._slot_values[:]
-        o._parent_slot_values = self._parent_slot_values[:]
-        o.scope_parent = self.scope_parent
-        self.map.used_in_multiple_objects = True
-
-        return o
-
-    def literal_copy(self):
-        """
-        Create copy such that modifications of the copy will not have any
-        influence on the original object.
-
-        This is used to create copy from objects on literal stack, which need
-        to stay unchanged.
-
-        Returns:
-            Object: Copy of this object.
-        """
-        obj = Object()
+        obj = Object(obj_map=self.map)
         obj._slot_values = self._slot_values[:]
         obj._parent_slot_values = self._parent_slot_values[:]
-
-        obj.map = self.map
+        obj.scope_parent = self.scope_parent
         self.map.used_in_multiple_objects = True
 
         return obj

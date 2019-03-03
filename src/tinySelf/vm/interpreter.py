@@ -361,12 +361,12 @@ class Interpreter(ProcessCycler):
             obj = PrimitiveStrObject(boxed_literal.value)
         elif literal_type == LITERAL_TYPE_OBJ:
             assert isinstance(boxed_literal, ObjBox)
-            obj = boxed_literal.value.literal_copy()
+            obj = boxed_literal.value.clone()
             if self.process.frame.self is None:
                 self.process.frame.self = obj
         elif literal_type == LITERAL_TYPE_BLOCK:
             assert isinstance(boxed_literal, ObjBox)
-            block = boxed_literal.value.literal_copy()
+            block = boxed_literal.value.clone()
             obj = add_block_trait(block)
             block.is_block = True
             block.scope_parent = self.process.frame.pop()
