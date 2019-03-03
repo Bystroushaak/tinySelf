@@ -70,6 +70,9 @@ def _create_block_trait_prototype():
     obj.meta_add_slot("with:With:With:With:", placer, check_duplicates=True)
     obj.meta_add_slot("withAll:", placer, check_duplicates=True)
 
+    add_primitive_fn(obj, "asString", _print_block_source, [])
+    add_primitive_fn(obj, "getLineNumber", _get_lineno, [])
+
     obj.scope_parent = _USER_EDITABLE_BLOCK_TRAIT
 
     return obj
@@ -81,9 +84,6 @@ _BLOCK_TRAIT_PROTOTYPE = _create_block_trait_prototype()
 def add_block_trait(block):
     obj = _BLOCK_TRAIT_PROTOTYPE.clone()
     obj.set_slot("value", block)
-
-    add_primitive_fn(block, "asString", _print_block_source, [])
-    add_primitive_fn(block, "getLineNumber", _get_lineno, [])
 
     return obj
 
