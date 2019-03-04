@@ -38,7 +38,7 @@ class _BareObject(object):
     def set_slot(self, slot_name, value):
         slot_index = self.map._slots.get(slot_name, -1)
 
-        if slot_index is -1:
+        if slot_index == -1:
             return False
 
         self._slot_values[slot_index] = value
@@ -46,10 +46,11 @@ class _BareObject(object):
 
     def get_slot(self, slot_name):
         slot_index = self.map._slots.get(slot_name, -1)
-        if slot_index is not -1:
-            return self._slot_values[slot_index]
 
-        return None
+        if slot_index == -1:
+            return None
+
+        return self._slot_values[slot_index]
 
     def parent_lookup(self, slot_name, _visited_objects=None):
         first_level_call = False
@@ -261,7 +262,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 
     def meta_remove_parent(self, parent_name):
         if parent_name not in self.map._parent_slots:
-            return False
+            return
 
         self._clone_map_if_used_by_multiple_objects()
 

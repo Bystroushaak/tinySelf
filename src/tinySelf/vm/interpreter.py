@@ -155,10 +155,8 @@ class Interpreter(ProcessCycler):
             for _ in range(len(parameter_names) - len(parameters)):
                 parameters.append(PrimitiveNilObject())
 
-        return [
-            (parameter_names[i], parameters[i])
-            for i in range(len(parameter_names))
-        ]
+        for i in range(len(parameter_names)):
+            yield parameter_names[i], parameters[i]
 
     def _create_intermediate_params_obj(self, scope_parent, method_obj,
                                         parameters, prev_scope_parent=None):
@@ -180,13 +178,7 @@ class Interpreter(ProcessCycler):
             return scope_parent
 
         intermediate_obj = Object()
-        intermediate_obj.meta_add_slot("this is intermediate obj", intermediate_obj)
-
-        if scope_parent.has_parents or scope_parent.scope_parent or scope_parent.has_slots:
-            intermediate_obj.scope_parent = scope_parent
-
-        if scope_parent == method_obj:
-            intermediate_obj.scope_parent = None
+        intermediate_obj.meta_add_slot("ThisIsIntermediateObj", intermediate_obj)
 
         if prev_scope_parent is not None:
             prev_scope_parents_parent = prev_scope_parent.meta_get_parent("*", None)
@@ -195,6 +187,9 @@ class Interpreter(ProcessCycler):
                 intermediate_obj.meta_add_parent("*", prev_scope_parents_parent)
             else:
                 intermediate_obj.meta_add_parent("*", prev_scope_parent)
+
+        if scope_parent.has_parents or scope_parent.scope_parent or scope_parent.has_slots:
+            intermediate_obj.scope_parent = None if scope_parent == method_obj else scope_parent
 
         parameter_pairs = self._put_together_parameters(
             parameter_names=method_obj.parameters,
@@ -245,6 +240,24 @@ class Interpreter(ProcessCycler):
 
         return resend_parent.slot_lookup(message_name)
 
+    def _handle_missing_slot(self, obj, code, message_name, bc_index):
+        # TODO: rewrite from prints to something more sensible
+        # TODO: interpreter error instead of exception
+
+        if obj.ast:
+            print "Missing slot `%s` on (line %s):" % (message_name, obj.ast.source_pos.start_line)
+            print
+            print obj.ast.source_pos.source_snippet
+        else:
+            print "Missing slot `%s`:" % message_name
+            print
+            print obj.__str__()
+
+        print
+        print "Failed at bytecode number %d" % bc_index
+        print code.debug_repr()
+        raise ValueError("Missing slot error: `%s`" % message_name)
+
     def _do_send(self, bc_index, code):
         """
         Args:
@@ -282,19 +295,7 @@ class Interpreter(ProcessCycler):
             slot = obj.slot_lookup(message_name)
 
         if slot is None:
-            if obj.ast:
-                print "Missing slot `%s` on (line %s):" % (message_name, obj.ast.source_pos.start_line)
-                print
-                print obj.ast.source_pos.source_snippet
-            else:
-                print "Missing slot `%s`:" % message_name
-                print
-                print obj.__str__()
-
-            print
-            print "Failed at bytecode number %d" % bc_index
-            print code.debug_repr()
-            raise ValueError("Missing slot error: `%s`" % message_name)
+            return self._handle_missing_slot(obj, code, message_name, bc_index)
 
         if slot.has_code:
             self._push_code_obj_for_interpretation(
