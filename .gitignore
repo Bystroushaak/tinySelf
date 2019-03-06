@@ -111,3 +111,8 @@ tSelf
 .pytest_cache/*
 .vscode/*
 .history
+*.plantuml
+plantuml.jar
+frame*.png
+parent_map*.png
+callgrind*
