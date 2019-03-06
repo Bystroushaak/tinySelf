@@ -21,7 +21,7 @@ def dump_obj_to_plantuml(f, o):
     if o is None:
         return None, {}
 
-    return o.scope_parent, o.map._parent_slots
+    return o.scope_parent, o.expensive_parent_slots
 
 
 def _get_object_graph(obj):
@@ -39,18 +39,18 @@ def _get_object_graph(obj):
             continue
 
         objs.append(o.scope_parent)
-        objs.extend(o.map._parent_slots.values())
+        objs.extend(o._parent_slot_values)
 
     return objs_to_print
 
 
-def obj_map_to_plantuml(obj, numbered=False, print_depth=False):
+def obj_map_to_plantuml(obj, numbered=False, print_depth=False, prefix="parent_map"):
     if numbered:
         global OBJ_MAP_COUNTER
-        f = open("%d_parent_map.plantuml" % OBJ_MAP_COUNTER, "w")
+        f = open("%s_%d.plantuml" % (prefix, OBJ_MAP_COUNTER), "w")
         OBJ_MAP_COUNTER += 1
     else:
-        f = open("parent_map.plantuml", "w")
+        f = open("%s.plantuml" % prefix, "w")
 
     f.write("@startuml\n")
 
@@ -79,16 +79,23 @@ def obj_map_to_plantuml(obj, numbered=False, print_depth=False):
 
 
 def _render_object(obj, name=None):
+    if obj is None:
+        return Object("None")
+
     if not name:
         name = str(id(obj))
 
     o = Object(name)
+    o.add_property("__class__: " + obj.__class__.__name__)
     o.add_property("scope_parent: %s" % id(obj.scope_parent))
 
-    if obj._parent_slots:
+    if obj.is_block:
+        o.add_property("Block")
+
+    if obj.map._parent_slots:
         o.add_property("---")
         o.add_property("Parents:")
-        for key, val in obj._parent_slots.items():
+        for key, val in obj.map._parent_slots.items():
             o.add_property("%s: %s" % (key, id(val)))
 
     if obj.slot_keys:
@@ -111,7 +118,7 @@ def _render_method_stack(cnt, method_stack):
         "tmp_method_obj_reference = %s" % method_stack.tmp_method_obj_reference,
     ])
 
-    self_obj = _render_object(method_stack.code_context.self)
+    self_obj = _render_object(method_stack.self)
     f.add(self_obj)
     settings.connect(self_obj, pos="r", desc=".code_context.self")
 
@@ -130,7 +137,7 @@ def _render_method_stack(cnt, method_stack):
     return f
 
 
-def process_stack_to_plantuml(process, numbered=False):
+def process_stack_to_plantuml(process, numbered=False, prefix="frame"):
     ps = Frame(name="process_stack")
 
     settings = Object("settings")
@@ -149,12 +156,14 @@ def process_stack_to_plantuml(process, numbered=False):
 
         prev = plantuml_frame
 
+    obj_map_to_plantuml(process.frame.self)
+
     if numbered:
         global FRAMESET_COUNTER
-        fn = "frame_%d.plantuml" % FRAMESET_COUNTER
+        fn = "%s_%d.plantuml" % (prefix, FRAMESET_COUNTER)
         FRAMESET_COUNTER += 1
     else:
-        fn = "frame.plantuml"
+        fn = "%s.plantuml" % prefix
 
     with open(fn, "w") as f:
         f.write(Root([ps]).to_str())
