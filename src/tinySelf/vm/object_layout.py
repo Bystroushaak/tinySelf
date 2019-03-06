@@ -125,6 +125,13 @@ class _ObjectWithMapEncapsulation(_BareObject):
         return self.map._parent_slots.keys()
 
     @property
+    def expensive_parent_slots(self):
+        return OrderedDict(
+            (key, self._parent_slot_values[self.map._parent_slots[key]])
+            for key in self.parent_slot_keys
+        )
+
+    @property
     def is_block(self):
         return self.map.is_block
 
