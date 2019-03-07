@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 
+from rpython.rlib.jit import JitDriver
+from rpython.rlib.objectmodel import we_are_translated
+
 from tinySelf.vm.bytecodes import *
 
 from tinySelf.vm.primitives import add_block_trait
@@ -21,13 +24,16 @@ from tinySelf.vm.code_context import FloatBox
 from tinySelf.vm.frames import ProcessCycler
 from tinySelf.vm.object_layout import Object
 
-from rpython.rlib.jit import JitDriver
+if not we_are_translated():
+    from tinySelf.vm.debug.visualisations import obj_map_to_plantuml
+    from tinySelf.vm.debug.visualisations import process_stack_to_plantuml
 
 
 NIL = PrimitiveNilObject()
 ONE_BYTECODE_LONG = 1
 TWO_BYTECODES_LONG = 2
 THREE_BYTECODES_LONG = 3
+EMPTY = Object()
 
 jitdriver = JitDriver(
     greens=['code_obj'],
@@ -165,8 +171,6 @@ class Interpreter(ProcessCycler):
             # this is used to remember in what context is the block executed,
             # so in case of indirect return, it is possible to return from
             # this context and not just block
-            # if method_obj.is_block and prev_scope_parent:
-
             if prev_scope_parent:
                 method_obj.meta_add_parent("*", prev_scope_parent)
 
@@ -177,19 +181,24 @@ class Interpreter(ProcessCycler):
 
             return scope_parent
 
-        intermediate_obj = Object()
-        intermediate_obj.meta_add_slot("ThisIsIntermediateObj", intermediate_obj)
+        if method_obj.code_context._params_cache is None:
+            intermediate_obj = Object()
+            intermediate_obj.meta_add_slot("ThisIsIntermediateObj", intermediate_obj)
+        else:
+            intermediate_obj = method_obj.code_context._params_cache.clone()
+
+        if scope_parent.has_parents or scope_parent.scope_parent or scope_parent.has_slots:
+            intermediate_obj.scope_parent = None if scope_parent == method_obj else scope_parent
 
         if prev_scope_parent is not None:
             prev_scope_parents_parent = prev_scope_parent.meta_get_parent("*", None)
             if prev_scope_parents_parent and \
                prev_scope_parent.scope_parent == prev_scope_parents_parent.scope_parent:
-                intermediate_obj.meta_add_parent("*", prev_scope_parents_parent)
+                parent = prev_scope_parents_parent
             else:
-                intermediate_obj.meta_add_parent("*", prev_scope_parent)
+                parent = prev_scope_parent
 
-        if scope_parent.has_parents or scope_parent.scope_parent or scope_parent.has_slots:
-            intermediate_obj.scope_parent = None if scope_parent == method_obj else scope_parent
+            intermediate_obj.meta_add_parent("*", parent)
 
         parameter_pairs = self._put_together_parameters(
             parameter_names=method_obj.parameters,
@@ -201,6 +210,9 @@ class Interpreter(ProcessCycler):
                 name + ":",
                 AssignmentPrimitive(intermediate_obj)
             )
+
+        if method_obj.code_context._params_cache is None:
+            method_obj.code_context._params_cache = intermediate_obj
 
         return intermediate_obj
 
@@ -256,6 +268,11 @@ class Interpreter(ProcessCycler):
         print
         print "Failed at bytecode number %d" % bc_index
         print code.debug_repr()
+
+        if not we_are_translated():
+            process_stack_to_plantuml(self.process)
+            obj_map_to_plantuml(obj, prefix="obj_parent_map")
+
         raise ValueError("Missing slot error: `%s`" % message_name)
 
     def _do_send(self, bc_index, code):

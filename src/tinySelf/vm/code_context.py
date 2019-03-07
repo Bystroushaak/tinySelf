@@ -71,6 +71,7 @@ class CodeContext(object):
         self.str_literal_cache = {}
 
         self.literals = []
+        self._params_cache = None
 
     def add_literal(self, literal):
         assert isinstance(literal, LiteralBox)
