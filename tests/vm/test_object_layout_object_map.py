@@ -67,12 +67,10 @@ def test_remove_parent():
 
 def test_clone():
     om = ObjectMap()
-    om.visited = True
     om.code_context = "code"
     om.add_slot("xex", 1)
 
     cloned = om.clone()
-    assert not cloned.visited
     assert cloned._slots == om._slots
     assert cloned._slots is not om._slots
 

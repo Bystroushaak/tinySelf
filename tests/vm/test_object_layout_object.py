@@ -283,6 +283,33 @@ def test_get_slot_from_several_parents():
     assert o.parent_lookup("xex") is val
 
 
+def test_parent_lookup_from_parent_tree():
+    """
+    Based on real case.
+    """
+    value = PrimitiveStrObject("value")
+
+    o1 = Object()
+    o2 = Object()
+    o3 = o2.clone()
+    o4 = Object()
+    o5 = Object()
+
+    o1.scope_parent = o2
+
+    o2.scope_parent = o3
+    o2.meta_add_parent("*", o5)
+
+    o3.scope_parent = o4
+    o3.meta_add_parent("*", o5)
+
+    o4.scope_parent = o5
+    o4.meta_add_slot("value", value)
+
+    assert o1.get_slot("value") is None
+    assert o1.parent_lookup("value") is value
+
+
 def slot_lookup():
     val = PrimitiveStrObject("it is xex!")
     flat = PrimitiveStrObject("it is flat")

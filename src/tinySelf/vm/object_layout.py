@@ -8,8 +8,8 @@ def unvisit(visited_objects, first_level_call):
     if not first_level_call:
         return
 
-    for obj_map in visited_objects.keys():
-        obj_map.visited = False
+    for obj in visited_objects:
+        obj.visited = False
 
 
 class _BareObject(object):
@@ -19,6 +19,8 @@ class _BareObject(object):
 
         self.map = obj_map
         self.scope_parent = None
+
+        self.visited = False
 
         self._parent_slot_values = []
         self._slot_values = []
@@ -56,9 +58,7 @@ class _BareObject(object):
         first_level_call = False
         if _visited_objects is None:
             first_level_call = True
-            # sets are not supported, see
-            # https://rpython.readthedocs.io/en/latest/rpython.html
-            _visited_objects = {}
+            _visited_objects = []
 
         parents = []
         if self.scope_parent is not None and not self.scope_parent.visited:
@@ -71,7 +71,7 @@ class _BareObject(object):
                 continue
 
             parent.visited = True
-            _visited_objects[parent.map] = None
+            _visited_objects.append(parent)
 
             if slot_name in parent.slot_keys:
                 unvisit(_visited_objects, first_level_call)
@@ -138,14 +138,6 @@ class _ObjectWithMapEncapsulation(_BareObject):
     @is_block.setter
     def is_block(self, is_block):
         self.map.is_block = is_block
-
-    @property
-    def visited(self):
-        return self.map.visited
-
-    @visited.setter
-    def visited(self, visited):
-        self.map.visited = visited
 
     @property
     def parameters(self):
@@ -303,7 +295,6 @@ class ObjectMap(object):
         self._slots = OrderedDict()
         self._parent_slots = OrderedDict()
 
-        self.visited = False
         self.is_block = False
         self.used_in_multiple_objects = False
 
