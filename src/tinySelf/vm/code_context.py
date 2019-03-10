@@ -126,7 +126,7 @@ class CodeContext(object):
         # I would use bytearray(), but it behaves differently under rpython
         self.bytecodes = str("".join([chr(x) for x in self._mutable_bytecodes]))
         self._mutable_bytecodes = None
-        self.str_literal_cache.clear()
+        self.str_literal_cache = None
 
         for item in self.literals:
             item.finalize()
