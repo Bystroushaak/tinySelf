@@ -3,6 +3,7 @@ from rply.token import BaseBox
 
 from tinySelf.vm.bytecodes import *
 from tinySelf.vm.object_layout import Object
+from tinySelf.vm.dynamic_recompiler import dynamic_recompiler
 
 
 class LiteralBox(BaseBox):
@@ -71,7 +72,9 @@ class CodeContext(object):
         self.str_literal_cache = {}
 
         self.literals = []
-        self._params_cache = None
+        self._params_cache = None  # used to cache intermediate prameters obj
+
+        self.recompile = False
 
     def add_literal(self, literal):
         assert isinstance(literal, LiteralBox)
@@ -134,6 +137,9 @@ class CodeContext(object):
         self._finalized = True
 
         return self
+
+    def dynamic_recompile(self, program_counter):
+        return program_counter
 
     def debug_repr(self):
         out = '(|\n  literals = (| l <- dict clone. |\n    l\n'
