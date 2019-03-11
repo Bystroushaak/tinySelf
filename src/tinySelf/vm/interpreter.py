@@ -133,6 +133,9 @@ class Interpreter(ProcessCycler):
                 self=self,
             )
 
+            if code_obj.recompile:
+                frame.bc_index = code_obj.dynamic_recompile(frame.bc_index)
+
             if (frame.bc_index % 10) == 0:
                 self.next_process()
 
