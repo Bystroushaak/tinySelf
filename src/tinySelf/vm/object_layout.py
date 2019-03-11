@@ -25,6 +25,8 @@ class _BareObject(object):
         self._parent_slot_values = []
         self._slot_values = []
 
+        self._local_lookups = 0
+
     @property
     def has_code(self):
         return self.map.code_context is not None
@@ -85,12 +87,25 @@ class _BareObject(object):
         unvisit(_visited_objects, first_level_call)
         return None
 
-    def slot_lookup(self, slot_name):
+    def slot_lookup(self, slot_name, local_lookup=False):
+        """
+        Look for the slot_name in own slots, if not found, delagate the search
+        to the parents.
+
+        Args:
+            slot_name (str): ...
+
+        Returns:
+            obj: Resolved Object, or None.
+        """
         assert isinstance(slot_name, str)
 
         slot_index = self.map._slots.get(slot_name, -1)
 
         if slot_index != -1:
+            if local_lookup:
+                self._local_cache_counter()
+
             return self._slot_values[slot_index]
 
         if self.scope_parent is not None:
@@ -100,6 +115,11 @@ class _BareObject(object):
                 return obj
 
         return self.parent_lookup(slot_name)
+
+    def _local_cache_counter(self):
+        self._local_lookups += 1
+        if self._local_lookups >= 3:  # TODO: set dynamically
+            self.map.code_context.recompile = True
 
     def clone(self):
         obj = Object(obj_map=self.map)
