@@ -29,13 +29,11 @@ SLOT_PARENT = 1
 
 
 def _compute_index(bytecodes_len, bytecodes):
-    return str(bytecodes_len - len(bytecodes))
+    return bytecodes_len - len(bytecodes)
 
 
-def disassemble(bytecodes_bytearray):
-    disassembled = []
-
-    bytecodes = [ord(c) for c in bytecodes_bytearray]
+def bytecode_tokenizer(bytecodes):
+    bytecodes = [ord(c) for c in bytecodes]
     bytecodes_len = len(bytecodes)
     while bytecodes:
         index = _compute_index(bytecodes_len, bytecodes)
@@ -43,6 +41,37 @@ def disassemble(bytecodes_bytearray):
 
         if bytecode == BYTECODE_SEND:
             send_type = bytecodes.pop(0)
+            number_of_params = bytecodes.pop(0)
+
+            yield [index, bytecode, send_type, number_of_params]
+
+        elif bytecode == BYTECODE_PUSH_LITERAL:
+            literal_type = bytecodes.pop(0)
+            literal_index = bytecodes.pop(0)
+
+            yield [index, bytecode, literal_type, literal_index]
+
+        elif (bytecode == BYTECODE_RETURN_TOP or
+              bytecode == BYTECODE_RETURN_IMPLICIT or
+              bytecode == BYTECODE_PUSH_SELF):
+            yield [index, bytecode]
+
+        elif bytecode == BYTECODE_ADD_SLOT:
+            slot_type = bytecodes.pop(0)
+
+            yield [index, bytecode, slot_type]
+
+
+def disassemble(bytecodes):
+    disassembled = []
+
+    for token in bytecode_tokenizer(bytecodes):
+        index = str(token[0])
+        bytecode = token[1]
+
+        if bytecode == BYTECODE_SEND:
+            send_type = token[2]
+            number_of_params = token[3]
 
             send_type_str = {
                 SEND_TYPE_UNARY: "UNARY",
@@ -52,26 +81,22 @@ def disassemble(bytecodes_bytearray):
                 SEND_TYPE_KEYWORD_RESEND: "KEYWORD_RESEND",
             }[send_type]
 
-            number_of_params = bytecodes.pop(0)
-
             disassembled.append([
                 index,
                 "SEND",
                 "type:" + send_type_str,
                 "params:" + str(number_of_params)
             ])
-            continue
 
         elif bytecode == BYTECODE_PUSH_SELF:
             disassembled.append([
                 index,
                 "PUSH_SELF"
             ])
-            continue
 
         elif bytecode == BYTECODE_PUSH_LITERAL:
-            literal_type = bytecodes.pop(0)
-            literal_index = bytecodes.pop(0)
+            literal_type = token[2]
+            literal_index = token[3]
 
             literal_type_str = {
                 LITERAL_TYPE_NIL: "NIL",
@@ -89,24 +114,21 @@ def disassemble(bytecodes_bytearray):
                 "type:" + literal_type_str,
                 "index:" + str(literal_index)
             ])
-            continue
 
         elif bytecode == BYTECODE_RETURN_TOP:
             disassembled.append([
                 index,
                 "RETURN_TOP"
             ])
-            continue
 
         elif bytecode == BYTECODE_RETURN_IMPLICIT:
             disassembled.append([
                 index,
                 "RETURN_IMPLICIT"
             ])
-            continue
 
         elif bytecode == BYTECODE_ADD_SLOT:
-            slot_type = bytecodes.pop(0)
+            slot_type = token[2]
             slot_type_str = {
                 SLOT_NORMAL: "SLOT_NORMAL",
                 SLOT_PARENT: "SLOT_PARENT",
@@ -117,6 +139,5 @@ def disassemble(bytecodes_bytearray):
                 "ADD_SLOT",
                 "type:" + slot_type_str,
             ])
-            continue
 
     return disassembled
