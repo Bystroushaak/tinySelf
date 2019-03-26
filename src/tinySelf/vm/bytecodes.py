@@ -156,6 +156,12 @@ def disassemble(bytecodes, tokens=None):
                 "type:" + slot_type_str,
             ])
 
+        elif bytecode == BYTECODE_NOP:
+            disassembled.append([
+                index,
+                "NOP"
+            ])
+
         else:
             disassembled.append([
                 index,
