@@ -24,6 +24,8 @@ from tinySelf.vm.code_context import FloatBox
 from tinySelf.vm.frames import ProcessCycler
 from tinySelf.vm.object_layout import Object
 
+from tinySelf.vm.dynamic_recompiler import dynamic_recompiler
+
 if not we_are_translated():
     from tinySelf.vm.debug.visualisations import obj_map_to_plantuml
     from tinySelf.vm.debug.visualisations import process_stack_to_plantuml
@@ -50,6 +52,8 @@ class Interpreter(ProcessCycler):
         ProcessCycler.__init__(self, code_context)
         self.universe = universe
         self._add_reflection_to_universe()
+
+        self._last_receiver = None
 
     def _add_reflection_to_universe(self):
         self.universe.meta_add_slot("universe", self.universe)
@@ -125,6 +129,15 @@ class Interpreter(ProcessCycler):
 
             frame.bc_index += bc_len
 
+            # if code_obj.recompile and self._last_receiver is not None:
+            if code_obj.recompile:# and self.process.frame.self is not None:
+                frame.bc_index = dynamic_recompiler(
+                    frame.bc_index,
+                    code_obj,
+                    # self._last_receiver  # TODO: maybe frame.self?
+                    self.process.frame.self
+                )
+
             jitdriver.jit_merge_point(
                 bc_index=frame.bc_index,
                 bytecode=bytecode,
@@ -132,9 +145,6 @@ class Interpreter(ProcessCycler):
                 frame=frame,
                 self=self,
             )
-
-            if code_obj.recompile:
-                frame.bc_index = code_obj.dynamic_recompile(frame.bc_index)
 
             if (frame.bc_index % 10) == 0:
                 self.next_process()
@@ -307,12 +317,13 @@ class Interpreter(ProcessCycler):
 
         obj = self.process.frame.pop()
         self._set_scope_parent_if_not_already_set(obj, code)
+        self._last_receiver = obj  # for dynamic recompilation
 
         if boxed_resend_parent_name is not None:
             parent_name = boxed_resend_parent_name.value
             slot = self._resend_to_parent(obj, parent_name, message_name)
         else:
-            slot = obj.slot_lookup(message_name)
+            slot = obj.slot_lookup(message_name, local_lookup_cache=True)
 
         if slot is None:
             return self._handle_missing_slot(obj, code, message_name, bc_index)

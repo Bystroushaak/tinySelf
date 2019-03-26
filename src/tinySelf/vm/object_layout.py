@@ -87,7 +87,7 @@ class _BareObject(object):
         unvisit(_visited_objects, first_level_call)
         return None
 
-    def slot_lookup(self, slot_name, local_lookup=False):
+    def slot_lookup(self, slot_name, local_lookup_cache=False):
         """
         Look for the slot_name in own slots, if not found, delagate the search
         to the parents.
@@ -103,7 +103,7 @@ class _BareObject(object):
         slot_index = self.map._slots.get(slot_name, -1)
 
         if slot_index != -1:
-            if local_lookup:
+            if local_lookup_cache:
                 self._local_cache_counter()
 
             return self._slot_values[slot_index]
@@ -118,8 +118,11 @@ class _BareObject(object):
 
     def _local_cache_counter(self):
         self._local_lookups += 1
-        if self._local_lookups >= 3:  # TODO: set dynamically
-            self.map.code_context.recompile = True
+
+        # TODO: set dynamically
+        if self._local_lookups >= 3:
+            if self.map.code_context and not self.map.code_context.recompile:
+                self.map.code_context.recompile = True
 
     def clone(self):
         obj = Object(obj_map=self.map)
