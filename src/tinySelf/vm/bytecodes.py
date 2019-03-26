@@ -9,6 +9,7 @@ BYTECODE_RETURN_IMPLICIT = 5
 BYTECODE_ADD_SLOT = 6
 BYTECODE_LOCAL_SEND = 7
 BYTECODE_PARENT_SEND = 8
+BYTECODE_NOP = 9
 
 LITERAL_TYPE_NIL = 0
 LITERAL_TYPE_INT = 1
@@ -61,11 +62,17 @@ def bytecode_tokenizer(bytecodes):
 
             yield [index, bytecode, slot_type]
 
+        else:
+            yield [index, bytecode]
 
-def disassemble(bytecodes):
+
+def disassemble(bytecodes, tokens=None):
     disassembled = []
 
-    for token in bytecode_tokenizer(bytecodes):
+    if not tokens:
+        tokens = bytecode_tokenizer(bytecodes)
+
+    for token in tokens:
         index = str(token[0])
         bytecode = token[1]
 
@@ -86,6 +93,15 @@ def disassemble(bytecodes):
                 "SEND",
                 "type:" + send_type_str,
                 "params:" + str(number_of_params)
+            ])
+
+        elif bytecode == BYTECODE_LOCAL_SEND:
+            message_index = token[2]
+
+            disassembled.append([
+                index,
+                "LOCAL_SEND",
+                "message_index:" + str(message_index),
             ])
 
         elif bytecode == BYTECODE_PUSH_SELF:
@@ -138,6 +154,12 @@ def disassemble(bytecodes):
                 index,
                 "ADD_SLOT",
                 "type:" + slot_type_str,
+            ])
+
+        else:
+            disassembled.append([
+                index,
+                "UNKNOWN:%s" % bytecode
             ])
 
     return disassembled
