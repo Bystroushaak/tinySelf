@@ -2,12 +2,19 @@
    :alt: Codacy Badge
    :target: https://app.codacy.com/app/Bystroushaak/tinySelf?utm_source=github.com&utm_medium=referral&utm_content=Bystroushaak/tinySelf&utm_campaign=badger
 
-This project is in alpha development stage and so there is not much to see.
+tinySelf is an experimental programming language inspired by the `Self lang <http://www.selflanguage.org/>`_, with the emphasis on the word *experimental*.
 
-Wiki
-++++
+I would like something like the glasswork rack you know from the chemistry pictures, but for computation.
 
-See https://github.com/Bystroushaak/tinySelf/wiki
+.. image:: docs/self_analogy.png
+
+The point of the experiment is not in the language itself, but in all kind of different stuff that can be done with it. tinySelf should be lightweight, compact, collapsible, interchangeable, universal computational apparatus for anything I can possibly hope to make.
+
+Articles
+++++++++
+
+* `Github Wiki <https://github.com/Bystroushaak/tinySelf/wiki>`_
+* `Articles about tinySelf <https://www.notion.so/tinySelf-57c3b418d3bc4c879fad5c5397310d86>`_
 
 Planning
 ++++++++
