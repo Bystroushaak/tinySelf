@@ -67,6 +67,7 @@ class CodeContext(object):
 
         self.bytecodes = ""
         self._mutable_bytecodes = []
+        self._original_bytecode = ""
 
         self.str_literal_cache = {}
 
@@ -136,6 +137,16 @@ class CodeContext(object):
         self._finalized = True
 
         return self
+
+    def swap_bytecodes(self, bytecodes):
+        if not self._original_bytecode:
+            self._original_bytecode = bytecodes
+
+        self.bytecodes = bytecodes
+
+    def invalidate_bytecodes(self):
+        if self._original_bytecode:
+            self.bytecodes = self._original_bytecode
 
     def debug_repr(self):
         out = '(|\n  literals = (| l <- dict clone. |\n    l\n'
