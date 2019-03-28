@@ -134,7 +134,7 @@ class Interpreter(ProcessCycler):
                 frame.bc_index = dynamic_recompiler(
                     frame.bc_index,
                     code_obj,
-                    # self._last_receiver  # TODO: maybe frame.self?
+                    # self._last_receiver  # TODO: maybe frame.self?  # TODO: remove
                     self.process.frame.self
                 )
 
@@ -300,6 +300,10 @@ class Interpreter(ProcessCycler):
         message_type = ord(code.bytecodes[bc_index + 1])
         number_of_parameters = ord(code.bytecodes[bc_index + 2])
 
+        boxed_message = self.process.frame.pop()
+        assert isinstance(boxed_message, PrimitiveStrObject)
+        message_name = boxed_message.value  # unpack from StrBox
+
         parameters_values = []
         if number_of_parameters > 0:
             for _ in range(number_of_parameters):
@@ -310,10 +314,6 @@ class Interpreter(ProcessCycler):
            message_type == SEND_TYPE_KEYWORD_RESEND:
             boxed_resend_parent_name = self.process.frame.pop()
             assert isinstance(boxed_resend_parent_name, PrimitiveStrObject)
-
-        boxed_message = self.process.frame.pop()
-        assert isinstance(boxed_message, PrimitiveStrObject)
-        message_name = boxed_message.value  # unpack from StrBox
 
         obj = self.process.frame.pop()
         self._set_scope_parent_if_not_already_set(obj, code)
