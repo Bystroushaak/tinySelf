@@ -7,9 +7,11 @@ BYTECODE_PUSH_LITERAL = 3
 BYTECODE_RETURN_TOP = 4
 BYTECODE_RETURN_IMPLICIT = 5
 BYTECODE_ADD_SLOT = 6
-BYTECODE_LOCAL_SEND = 7
-BYTECODE_PARENT_SEND = 8
-BYTECODE_NOP = 9
+BYTECODE_LOCAL_SEND_UNARY = 7
+BYTECODE_LOCAL_SEND_BINARY = 8
+BYTECODE_LOCAL_SEND_KEYWORD = 9
+BYTECODE_PARENT_SEND = 10
+BYTECODE_NOP = 11
 
 LITERAL_TYPE_NIL = 0
 LITERAL_TYPE_INT = 1
@@ -27,43 +29,6 @@ SEND_TYPE_KEYWORD_RESEND = 4
 
 SLOT_NORMAL = 0
 SLOT_PARENT = 1
-
-
-def _compute_index(bytecodes_len, bytecodes):
-    return bytecodes_len - len(bytecodes)
-
-
-def bytecode_tokenizer(bytecodes):
-    bytecodes = [ord(c) for c in bytecodes]
-    bytecodes_len = len(bytecodes)
-    while bytecodes:
-        index = _compute_index(bytecodes_len, bytecodes)
-        bytecode = bytecodes.pop(0)
-
-        if bytecode == BYTECODE_SEND:
-            send_type = bytecodes.pop(0)
-            number_of_params = bytecodes.pop(0)
-
-            yield [index, bytecode, send_type, number_of_params]
-
-        elif bytecode == BYTECODE_PUSH_LITERAL:
-            literal_type = bytecodes.pop(0)
-            literal_index = bytecodes.pop(0)
-
-            yield [index, bytecode, literal_type, literal_index]
-
-        elif (bytecode == BYTECODE_RETURN_TOP or
-              bytecode == BYTECODE_RETURN_IMPLICIT or
-              bytecode == BYTECODE_PUSH_SELF):
-            yield [index, bytecode]
-
-        elif bytecode == BYTECODE_ADD_SLOT:
-            slot_type = bytecodes.pop(0)
-
-            yield [index, bytecode, slot_type]
-
-        else:
-            yield [index, bytecode]
 
 
 def disassemble(bytecodes, tokens=None):
@@ -95,12 +60,21 @@ def disassemble(bytecodes, tokens=None):
                 "params:" + str(number_of_params)
             ])
 
-        elif bytecode == BYTECODE_LOCAL_SEND:
-            message_index = token[2]
+        elif bytecode in [BYTECODE_LOCAL_SEND_UNARY, BYTECODE_LOCAL_SEND_BINARY,
+                          BYTECODE_LOCAL_SEND_KEYWORD]:
+            number_of_params = token[2]
+            message_index = token[3]
+
+            local_send_type = {
+                BYTECODE_LOCAL_SEND_UNARY: "LOCAL_SEND_UNARY",
+                BYTECODE_LOCAL_SEND_BINARY: "LOCAL_SEND_BINARY",
+                BYTECODE_LOCAL_SEND_KEYWORD: "LOCAL_SEND_KEYWORD",
+            }[bytecode]
 
             disassembled.append([
                 index,
-                "LOCAL_SEND",
+                local_send_type,
+                "params:" + str(number_of_params),
                 "message_index:" + str(message_index),
             ])
 
@@ -165,7 +139,53 @@ def disassemble(bytecodes, tokens=None):
         else:
             disassembled.append([
                 index,
-                "UNKNOWN:%s" % bytecode
+                "UNKNOWN:%s token:%s" % (str(bytecode), token)
             ])
 
     return disassembled
+
+
+def bytecode_tokenizer(bytecodes):
+    bytecodes = [ord(c) for c in bytecodes]
+    bytecodes_len = len(bytecodes)
+    while bytecodes:
+        index = _compute_index(bytecodes_len, bytecodes)
+        bytecode = bytecodes.pop(0)
+
+        if bytecode == BYTECODE_SEND:
+            send_type = bytecodes.pop(0)
+            number_of_params = bytecodes.pop(0)
+
+            yield [index, bytecode, send_type, number_of_params]
+
+        elif bytecode == BYTECODE_PUSH_LITERAL:
+            literal_type = bytecodes.pop(0)
+            literal_index = bytecodes.pop(0)
+
+            yield [index, bytecode, literal_type, literal_index]
+
+        elif (bytecode == BYTECODE_RETURN_TOP or
+              bytecode == BYTECODE_RETURN_IMPLICIT or
+              bytecode == BYTECODE_PUSH_SELF):
+            yield [index, bytecode]
+
+        elif bytecode == BYTECODE_ADD_SLOT:
+            slot_type = bytecodes.pop(0)
+
+            yield [index, bytecode, slot_type]
+
+        else:
+            yield [index, bytecode]
+
+
+def _compute_index(bytecodes_len, bytecodes):
+    return bytecodes_len - len(bytecodes)
+
+
+def bytecode_detokenizer(tokens):
+    bytecodes = []
+    for token in tokens:
+        token = token[1:]
+        bytecodes.extend(token)
+
+    return str("".join([chr(x) for x in bytecodes]))
