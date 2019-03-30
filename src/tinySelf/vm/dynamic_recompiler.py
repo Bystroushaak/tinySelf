@@ -42,7 +42,7 @@ def dynamic_recompiler(program_counter, code_context, obj):
             msg_name = msg_box.value
 
             if msg_name in obj.map._slots:
-                # replace BYTECODE_PUSH_LITERAL with nops
+                # replace BYTECODE_PUSH_LITERAL with NOPs
                 push_literal = bytecode_tokens.pop()
                 push_literal_index = push_literal[0]
                 bytecode_tokens.append([push_literal_index, BYTECODE_NOP])
