@@ -112,6 +112,17 @@ class Interpreter(ProcessCycler):
             # elif bytecode == BYTECODE_SELF_SEND:
             #     self._do_selfSend(bc_index, code_obj, frame)
 
+            elif bytecode == BYTECODE_NOP:
+                frame.bc_index += 1
+                continue
+
+            elif bytecode == BYTECODE_LOCAL_SEND_UNARY:
+                bc_len = self._do_local_send(frame.bc_index, code_obj, SEND_TYPE_UNARY)
+            elif bytecode == BYTECODE_LOCAL_SEND_BINARY:
+                bc_len = self._do_local_send(frame.bc_index, code_obj, SEND_TYPE_BINARY)
+            elif bytecode == BYTECODE_LOCAL_SEND_KEYWORD:
+                bc_len = self._do_local_send(frame.bc_index, code_obj, SEND_TYPE_KEYWORD)
+
             else:
                 self.process.result = ErrorObject(
                     PrimitiveStrObject("Unknown bytecode: %s!" % bytecode),
@@ -129,8 +140,7 @@ class Interpreter(ProcessCycler):
 
             frame.bc_index += bc_len
 
-            # if code_obj.recompile and self._last_receiver is not None:
-            if code_obj.recompile:# and self.process.frame.self is not None:
+            if code_obj.recompile and not code_obj.is_recompiled:
                 frame.bc_index = dynamic_recompiler(
                     frame.bc_index,
                     code_obj,
@@ -288,28 +298,19 @@ class Interpreter(ProcessCycler):
 
         raise ValueError("Missing slot error: `%s`" % message_name)
 
-    def _do_send(self, bc_index, code):
-        """
-        Args:
-            bc_index (int): Index of the bytecode in `code` bytecode list.
-            code (obj): :class:`CodeContext` instance.
-
-        Returns:
-            int: Index of next bytecode.
-        """
-        message_type = ord(code.bytecodes[bc_index + 1])
-        number_of_parameters = ord(code.bytecodes[bc_index + 2])
-
+    def _read_do_send_parameters(self, bc_index, code):
         boxed_message = self.process.frame.pop()
         assert isinstance(boxed_message, PrimitiveStrObject)
         message_name = boxed_message.value  # unpack from StrBox
 
         parameters_values = []
+        number_of_parameters = ord(code.bytecodes[bc_index + 2])
         if number_of_parameters > 0:
             for _ in range(number_of_parameters):
                 parameters_values.append(self.process.frame.pop())
 
         boxed_resend_parent_name = None
+        message_type = ord(code.bytecodes[bc_index + 1])
         if message_type == SEND_TYPE_UNARY_RESEND or \
            message_type == SEND_TYPE_KEYWORD_RESEND:
             boxed_resend_parent_name = self.process.frame.pop()
@@ -325,6 +326,9 @@ class Interpreter(ProcessCycler):
         else:
             slot = obj.slot_lookup(message_name, local_lookup_cache=True)
 
+        return message_name, parameters_values, obj, slot
+
+    def _eval(self, bc_index, code, message_name, parameters, obj, slot):
         if slot is None:
             return self._handle_missing_slot(obj, code, message_name, bc_index)
 
@@ -333,37 +337,72 @@ class Interpreter(ProcessCycler):
                 next_bytecode=ord(code.bytecodes[bc_index + 4]),
                 scope_parent=obj,
                 method_obj=slot,
-                parameters=parameters_values,
+                parameters=parameters,
             )
 
         elif slot.has_primitive_code:
             return_value = slot.primitive_code(
                 slot.primitive_code_self,
                 obj,
-                parameters_values
+                parameters
             )
 
             if return_value is not None:
                 self.process.frame.push(return_value)
 
         elif slot.is_assignment_primitive:
-            if len(parameters_values) != 1:
+            if len(parameters) != 1:
                 raise ValueError("Too many values to set!")
 
             assert len(message_name) > 1
             slot_name = message_name[:-1]
 
             assignee = slot.real_parent
-            ret_val = assignee.set_slot(slot_name, parameters_values[0])
+            ret_val = assignee.set_slot(slot_name, parameters[0])
 
-            if ret_val is None:
-                raise ValueError("Mistery; a slot that was and is not any more: %s" % slot_name)
+            if not ret_val:
+                raise ValueError("Can't set slot %s" % slot_name)
 
         else:
             return_value = slot
             self.process.frame.push(return_value)
 
         return THREE_BYTECODES_LONG
+
+
+    def _do_send(self, bc_index, code):
+        """
+        Args:
+            bc_index (int): Index of the bytecode in `code` bytecode list.
+            code (obj): :class:`CodeContext` instance.
+
+        Returns:
+            int: Index of next bytecode.
+        """
+        message_name, parameters, obj, slot = self._read_do_send_parameters(
+            bc_index,
+            code
+        )
+
+        return self._eval(bc_index, code, message_name, parameters, obj, slot)
+
+    def _do_local_send(self, bc_index, code, send_type):
+        parameters = []
+        number_of_parameters = ord(code.bytecodes[bc_index + 2])
+        if number_of_parameters > 0:
+            for _ in range(number_of_parameters):
+                parameters.append(self.process.frame.pop())
+
+        obj = self.process.frame.pop()
+        self._set_scope_parent_if_not_already_set(obj, code)
+        self._last_receiver = obj  # for dynamic recompilation
+
+        slot_index = ord(code.bytecodes[bc_index + 1])
+        slot = obj._slot_values[slot_index]
+
+        message_name = obj.map._slots.keys()[slot_index]
+
+        return self._eval(bc_index, code, message_name, parameters, obj, slot)
 
     # def _do_selfSend(self, bc_index, code_obj, frame):
     #     pass
