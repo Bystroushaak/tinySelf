@@ -15,6 +15,8 @@ from tinySelf.vm.bytecodes import SEND_TYPE_BINARY
 from tinySelf.vm.bytecodes import SEND_TYPE_UNARY_RESEND
 from tinySelf.vm.bytecodes import SEND_TYPE_KEYWORD_RESEND
 
+from tinySelf.vm.code_context import StrBox
+
 
 def dynamic_recompiler(program_counter, code_context, obj):
     bytecode_tokens = []
@@ -38,7 +40,9 @@ def dynamic_recompiler(program_counter, code_context, obj):
         if (last_token_type == BYTECODE_PUSH_LITERAL and
                 last_token_literal_type == LITERAL_TYPE_STR and _not_resend(token)):
             literal_index = last_token[3]
+
             msg_box = code_context.literals[literal_index]
+            assert isinstance(msg_box, StrBox)
             msg_name = msg_box.value
 
             if msg_name in obj.map._slots:

@@ -158,6 +158,14 @@ def bytecode_tokenizer(bytecodes):
 
             yield [index, bytecode, send_type, number_of_params]
 
+        elif (bytecode == BYTECODE_LOCAL_SEND_UNARY or
+              bytecode == BYTECODE_LOCAL_SEND_BINARY or
+              bytecode == BYTECODE_LOCAL_SEND_KEYWORD):
+            message_index = bytecodes.pop(0)
+            number_of_params = bytecodes.pop(0)
+
+            yield [index, bytecode, message_index, number_of_params]
+
         elif bytecode == BYTECODE_PUSH_LITERAL:
             literal_type = bytecodes.pop(0)
             literal_index = bytecodes.pop(0)

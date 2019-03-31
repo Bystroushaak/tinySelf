@@ -328,8 +328,11 @@ class Interpreter(ProcessCycler):
 
         return message_name, parameters_values, obj, slot
 
-    def _eval(self, bc_index, code, message_name, parameters, obj, slot):
+    def _eval(self, bc_index, code, message_name, parameters, obj, slot, slot_index=-1):
         if slot is None:
+            if slot_index >= 0:
+                message_name = obj.map._slots.keys()[slot_index]
+
             return self._handle_missing_slot(obj, code, message_name, bc_index)
 
         if slot.has_code:
@@ -353,6 +356,9 @@ class Interpreter(ProcessCycler):
         elif slot.is_assignment_primitive:
             if len(parameters) != 1:
                 raise ValueError("Too many values to set!")
+
+            if slot_index >= 0:
+                message_name = obj.map._slots.keys()[slot_index]
 
             assert len(message_name) > 1
             slot_name = message_name[:-1]
@@ -400,9 +406,7 @@ class Interpreter(ProcessCycler):
         slot_index = ord(code.bytecodes[bc_index + 1])
         slot = obj._slot_values[slot_index]
 
-        message_name = obj.map._slots.keys()[slot_index]
-
-        return self._eval(bc_index, code, message_name, parameters, obj, slot)
+        return self._eval(bc_index, code, "", parameters, obj, slot, slot_index)
 
     # def _do_selfSend(self, bc_index, code_obj, frame):
     #     pass
