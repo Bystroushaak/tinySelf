@@ -67,14 +67,15 @@ class CodeContext(object):
 
         self.bytecodes = ""
         self._mutable_bytecodes = []
-        self._original_bytecode = ""
+        self._original_bytecodes = ""
 
         self.str_literal_cache = {}
 
         self.literals = []
-        self._params_cache = None  # used to cache intermediate prameters obj
+        self._params_cache = None  # used to cache intermediate parameters obj
 
         self.recompile = False
+        self.is_recompiled = False
 
     def add_literal(self, literal):
         assert isinstance(literal, LiteralBox)
@@ -139,14 +140,15 @@ class CodeContext(object):
         return self
 
     def swap_bytecodes(self, bytecodes):
-        if not self._original_bytecode:
-            self._original_bytecode = bytecodes
+        if not self._original_bytecodes:
+            self._original_bytecodes = bytecodes
 
         self.bytecodes = bytecodes
+        self.is_recompiled = True
 
     def invalidate_bytecodes(self):
-        if self._original_bytecode:
-            self.bytecodes = self._original_bytecode
+        if self._original_bytecodes:
+            self.bytecodes = self._original_bytecodes
 
     def debug_repr(self):
         out = '(|\n  literals = (| l <- dict clone. |\n    l\n'
