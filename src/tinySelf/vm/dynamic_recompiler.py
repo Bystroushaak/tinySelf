@@ -56,8 +56,8 @@ def dynamic_recompiler(program_counter, code_context, obj):
                 bytecode_tokens.append([
                     token_index,
                     _get_local_send_type(send_type),
-                    number_of_parameters,
                     message_index,
+                    number_of_parameters,
                 ])
                 continue
 

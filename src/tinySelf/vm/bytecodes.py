@@ -62,8 +62,8 @@ def disassemble(bytecodes, tokens=None):
 
         elif bytecode in [BYTECODE_LOCAL_SEND_UNARY, BYTECODE_LOCAL_SEND_BINARY,
                           BYTECODE_LOCAL_SEND_KEYWORD]:
-            number_of_params = token[2]
-            message_index = token[3]
+            message_index = token[2]
+            number_of_params = token[3]
 
             local_send_type = {
                 BYTECODE_LOCAL_SEND_UNARY: "LOCAL_SEND_UNARY",
