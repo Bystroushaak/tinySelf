@@ -121,10 +121,11 @@ class _BareObject(object):
     def _local_cache_counter(self):
         self._local_lookups += 1
 
-        # TODO: set dynamically
-        if self._local_lookups >= 3:
-            if self.map.code_context and not self.map.code_context.recompile:
-                self.map.code_context.recompile = True
+        if self._local_lookups < 5:  # TODO: set dynamically
+            return
+
+        if self.map.code_context and not self.map.code_context.recompile:
+            self.map.code_context.recompile = True
 
     def clone(self):
         obj = Object(obj_map=self.map)
