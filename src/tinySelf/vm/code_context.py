@@ -149,6 +149,8 @@ class CodeContext(object):
     def invalidate_bytecodes(self):
         if self._original_bytecodes:
             self.bytecodes = self._original_bytecodes
+            self.is_recompiled = False
+            self._original_bytecodes = ""
 
     def debug_repr(self):
         out = '(|\n  literals = (| l <- dict clone. |\n    l\n'

@@ -94,6 +94,8 @@ class _BareObject(object):
 
         Args:
             slot_name (str): ...
+            local_lookup_cache (bool, default False): Count lookups and trigger
+                dynamic recompilation on frequent access.
 
         Returns:
             obj: Resolved Object, or None.
@@ -208,6 +210,13 @@ class _ObjectWithMapEncapsulation(_BareObject):
     def has_parents(self):
         return bool(self._parent_slot_values)
 
+    def invalidate_cache(self):
+        """
+        Invalidate dynamic caches in code context objects on meta-operations.
+        """
+        if self.map.code_context and self.map.code_context.is_recompiled:
+            self.map.code_context.invalidate_bytecodes()
+
 
 class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
     def _clone_map_if_used_by_multiple_objects(self):
@@ -227,6 +236,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
             return
 
         self._clone_map_if_used_by_multiple_objects()
+        self.invalidate_cache()
 
         if not check_duplicates:
             self.map.add_slot(slot_name, len(self._slot_values))
@@ -244,6 +254,8 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
             return
 
         self._clone_map_if_used_by_multiple_objects()
+        self.invalidate_cache()
+
         slot_index = self.map._slots[slot_name]
         self.map.remove_slot(slot_name)
         self._slot_values.pop(slot_index)
@@ -257,12 +269,16 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
             self.set_slot(slot_name, value)
 
         self._clone_map_if_used_by_multiple_objects()
+        self.invalidate_cache()
+
         self.map.insert_slot(slot_index, slot_name, len(self._slot_values))
 
         self._slot_values.append(value)
 
     def meta_add_parent(self, parent_name, value):
         assert isinstance(value, Object)
+
+        self.invalidate_cache()
 
         if parent_name in self.map._parent_slots:
             index = self.map._parent_slots[parent_name]
@@ -287,6 +303,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
             return
 
         self._clone_map_if_used_by_multiple_objects()
+        self.invalidate_cache()
 
         parent_index = self.map._parent_slots[parent_name]
         self.map.remove_parent(parent_name)
