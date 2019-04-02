@@ -4,10 +4,7 @@ from collections import OrderedDict
 from rply.token import BaseBox
 
 
-def unvisit(visited_objects, first_level_call):
-    if not first_level_call:
-        return
-
+def unvisit(visited_objects):
     for obj in visited_objects:
         obj.visited = False
 
@@ -56,36 +53,51 @@ class _BareObject(object):
 
         return self._slot_values[slot_index]
 
-    def parent_lookup(self, slot_name, _visited_objects=None):
-        first_level_call = False
-        if _visited_objects is None:
-            first_level_call = True
-            _visited_objects = []
+    def parent_lookup(self, slot_name):
+        """
+        Look for `slot_name` in all parents.
 
-        parents = []
+        Args:
+            slot_name (str): Name of the slot to look for.
+
+        Returns:
+            obj: Object instance or None if not found.
+
+        Raises:
+            KeyError: If multiple slots are found.
+        """
+        objects = []
         if self.scope_parent is not None and not self.scope_parent.visited:
-            parents.append(self.scope_parent)
+            objects.append(self.scope_parent)
 
-        parents.extend(self._parent_slot_values)
+        objects.extend(self._parent_slot_values)
 
-        for parent in parents:
-            if parent.visited:
+        result = None
+        visited_objects = []
+        while objects:
+            obj = objects.pop(0)
+
+            if obj.visited:
                 continue
 
-            parent.visited = True
-            _visited_objects.append(parent)
+            obj.visited = True
+            visited_objects.append(obj)
 
-            if slot_name in parent.slot_keys:
-                unvisit(_visited_objects, first_level_call)
-                return parent.get_slot(slot_name)
+            if slot_name in obj.slot_keys:
+                if result:
+                    raise KeyError("Too many parent slots `%s`, use resend!" % slot_name)
 
-            result = parent.parent_lookup(slot_name, _visited_objects)
-            if result is not None:
-                unvisit(_visited_objects, first_level_call)
-                return result
+                result = obj.get_slot(slot_name)
+                continue
 
-        unvisit(_visited_objects, first_level_call)
-        return None
+            if obj.scope_parent is not None:
+                objects.append(obj.scope_parent)
+
+            objects.extend(obj._parent_slot_values)
+
+        unvisit(visited_objects)
+
+        return result
 
     def slot_lookup(self, slot_name, local_lookup_cache=False):
         """
