@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from tinySelf.vm.object_layout import Object
 from tinySelf.vm.object_layout import ObjectMap
+from tinySelf.vm.code_context import CodeContext
 
 
 def test_create_instance():
@@ -67,7 +68,7 @@ def test_remove_parent():
 
 def test_clone():
     om = ObjectMap()
-    om.code_context = "code"
+    om.code_context = CodeContext()
     om.add_slot("xex", 1)
 
     cloned = om.clone()

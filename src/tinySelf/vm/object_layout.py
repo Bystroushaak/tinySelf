@@ -144,7 +144,7 @@ class _BareObject(object):
         obj._slot_values = self._slot_values[:]
         obj._parent_slot_values = self._parent_slot_values[:]
         obj.scope_parent = self.scope_parent
-        self.map.used_in_multiple_objects = True
+        self.map._used_in_multiple_objects = True
 
         return obj
 
@@ -223,19 +223,8 @@ class _ObjectWithMapEncapsulation(_BareObject):
     def has_parents(self):
         return bool(self._parent_slot_values)
 
-    def invalidate_cache(self):
-        """
-        Invalidate dynamic caches in code context objects on meta-operations.
-        """
-        if self.map.code_context and self.map.code_context.is_recompiled:
-            self.map.code_context.invalidate_bytecodes()
-
 
 class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
-    def _clone_map_if_used_by_multiple_objects(self):
-        if self.map.used_in_multiple_objects:
-            self.map = self.map.clone()
-
     def meta_add_slot(self, slot_name, value, check_duplicates=False):
         """
         check_duplicates: make sure that one value is stored only once
@@ -246,10 +235,10 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 
         if slot_name in self.map._slots:
             self.set_slot(slot_name, value)
+            self.map._on_structural_changes()
             return
 
         self._clone_map_if_used_by_multiple_objects()
-        self.invalidate_cache()
 
         if not check_duplicates:
             self.map.add_slot(slot_name, len(self._slot_values))
@@ -267,7 +256,6 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
             return
 
         self._clone_map_if_used_by_multiple_objects()
-        self.invalidate_cache()
 
         slot_index = self.map._slots[slot_name]
         self.map.remove_slot(slot_name)
@@ -280,9 +268,10 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
     def meta_insert_slot(self, slot_index, slot_name, value):  # TODO: wtf?
         if slot_name in self.map._slots:
             self.set_slot(slot_name, value)
+            self.map._on_structural_changes()
+            return
 
         self._clone_map_if_used_by_multiple_objects()
-        self.invalidate_cache()
 
         self.map.insert_slot(slot_index, slot_name, len(self._slot_values))
 
@@ -291,11 +280,10 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
     def meta_add_parent(self, parent_name, value):
         assert isinstance(value, Object)
 
-        self.invalidate_cache()
-
         if parent_name in self.map._parent_slots:
             index = self.map._parent_slots[parent_name]
             self._parent_slot_values[index] = value
+            self.map._on_structural_changes()
             return
 
         self._clone_map_if_used_by_multiple_objects()
@@ -316,7 +304,6 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
             return
 
         self._clone_map_if_used_by_multiple_objects()
-        self.invalidate_cache()
 
         parent_index = self.map._parent_slots[parent_name]
         self.map.remove_parent(parent_name)
@@ -338,6 +325,10 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
         self._clone_map_if_used_by_multiple_objects()
         self.map.code_context = code_context
 
+    def _clone_map_if_used_by_multiple_objects(self):
+        if self.map._used_in_multiple_objects:
+            self.map = self.map.clone()
+
 
 class Object(_ObjectWithMetaOperations):
     pass
@@ -347,9 +338,10 @@ class ObjectMap(object):
     def __init__(self):
         self._slots = OrderedDict()
         self._parent_slots = OrderedDict()
+        self._used_in_multiple_objects = False
+        self._version = 0
 
         self.is_block = False
-        self.used_in_multiple_objects = False
 
         self.ast = None
         self.code_context = None
@@ -376,12 +368,15 @@ class ObjectMap(object):
         assert isinstance(index, int)
 
         self._slots[slot_name] = index
+        self._on_structural_changes()
 
     def remove_slot(self, slot_name):
         if slot_name not in self._slots:
             return False
 
         del self._slots[slot_name]
+        self._on_structural_changes()
+
         return True
 
     def insert_slot(self, slot_index, slot_name, index):
@@ -399,15 +394,30 @@ class ObjectMap(object):
             new_slots[key] = self._slots[key]
 
         self._slots = new_slots
+        self._on_structural_changes()
 
     def add_parent(self, parent_name, index):
         assert isinstance(index, int)
 
         self._parent_slots[parent_name] = index
+        self._on_structural_changes()
 
     def remove_parent(self, parent_name):
         if parent_name not in self._parent_slots:
             return False
 
         del self._parent_slots[parent_name]
+        self._on_structural_changes()
+
         return True
+
+    def _on_structural_changes(self):
+        self.invalidate_cache()
+        self._version += 1
+
+    def invalidate_cache(self):
+        """
+        Invalidate dynamic caches in code context objects on meta-operations.
+        """
+        if self.code_context is not None and self.code_context.is_recompiled:
+            self.code_context.invalidate_bytecodes()
