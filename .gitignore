@@ -118,3 +118,4 @@ parent_map*.png
 callgrind*
 
 .idea
+/.gtm/
