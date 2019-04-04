@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 
 
+class KeyValPair(object):
+    def __init__(self, key, val):
+        self.key = key
+        self.val = val
+
+
 class LightWeightDict(object):
     def __init__(self):
         self._first_key = None
@@ -23,8 +29,8 @@ class LightWeightDict(object):
         if self._use_properties:
             return key == self._first_key or key == self._second_key or key == self._third_key
         elif self._use_small_array:
-            for k, _ in self._small_array:
-                if key == k:
+            for kv in self._small_array:
+                if kv.key == key:
                     return True
             return False
         else:
@@ -47,9 +53,9 @@ class LightWeightDict(object):
                 self._use_dict = False
 
                 self._small_array = [
-                    [self._first_key, self._first_value],
-                    [self._second_key, self._second_value],
-                    [self._third_key, self._third_value],
+                    KeyValPair(self._first_key, self._first_value),
+                    KeyValPair(self._second_key, self._second_value),
+                    KeyValPair(self._third_key, self._third_value),
                 ]
 
                 self._first_key = None
@@ -67,20 +73,19 @@ class LightWeightDict(object):
                 self._use_small_array = False
                 self._use_dict = True
 
-                self._dict = {
-                    k: v
-                    for k, v in self._small_array
-                }
+                self._dict = {}
+                for kv in self._small_array:
+                    self._dict[kv.key] = kv.val
+
                 self._small_array = None
                 return self.set(key, val)
 
-            for cnt, kv in enumerate(self._small_array):
-                k = kv[0]
-                if k == key:
-                    kv[1] = val
+            for kv in self._small_array:
+                if kv.key == key:
+                    kv.val = val
                     return
 
-            self._small_array.append([key, val])
+            self._small_array.append(KeyValPair(key, val))
 
         else:
             self._dict[key] = val
@@ -96,9 +101,9 @@ class LightWeightDict(object):
             else:
                 return alt
         elif self._use_small_array:
-            for k, v in self._small_array:
-                if k == key:
-                    return v
+            for kv in self._small_array:
+                if kv.key == key:
+                    return kv.val
 
             return alt
         else:
@@ -125,8 +130,7 @@ class LightWeightDict(object):
                 self._third_value = None
         elif self._use_small_array:
             for cnt, kv in enumerate(self._small_array):
-                k = kv[0]
-                if k == key:
+                if kv.key == key:
                     self._small_array.pop(cnt)
                     return
         else:
@@ -145,7 +149,7 @@ class LightWeightDict(object):
 
             return keys
         elif self._use_small_array:
-            return [kv[0] for kv in self._small_array]
+            return [kv.key for kv in self._small_array]
         else:
             return self._dict.keys()
 
@@ -161,6 +165,6 @@ class LightWeightDict(object):
 
             return values
         elif self._use_small_array:
-            return [kv[1] for kv in self._small_array]
+            return [kv.val for kv in self._small_array]
         else:
             return self._dict.values()
