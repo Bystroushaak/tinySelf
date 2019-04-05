@@ -45,7 +45,7 @@ def dynamic_recompiler(program_counter, code_context, obj):
             assert isinstance(msg_box, StrBox)
             msg_name = msg_box.value
 
-            if msg_name in obj.map._slots:
+            if obj.map._slots.has_key(msg_name):
                 # replace BYTECODE_PUSH_LITERAL with NOPs
                 push_literal = bytecode_tokens.pop()
                 push_literal_index = push_literal[0]

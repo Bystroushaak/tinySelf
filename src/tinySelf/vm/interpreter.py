@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 
-from rpython.rlib.jit import JitDriver
+from rpython.rlib import jit
 from rpython.rlib.objectmodel import we_are_translated
 
 from tinySelf.vm.bytecodes import *
@@ -37,7 +37,10 @@ TWO_BYTECODES_LONG = 2
 THREE_BYTECODES_LONG = 3
 EMPTY = Object()
 
-jitdriver = JitDriver(
+
+jit.set_param(None, "enable_opts", "intbounds:rewrite:virtualize:string:pure:earlyforce:heap")
+
+jitdriver = jit.JitDriver(
     greens=['code_obj'],
     reds=['bc_index', 'bytecode', 'frame', 'self'],
     is_recursive=True  # I have no idea why is this required
@@ -264,7 +267,7 @@ class Interpreter(ProcessCycler):
         resend_parent = obj.meta_get_parent(parent_name)
         if resend_parent is None and obj.scope_parent:
             resend_parent = obj.scope_parent.meta_get_parent(parent_name)
-        if resend_parent is None and "*" in obj.scope_parent.map._parent_slots:
+        if resend_parent is None and obj.scope_parent.map._parent_slots.has_key("*"):  # TODO: rewrite
             star_parent = obj.scope_parent.meta_get_parent("*")
             resend_parent = star_parent.meta_get_parent(parent_name)
 
