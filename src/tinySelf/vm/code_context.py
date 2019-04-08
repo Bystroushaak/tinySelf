@@ -73,6 +73,7 @@ class CodeContext(object):
 
         self.literals = []
         self._params_cache = None  # used to cache intermediate parameters obj
+        self._parent_cache = None
 
         self.recompile = False
         self.is_recompiled = False

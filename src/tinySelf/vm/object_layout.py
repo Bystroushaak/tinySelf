@@ -3,6 +3,48 @@ from collections import OrderedDict
 
 from rply.token import BaseBox
 
+from tinySelf.vm.lightweight_dict import LightWeightDict
+from tinySelf.vm.lightweight_dict import LightWeightDictObjects
+
+
+class PathHolder(object):
+    def __init__(self, obj, path):
+        self.obj = obj
+        self.path = path
+
+    @staticmethod
+    def from_path(obj, new_path, path_holder):
+        path = path_holder.path
+        path.append(new_path)
+
+        return PathHolder(obj, path)
+
+
+class VersionedObject(object):
+    def __init__(self, object, version=None):
+        self.object = object
+
+        if version is None:
+            self.version = object.map._version
+        else:
+            self.version = version
+
+    def verify(self):
+        return self.object.map._version == self.version
+
+
+class NamedCacheItem(object):
+    def __init__(self, item, objects):
+        self.item = item
+        self.object_versions = [VersionedObject(x) for x in objects]
+
+    def verify_version(self):
+        for x in self.object_versions:
+            if not x.verify():
+                return False
+
+        return True
+
 
 def unvisit(visited_objects):
     for obj in visited_objects:
@@ -19,10 +61,11 @@ class _BareObject(object):
 
         self.visited = False
 
+        self._local_lookups = 0
+
         self._parent_slot_values = []
         self._slot_values = []
 
-        self._local_lookups = 0
 
     @property
     def has_code(self):
@@ -53,7 +96,84 @@ class _BareObject(object):
 
         return self._slot_values[slot_index]
 
+    @property
+    def _parent_cache(self):
+        if self.map.code_context is None:
+            return None
+
+        return self.map.code_context._parent_cache
+
+    @_parent_cache.setter
+    def _parent_cache(self, new_parent_cache):
+        self.map.code_context._parent_cache = new_parent_cache
+
     def parent_lookup(self, slot_name):
+        """
+        Look for `slot_name` in all parents.
+
+        Args:
+            slot_name (str): Name of the slot to look for.
+
+        Returns:
+            obj: Object instance or None if not found.
+
+        Raises:
+            KeyError: If multiple slots are found.
+        """
+        if self._parent_cache is not None:
+            result = self._parent_cache.get(slot_name)
+            if result is not None:
+                if result.verify_version():
+                    return result.item
+                else:
+                    self._parent_cache.delete(slot_name)
+
+        objects = []
+        if self.scope_parent is not None and not self.scope_parent.visited:
+            objects.append(PathHolder(self.scope_parent, [-1]))
+
+        # objects.extend(self._parent_slot_values)
+        for cnt, parent in enumerate(self._parent_slot_values):
+            objects.append(PathHolder(parent, [cnt]))
+
+        result = None
+        result_path = []
+        visited_objects = []
+        while objects:
+            ph = objects.pop(0)
+
+            if ph.obj.visited:
+                continue
+
+            ph.obj.visited = True
+            visited_objects.append(ph.obj)
+
+            slot = ph.obj.get_slot(slot_name)
+            if slot is not None:
+                if result is not None:
+                    raise KeyError("Too many parent slots `%s`, use resend!" % slot_name)
+
+                result = slot
+                result_path = ph.path
+                continue
+
+            if ph.obj.scope_parent is not None:
+                objects.append(PathHolder.from_path(ph.obj.scope_parent, -1, ph))
+
+            # objects.extend(obj._parent_slot_values)
+            for cnt, parent in enumerate(ph.obj._parent_slot_values):
+                objects.append(PathHolder.from_path(parent, cnt, ph))
+
+        unvisit(visited_objects)
+        if self.map.code_context is not None:
+            if self._parent_cache is None:
+                self._parent_cache = LightWeightDictObjects()
+
+            self._parent_cache.set(slot_name, NamedCacheItem(result, visited_objects))
+
+        return result
+
+    def parent_lookup2(self, slot_name):
         """
         Look for `slot_name` in all parents.
 
@@ -83,11 +203,12 @@ class _BareObject(object):
             obj.visited = True
             visited_objects.append(obj)
 
-            if slot_name in obj.slot_keys:
-                if result:
+            slot = obj.get_slot(slot_name)
+            if slot is not None:
+                if result is not None:
                     raise KeyError("Too many parent slots `%s`, use resend!" % slot_name)
 
-                result = obj.get_slot(slot_name)
+                result = slot
                 continue
 
             if obj.scope_parent is not None:
@@ -233,7 +354,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 
         value.scope_parent = self
 
-        if slot_name in self.map._slots:
+        if self.map._slots.has_key(slot_name):
             self.set_slot(slot_name, value)
             self.map._on_structural_changes()
             return
@@ -252,7 +373,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
             self._slot_values.append(value)
 
     def meta_remove_slot(self, slot_name):
-        if slot_name not in self.map._slots:
+        if not self.map._slots.has_key(slot_name):
             return
 
         self._clone_map_if_used_by_multiple_objects()
@@ -266,7 +387,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
                 self.map._slots[name] -= 1
 
     def meta_insert_slot(self, slot_index, slot_name, value):  # TODO: wtf?
-        if slot_name in self.map._slots:
+        if self.map._slots.has_key(slot_name):
             self.set_slot(slot_name, value)
             self.map._on_structural_changes()
             return
@@ -280,7 +401,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
     def meta_add_parent(self, parent_name, value):
         assert isinstance(value, Object)
 
-        if parent_name in self.map._parent_slots:
+        if self.map._parent_slots.has_key(parent_name):
             index = self.map._parent_slots[parent_name]
             self._parent_slot_values[index] = value
             self.map._on_structural_changes()
@@ -300,7 +421,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
         return self._parent_slot_values[index]
 
     def meta_remove_parent(self, parent_name):
-        if parent_name not in self.map._parent_slots:
+        if not self.map._parent_slots.has_key(parent_name):
             return
 
         self._clone_map_if_used_by_multiple_objects()
@@ -336,10 +457,11 @@ class Object(_ObjectWithMetaOperations):
 
 class ObjectMap(object):
     def __init__(self):
-        self._slots = OrderedDict()
-        self._parent_slots = OrderedDict()
+        self._slots = LightWeightDict()
+        self._parent_slots = LightWeightDict()
         self._used_in_multiple_objects = False
         self._version = 0
+        self._parent_cache = None
 
         self.is_block = False
 
@@ -353,12 +475,13 @@ class ObjectMap(object):
     def clone(self):
         new_map = ObjectMap()
 
-        new_map.ast = self.ast
         new_map._slots = self._slots.copy()
+        new_map._parent_slots = self._parent_slots.copy()
+
+        new_map.ast = self.ast
         new_map.is_block = self.is_block
         new_map.parameters = self.parameters[:]
         new_map.code_context = self.code_context
-        new_map._parent_slots = self._parent_slots.copy()
         new_map.primitive_code = self.primitive_code
 
         return new_map
@@ -386,7 +509,7 @@ class ObjectMap(object):
         if slot_index > len(self._slots):
             self.add_slot(slot_name, index)
 
-        new_slots = OrderedDict()
+        new_slots = LightWeightDict()
         for cnt, key in enumerate(self._slots.keys()):
             if cnt == slot_index:
                 new_slots[slot_name] = index
@@ -403,7 +526,7 @@ class ObjectMap(object):
         self._on_structural_changes()
 
     def remove_parent(self, parent_name):
-        if parent_name not in self._parent_slots:
+        if not self._parent_slots.has_key(parent_name):
             return False
 
         del self._parent_slots[parent_name]
