@@ -2,6 +2,9 @@
 from collections import OrderedDict
 
 
+from tinySelf.code_generalization import create_copy_with_different_types
+
+
 class KeyValPair(object):
     def __init__(self, key, val):
         self.key = key
@@ -289,3 +292,10 @@ class LightWeightDict(object):
         else:
             for k, v in self._dict.iteritems():
                 yield k, v
+
+
+exec create_copy_with_different_types(Container, "ObjectContainer")
+exec create_copy_with_different_types(KeyValPair, "KeyValPairObject")
+exec create_copy_with_different_types(LightWeightDict, "LightWeightDictObjects",
+                                      [["Container", "ObjectContainer"],
+                                       ["KeyValPair", "KeyValPairObject"]])
