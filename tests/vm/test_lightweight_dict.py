@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import pytest
+
 from tinySelf.vm.lightweight_dict import LightWeightDict
 
 
@@ -11,7 +13,13 @@ def test_lightweight_dict_one():
     lwd["xe"] = 1
 
     assert lwd["xe"] == 1
-    assert lwd["a"] is None
+
+    with pytest.raises(KeyError):
+        assert lwd["a"]
+
+    assert lwd.get("a") is None
+    assert lwd.get("a", 1) is 1
+
 
     assert lwd.keys() == ["xe"]
     assert lwd.values() == [1]
@@ -28,7 +36,11 @@ def test_lightweight_dict_one():
     assert lwd.values() == [1, 2, 3]
 
     del lwd["xe"]
-    assert lwd["xe"] is None
+
+    with pytest.raises(KeyError):
+        assert lwd["xe"]
+    assert lwd.get("xe") is None
+
     assert lwd.keys() == ["xa", "xo"]
     assert lwd.values() == [2, 3]
 
@@ -44,7 +56,10 @@ def test_lightweight_dict_four():
     assert lwd["b"] == 2
     assert lwd["c"] == 3
     assert lwd["d"] == 4
-    assert lwd["e"] == None
+
+    with pytest.raises(KeyError):
+        assert lwd["e"]
+
     assert lwd.keys() == ["a", "b", "c", "d"]
     assert lwd.values() == [1, 2, 3, 4]
 
@@ -53,7 +68,10 @@ def test_lightweight_dict_four():
     assert lwd["a"] == 1
     assert lwd["c"] == 3
     assert lwd["d"] == 4
-    assert lwd["e"] == None
+
+    with pytest.raises(KeyError):
+        assert lwd["e"]
+
     assert lwd.keys() == ["a", "c", "d"]
     assert lwd.values() == [1, 3, 4]
 
@@ -74,7 +92,10 @@ def test_lightweight_dict_more():
     assert lwd["d"] == 4
     assert lwd["e"] == 5
     assert lwd["f"] == 6
-    assert lwd["g"] == None
+
+    with pytest.raises(KeyError):
+        assert lwd["g"]
+
     assert lwd.keys() == ["a", "b", "c", "d", "e", "f"]
     assert lwd.values() == [1, 2, 3, 4, 5, 6]
 
@@ -85,6 +106,9 @@ def test_lightweight_dict_more():
     assert lwd["d"] == 4
     assert lwd["e"] == 5
     assert lwd["f"] == 6
-    assert lwd["g"] == None
+
+    with pytest.raises(KeyError):
+        assert lwd["g"]
+
     assert lwd.keys() == ["a", "c", "d", "e", "f"]
     assert lwd.values() == [1, 3, 4, 5, 6]
