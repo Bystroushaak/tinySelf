@@ -3,8 +3,8 @@ from collections import OrderedDict
 
 from rply.token import BaseBox
 
-from tinySelf.vm.lightweight_dict import LightWeightDict
-from tinySelf.vm.lightweight_dict import LightWeightDictObjects
+from tinySelf.datastructures.lightweight_dict import LightWeightDict
+from tinySelf.datastructures.lightweight_dict import LightWeightDictObjects
 
 
 class PathHolder(object):
@@ -21,13 +21,9 @@ class PathHolder(object):
 
 
 class VersionedObject(object):
-    def __init__(self, object, version=None):
+    def __init__(self, object):
         self.object = object
-
-        if version is None:
-            self.version = object.map._version
-        else:
-            self.version = version
+        self.version = object.map._version
 
     def verify(self):
         return self.object.map._version == self.version
@@ -133,13 +129,14 @@ class _BareObject(object):
             objects.append(PathHolder(self.scope_parent, [-1]))
 
         # objects.extend(self._parent_slot_values)
-        for cnt, parent in enumerate(self._parent_slot_values):
-            objects.append(PathHolder(parent, [cnt]))
+        if len(self._parent_slot_values) > 0:  # this actually produces faster code
+            for cnt, parent in enumerate(self._parent_slot_values):
+                objects.append(PathHolder(parent, [cnt]))
 
         result = None
         result_path = []
         visited_objects = []
-        while objects:
+        while len(objects) > 0:
             ph = objects.pop(0)
 
             if ph.obj.visited:
@@ -161,8 +158,9 @@ class _BareObject(object):
                 objects.append(PathHolder.from_path(ph.obj.scope_parent, -1, ph))
 
             # objects.extend(obj._parent_slot_values)
-            for cnt, parent in enumerate(ph.obj._parent_slot_values):
-                objects.append(PathHolder.from_path(parent, cnt, ph))
+            if len(ph.obj._parent_slot_values) > 0:  # this actually produces faster code
+                for cnt, parent in enumerate(ph.obj._parent_slot_values):
+                    objects.append(PathHolder.from_path(parent, cnt, ph))
 
         unvisit(visited_objects)
         if self.map.code_context is not None:
