@@ -22,9 +22,7 @@ from tinySelf.vm.code_context import ObjBox
 from tinySelf.vm.code_context import FloatBox
 
 from tinySelf.vm.frames import ProcessCycler
-from tinySelf.vm.object_layout import Object, NamedCacheItem
-
-from tinySelf.vm.dynamic_recompiler import dynamic_recompiler
+from tinySelf.vm.object_layout import Object
 
 if not we_are_translated():
     from tinySelf.vm.debug.visualisations import obj_map_to_plantuml
@@ -89,7 +87,6 @@ class Interpreter(ProcessCycler):
 
             elif bytecode == BYTECODE_RETURN_TOP or \
                  bytecode == BYTECODE_RETURN_IMPLICIT:
-                self._recompile(code_obj, frame)
                 if not self.process.is_nested_call():
                     result = self.process.frame.pop_or_nil()
                     process = self.remove_active_process()
@@ -113,20 +110,6 @@ class Interpreter(ProcessCycler):
 
             # elif bytecode == BYTECODE_SELF_SEND:
             #     self._do_selfSend(bc_index, code_obj, frame)
-
-            elif bytecode == BYTECODE_NOP:
-                frame.bc_index += 1
-                continue
-
-            elif bytecode == BYTECODE_LOCAL_SEND_UNARY:
-                bc_len = self._do_local_send(frame.bc_index, code_obj, SEND_TYPE_UNARY)
-            elif bytecode == BYTECODE_LOCAL_SEND_BINARY:
-                bc_len = self._do_local_send(frame.bc_index, code_obj, SEND_TYPE_BINARY)
-            elif bytecode == BYTECODE_LOCAL_SEND_KEYWORD:
-                bc_len = self._do_local_send(frame.bc_index, code_obj, SEND_TYPE_KEYWORD)
-
-            elif bytecode == BYTECODE_PARENT_SEND:
-                bc_len = self._do_parent_send(frame.bc_index, code_obj)
 
             else:
                 self.process.result = ErrorObject(
@@ -155,14 +138,6 @@ class Interpreter(ProcessCycler):
 
             if (frame.bc_index % 10) == 0:
                 self.next_process()
-
-    def _recompile(self, code_obj, frame):
-        if code_obj.recompile and not code_obj.is_recompiled:
-            frame.bc_index = dynamic_recompiler(
-                frame.bc_index,
-                code_obj,
-                self.process.frame.self
-            )
 
     def _handle_nonlocal_return(self):
         """
@@ -303,16 +278,24 @@ class Interpreter(ProcessCycler):
 
         raise ValueError("Missing slot error: `%s`" % message_name)
 
-    def _read_do_send_parameters(self, bc_index, code):
+    def _do_send(self, bc_index, code):
+        """
+        Args:
+            bc_index (int): Index of the bytecode in `code` bytecode list.
+            code (obj): :class:`CodeContext` instance.
+
+        Returns:
+            int: Index of next bytecode.
+        """
         boxed_message = self.process.frame.pop()
         assert isinstance(boxed_message, PrimitiveStrObject)
         message_name = boxed_message.value  # unpack from StrBox
 
-        parameters_values = []
+        parameters = []
         number_of_parameters = ord(code.bytecodes[bc_index + 2])
         if number_of_parameters > 0:
             for _ in range(number_of_parameters):
-                parameters_values.append(self.process.frame.pop())
+                parameters.append(self.process.frame.pop())
 
         boxed_resend_parent_name = None
         message_type = ord(code.bytecodes[bc_index + 1])
@@ -328,15 +311,9 @@ class Interpreter(ProcessCycler):
             parent_name = boxed_resend_parent_name.value
             slot = self._resend_to_parent(obj, parent_name, message_name)
         else:
-            slot = obj.slot_lookup(message_name, local_lookup_cache=True)
+            slot = obj.slot_lookup(message_name)
 
-        return message_name, parameters_values, obj, slot
-
-    def _eval(self, bc_index, code, message_name, parameters, obj, slot, slot_index=-1):
         if slot is None:
-            if slot_index >= 0:
-                message_name = obj.map._slots.keys()[slot_index]
-
             return self._handle_missing_slot(obj, code, message_name, bc_index)
 
         if slot.has_code:
@@ -361,9 +338,6 @@ class Interpreter(ProcessCycler):
             if len(parameters) != 1:
                 raise ValueError("Too many values to set!")
 
-            if slot_index >= 0:
-                message_name = obj.map._slots.keys()[slot_index]
-
             assert len(message_name) > 1
             slot_name = message_name[:-1]
 
@@ -378,62 +352,6 @@ class Interpreter(ProcessCycler):
             self.process.frame.push(return_value)
 
         return THREE_BYTECODES_LONG
-
-
-    def _do_send(self, bc_index, code):
-        """
-        Args:
-            bc_index (int): Index of the bytecode in `code` bytecode list.
-            code (obj): :class:`CodeContext` instance.
-
-        Returns:
-            int: Index of next bytecode.
-        """
-        message_name, parameters, obj, slot = self._read_do_send_parameters(
-            bc_index,
-            code
-        )
-
-        return self._eval(bc_index, code, message_name, parameters, obj, slot)
-
-    def _do_local_send(self, bc_index, code, send_type):
-        parameters = []
-        number_of_parameters = ord(code.bytecodes[bc_index + 2])
-        if number_of_parameters > 0:
-            for _ in range(number_of_parameters):
-                parameters.append(self.process.frame.pop())
-
-        obj = self.process.frame.pop()
-        self._set_scope_parent_if_not_already_set(obj, code)
-
-        slot_index = ord(code.bytecodes[bc_index + 1])
-        slot = obj._slot_values[slot_index]
-
-        return self._eval(bc_index, code, "", parameters, obj, slot, slot_index)
-
-    def _do_parent_send(self, bc_index, code):
-        parameters = []
-        number_of_parameters = ord(code.bytecodes[bc_index + 2])
-        if number_of_parameters > 0:
-            for _ in range(number_of_parameters):
-                parameters.append(self.process.frame.pop())
-
-        obj = self.process.frame.pop()
-        self._set_scope_parent_if_not_already_set(obj, code)
-
-        path_index = ord(code.bytecodes[bc_index + 1])
-
-        assert path_index >= 0
-        assert len(code._parent_cache_paths) > 0
-        cached_item = code._parent_cache_paths[path_index]
-
-        if cached_item.verify_version():
-            slot = cached_item.item
-        else:
-            code.invalidate_parent_lookup(cached_item.message_name)
-            slot = obj.slot_lookup(cached_item.message_name, local_lookup_cache=True)
-
-        return self._eval(bc_index, code, cached_item.message_name, parameters, obj, slot)
 
     # def _do_selfSend(self, bc_index, code_obj, frame):
     #     pass
