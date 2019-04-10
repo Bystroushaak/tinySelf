@@ -7,6 +7,7 @@ from tinySelf.vm.bytecodes import BYTECODE_SEND
 from tinySelf.vm.bytecodes import BYTECODE_LOCAL_SEND_UNARY
 from tinySelf.vm.bytecodes import BYTECODE_LOCAL_SEND_BINARY
 from tinySelf.vm.bytecodes import BYTECODE_LOCAL_SEND_KEYWORD
+from tinySelf.vm.bytecodes import BYTECODE_PARENT_SEND
 from tinySelf.vm.bytecodes import BYTECODE_PUSH_LITERAL
 from tinySelf.vm.bytecodes import LITERAL_TYPE_STR
 
@@ -20,6 +21,8 @@ from tinySelf.vm.code_context import StrBox
 
 def dynamic_recompiler(program_counter, code_context, obj):
     bytecode_tokens = []
+    code_context.invalidate_bytecodes()
+    code_context._parent_cache_paths = []
 
     for token in bytecode_tokenizer(code_context.bytecodes):
         if not bytecode_tokens:
@@ -35,7 +38,8 @@ def dynamic_recompiler(program_counter, code_context, obj):
 
         last_token = bytecode_tokens[-1]
         last_token_type = last_token[1]
-        last_token_literal_type = last_token[2]
+
+        last_token_literal_type = last_token[2] if len(last_token) > 2 else -1
 
         if (last_token_type == BYTECODE_PUSH_LITERAL and
                 last_token_literal_type == LITERAL_TYPE_STR and _not_resend(token)):
@@ -65,6 +69,32 @@ def dynamic_recompiler(program_counter, code_context, obj):
                 ])
                 continue
 
+            elif code_context is not None and code_context._parent_cache is not None and \
+                    len(code_context._parent_cache) > 0 and len(code_context._parent_cache_paths) < 255:
+                item = code_context._parent_cache.get(msg_name)
+                if item is not None:
+                    # replace BYTECODE_PUSH_LITERAL with NOPs
+                    push_literal = bytecode_tokens.pop()
+                    push_literal_index = push_literal[0]
+                    bytecode_tokens.append([push_literal_index, BYTECODE_NOP])
+                    bytecode_tokens.append([push_literal_index + 1, BYTECODE_NOP])
+                    bytecode_tokens.append([push_literal_index + 2, BYTECODE_NOP])
+
+                    number_of_parameters = token[3]
+                    path_index = len(code_context._parent_cache_paths)
+                    code_context._parent_cache_paths.append(item)
+
+                    bytecode_tokens.append([
+                        token_index,
+                        BYTECODE_PARENT_SEND,
+                        path_index,
+                        number_of_parameters,
+                    ])
+
+                    print("recompiled")
+
+                    continue
+
         bytecode_tokens.append(token)
 
     assert len(code_context.bytecodes) == len(bytecode_detokenizer(bytecode_tokens))
@@ -74,6 +104,7 @@ def dynamic_recompiler(program_counter, code_context, obj):
     # _print_tokens(lambda: disassemble([], bytecode_tokens))
 
     code_context.swap_bytecodes(bytecode_detokenizer(bytecode_tokens))
+    code_context.is_recompiled = True
 
     return program_counter
 

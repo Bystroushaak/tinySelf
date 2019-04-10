@@ -22,7 +22,7 @@ from tinySelf.vm.code_context import ObjBox
 from tinySelf.vm.code_context import FloatBox
 
 from tinySelf.vm.frames import ProcessCycler
-from tinySelf.vm.object_layout import Object
+from tinySelf.vm.object_layout import Object, NamedCacheItem
 
 from tinySelf.vm.dynamic_recompiler import dynamic_recompiler
 
@@ -55,8 +55,6 @@ class Interpreter(ProcessCycler):
         ProcessCycler.__init__(self, code_context)
         self.universe = universe
         self._add_reflection_to_universe()
-
-        self._last_receiver = None
 
     def _add_reflection_to_universe(self):
         self.universe.meta_add_slot("universe", self.universe)
@@ -91,6 +89,7 @@ class Interpreter(ProcessCycler):
 
             elif bytecode == BYTECODE_RETURN_TOP or \
                  bytecode == BYTECODE_RETURN_IMPLICIT:
+                self._recompile(code_obj, frame)
                 if not self.process.is_nested_call():
                     result = self.process.frame.pop_or_nil()
                     process = self.remove_active_process()
@@ -126,6 +125,9 @@ class Interpreter(ProcessCycler):
             elif bytecode == BYTECODE_LOCAL_SEND_KEYWORD:
                 bc_len = self._do_local_send(frame.bc_index, code_obj, SEND_TYPE_KEYWORD)
 
+            elif bytecode == BYTECODE_PARENT_SEND:
+                bc_len = self._do_parent_send(frame.bc_index, code_obj)
+
             else:
                 self.process.result = ErrorObject(
                     PrimitiveStrObject("Unknown bytecode: %s!" % bytecode),
@@ -143,14 +145,6 @@ class Interpreter(ProcessCycler):
 
             frame.bc_index += bc_len
 
-            if code_obj.recompile and not code_obj.is_recompiled:
-                frame.bc_index = dynamic_recompiler(
-                    frame.bc_index,
-                    code_obj,
-                    # self._last_receiver  # TODO: maybe frame.self?  # TODO: remove
-                    self.process.frame.self
-                )
-
             jitdriver.jit_merge_point(
                 bc_index=frame.bc_index,
                 bytecode=bytecode,
@@ -161,6 +155,14 @@ class Interpreter(ProcessCycler):
 
             if (frame.bc_index % 10) == 0:
                 self.next_process()
+
+    def _recompile(self, code_obj, frame):
+        if code_obj.recompile and not code_obj.is_recompiled:
+            frame.bc_index = dynamic_recompiler(
+                frame.bc_index,
+                code_obj,
+                self.process.frame.self
+            )
 
     def _handle_nonlocal_return(self):
         """
@@ -187,7 +189,7 @@ class Interpreter(ProcessCycler):
             for _ in range(len(parameter_names) - len(parameters)):
                 parameters.append(PrimitiveNilObject())
 
-        for i in range(len(parameter_names)):
+        for i in xrange(len(parameter_names)):  # TODO: benchmark rewrite to enumerate()
             yield parameter_names[i], parameters[i]
 
     def _create_intermediate_params_obj(self, scope_parent, method_obj,
@@ -321,7 +323,6 @@ class Interpreter(ProcessCycler):
 
         obj = self.process.frame.pop()
         self._set_scope_parent_if_not_already_set(obj, code)
-        self._last_receiver = obj  # for dynamic recompilation
 
         if boxed_resend_parent_name is not None:
             parent_name = boxed_resend_parent_name.value
@@ -404,12 +405,36 @@ class Interpreter(ProcessCycler):
 
         obj = self.process.frame.pop()
         self._set_scope_parent_if_not_already_set(obj, code)
-        self._last_receiver = obj  # for dynamic recompilation
 
         slot_index = ord(code.bytecodes[bc_index + 1])
         slot = obj._slot_values[slot_index]
 
         return self._eval(bc_index, code, "", parameters, obj, slot, slot_index)
+
+    def _do_parent_send(self, bc_index, code):
+        parameters = []
+        number_of_parameters = ord(code.bytecodes[bc_index + 2])
+        if number_of_parameters > 0:
+            for _ in range(number_of_parameters):
+                parameters.append(self.process.frame.pop())
+
+        obj = self.process.frame.pop()
+        self._set_scope_parent_if_not_already_set(obj, code)
+
+        path_index = ord(code.bytecodes[bc_index + 1])
+
+        assert path_index >= 0
+        assert len(code._parent_cache_paths) > 0
+        cached_item = code._parent_cache_paths[path_index]
+
+        if cached_item.verify_version():
+            slot = cached_item.item
+        else:
+            print("invalidated!")
+            code.invalidate_parent_lookup(cached_item.message_name)
+            slot = obj.slot_lookup(cached_item.message_name, local_lookup_cache=True)
+
+        return self._eval(bc_index, code, cached_item.message_name, parameters, obj, slot)
 
     # def _do_selfSend(self, bc_index, code_obj, frame):
     #     pass

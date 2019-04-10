@@ -74,6 +74,7 @@ class CodeContext(object):
         self.literals = []
         self._params_cache = None  # used to cache intermediate parameters obj
         self._parent_cache = None
+        self._parent_cache_paths = []
 
         self.recompile = False
         self.is_recompiled = False
@@ -130,6 +131,7 @@ class CodeContext(object):
 
         # I would use bytearray(), but it behaves differently under rpython
         self.bytecodes = str("".join([chr(x) for x in self._mutable_bytecodes]))
+        self._original_bytecodes = self.bytecodes
         self._mutable_bytecodes = None
         self.str_literal_cache = None
 
@@ -141,17 +143,19 @@ class CodeContext(object):
         return self
 
     def swap_bytecodes(self, bytecodes):
-        if not self._original_bytecodes:
-            self._original_bytecodes = bytecodes
-
         self.bytecodes = bytecodes
         self.is_recompiled = True
 
     def invalidate_bytecodes(self):
-        if self._original_bytecodes:
-            self.bytecodes = self._original_bytecodes
-            self.is_recompiled = False
-            self._original_bytecodes = ""
+        self.bytecodes = self._original_bytecodes
+        self.is_recompiled = False
+
+    def invalidate_parent_lookup(self, msg_name):
+        self.invalidate_bytecodes()
+
+        self._parent_cache.delete(msg_name)
+        self._parent_cache_paths = []
+        self.recompile = True
 
     def debug_repr(self):
         out = '(|\n  literals = (| l <- dict clone. |\n    l\n'
@@ -176,3 +180,24 @@ class CodeContext(object):
         out += 'bytecodes = (||\n    %s\n).' % bytecodes_list
 
         return out
+
+    def clone(self):
+        cc = CodeContext()
+
+        cc._finalized = self._finalized
+        cc.bytecodes = self.bytecodes
+
+        cc._mutable_bytecodes = self._mutable_bytecodes
+        cc._original_bytecodes = self._original_bytecodes
+
+        cc.str_literal_cache = self.str_literal_cache
+        cc.literals = self.literals
+
+        cc._params_cache = self._params_cache
+        cc._parent_cache = self._parent_cache
+        cc._parent_cache_paths = self._parent_cache_paths
+
+        cc.recompile = self.recompile
+        cc.is_recompiled = self.is_recompiled
+
+        return cc
