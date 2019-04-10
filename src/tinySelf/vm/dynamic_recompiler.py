@@ -91,8 +91,6 @@ def dynamic_recompiler(program_counter, code_context, obj):
                         number_of_parameters,
                     ])
 
-                    print("recompiled")
-
                     continue
 
         bytecode_tokens.append(token)
@@ -105,6 +103,7 @@ def dynamic_recompiler(program_counter, code_context, obj):
 
     code_context.swap_bytecodes(bytecode_detokenizer(bytecode_tokens))
     code_context.is_recompiled = True
+    code_context.recompile = False
 
     return program_counter
 

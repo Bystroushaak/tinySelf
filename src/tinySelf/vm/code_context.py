@@ -155,7 +155,6 @@ class CodeContext(object):
 
         self._parent_cache.delete(msg_name)
         self._parent_cache_paths = []
-        self.recompile = True
 
     def debug_repr(self):
         out = '(|\n  literals = (| l <- dict clone. |\n    l\n'

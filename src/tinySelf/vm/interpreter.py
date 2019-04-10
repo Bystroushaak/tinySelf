@@ -430,7 +430,6 @@ class Interpreter(ProcessCycler):
         if cached_item.verify_version():
             slot = cached_item.item
         else:
-            print("invalidated!")
             code.invalidate_parent_lookup(cached_item.message_name)
             slot = obj.slot_lookup(cached_item.message_name, local_lookup_cache=True)
 

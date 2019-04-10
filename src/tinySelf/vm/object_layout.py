@@ -49,6 +49,7 @@ class _BareObject(object):
 
         self._local_lookups = 0
         self._parent_lookups = 0
+        self._next_recompilation = 0
 
         self._parent_slot_values = []
         self._slot_values = []
@@ -99,8 +100,10 @@ class _BareObject(object):
         self._parent_lookups += 1
 
         if self.map.code_context is not None and self.map.code_context._parent_cache is not None:
-            if not self.map.code_context.is_recompiled and self._parent_lookups > 5:
+            if not self.map.code_context.is_recompiled and self._parent_lookups > 2 and \
+                self._parent_lookups > self._next_recompilation:
                 self.map.code_context.recompile = True
+                self._next_recompilation += 5000
 
             result = self.map.code_context._parent_cache.get(slot_name)
             if result is not None:
@@ -247,7 +250,8 @@ class _BareObject(object):
         if self._local_lookups < 5:  # TODO: set dynamically
             return
 
-        if self.map.code_context is not None and not self.map.code_context.recompile:
+        if self.map.code_context is not None and not self.map.code_context.recompile and \
+                self._local_lookups > self._next_recompilation:
             self.map.code_context.recompile = True
 
     def clone(self):
