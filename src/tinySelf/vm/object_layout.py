@@ -3,13 +3,8 @@ from collections import OrderedDict
 
 from rply.token import BaseBox
 
-
-def unvisit(visited_objects, first_level_call):
-    if not first_level_call:
-        return
-
-    for obj in visited_objects:
-        obj.visited = False
+from tinySelf.datastructures.arrays import TwoPointerArray
+from tinySelf.datastructures.lightweight_dict import LightWeightDict
 
 
 class _BareObject(object):
@@ -54,38 +49,73 @@ class _BareObject(object):
 
         return self._slot_values[slot_index]
 
-    def parent_lookup(self, slot_name, _visited_objects=None):
-        first_level_call = False
-        if _visited_objects is None:
-            first_level_call = True
-            _visited_objects = []
+    def parent_lookup(self, slot_name):
+        """
+        Look for `slot_name` in all parents.
 
-        parents = []
+        Args:
+            slot_name (str): Name of the slot to look for.
+
+        Returns:
+            obj: Object instance or None if not found.
+
+        Raises:
+            KeyError: If multiple slots are found.
+        """
+        objects = TwoPointerArray(100)
         if self.scope_parent is not None and not self.scope_parent.visited:
-            parents.append(self.scope_parent)
+            objects.append(self.scope_parent)
 
-        parents.extend(self._parent_slot_values)
+        # objects.extend(self._parent_slot_values)
+        if len(self._parent_slot_values) > 0:  # this actually produces faster code
+            for parent in self._parent_slot_values:
+                objects.append(parent)
 
-        for parent in parents:
-            if parent.visited:
+        result = None
+        visited_objects = TwoPointerArray(100)
+        while len(objects) > 0:
+            obj = objects.pop_first()
+
+            if obj.visited:
                 continue
 
-            parent.visited = True
-            _visited_objects.append(parent)
+            obj.visited = True
+            visited_objects.append(obj)
 
-            if slot_name in parent.slot_keys:
-                unvisit(_visited_objects, first_level_call)
-                return parent.get_slot(slot_name)
+            slot = obj.get_slot(slot_name)
+            if slot is not None:
+                if result is not None:
+                    raise KeyError("Too many parent slots `%s`, use resend!" % slot_name)
 
-            result = parent.parent_lookup(slot_name, _visited_objects)
-            if result is not None:
-                unvisit(_visited_objects, first_level_call)
-                return result
+                result = slot
+                continue
 
-        unvisit(_visited_objects, first_level_call)
-        return None
+            if obj.scope_parent is not None:
+                objects.append(obj.scope_parent)
+
+            # objects.extend(obj._parent_slot_values)
+            if len(obj._parent_slot_values) > 0:  # this actually produces faster code
+                for parent in obj._parent_slot_values:
+                    objects.append(parent)
+
+        for obj in visited_objects.to_list():
+            obj.visited = False
+
+        return result
 
     def slot_lookup(self, slot_name):
+        """
+        Look for the slot_name in own slots, if not found, delagate the search
+        to the parents.
+
+        Args:
+            slot_name (str): ...
+            local_lookup_cache (bool, default False): Count lookups and trigger
+                dynamic recompilation on frequent access.
+
+        Returns:
+            obj: Resolved Object, or None.
+        """
         assert isinstance(slot_name, str)
 
         slot_index = self.map._slots.get(slot_name, -1)
@@ -106,7 +136,7 @@ class _BareObject(object):
         obj._slot_values = self._slot_values[:]
         obj._parent_slot_values = self._parent_slot_values[:]
         obj.scope_parent = self.scope_parent
-        self.map.used_in_multiple_objects = True
+        self.map._used_in_multiple_objects = True
 
         return obj
 
@@ -147,9 +177,8 @@ class _ObjectWithMapEncapsulation(_BareObject):
     def parameters(self, new_paremeters):
         assert isinstance(new_paremeters, list)
 
-        new_map = self.map.clone()
-        new_map.parameters = new_paremeters
-        self.map = new_map
+        self._clone_map_if_used_by_multiple_objects()
+        self.map.parameters = new_paremeters
 
     @property
     def ast(self):
@@ -185,12 +214,12 @@ class _ObjectWithMapEncapsulation(_BareObject):
     def has_parents(self):
         return bool(self._parent_slot_values)
 
-
-class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
     def _clone_map_if_used_by_multiple_objects(self):
-        if self.map.used_in_multiple_objects:
+        if self.map._used_in_multiple_objects:
             self.map = self.map.clone()
 
+
+class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
     def meta_add_slot(self, slot_name, value, check_duplicates=False):
         """
         check_duplicates: make sure that one value is stored only once
@@ -199,7 +228,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 
         value.scope_parent = self
 
-        if slot_name in self.map._slots:
+        if self.map._slots.has_key(slot_name):
             self.set_slot(slot_name, value)
             return
 
@@ -217,10 +246,11 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
             self._slot_values.append(value)
 
     def meta_remove_slot(self, slot_name):
-        if slot_name not in self.map._slots:
+        if not self.map._slots.has_key(slot_name):
             return
 
         self._clone_map_if_used_by_multiple_objects()
+
         slot_index = self.map._slots[slot_name]
         self.map.remove_slot(slot_name)
         self._slot_values.pop(slot_index)
@@ -230,10 +260,12 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
                 self.map._slots[name] -= 1
 
     def meta_insert_slot(self, slot_index, slot_name, value):  # TODO: wtf?
-        if slot_name in self.map._slots:
+        if self.map._slots.has_key(slot_name):
             self.set_slot(slot_name, value)
+            return
 
         self._clone_map_if_used_by_multiple_objects()
+
         self.map.insert_slot(slot_index, slot_name, len(self._slot_values))
 
         self._slot_values.append(value)
@@ -241,7 +273,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
     def meta_add_parent(self, parent_name, value):
         assert isinstance(value, Object)
 
-        if parent_name in self.map._parent_slots:
+        if self.map._parent_slots.has_key(parent_name):
             index = self.map._parent_slots[parent_name]
             self._parent_slot_values[index] = value
             return
@@ -260,7 +292,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
         return self._parent_slot_values[index]
 
     def meta_remove_parent(self, parent_name):
-        if parent_name not in self.map._parent_slots:
+        if not self.map._parent_slots.has_key(parent_name):
             return
 
         self._clone_map_if_used_by_multiple_objects()
@@ -286,17 +318,18 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
         self.map.code_context = code_context
 
 
+
 class Object(_ObjectWithMetaOperations):
     pass
 
 
 class ObjectMap(object):
     def __init__(self):
-        self._slots = OrderedDict()
-        self._parent_slots = OrderedDict()
+        self._slots = LightWeightDict()
+        self._parent_slots = LightWeightDict()
+        self._used_in_multiple_objects = False
 
         self.is_block = False
-        self.used_in_multiple_objects = False
 
         self.ast = None
         self.code_context = None
@@ -308,12 +341,16 @@ class ObjectMap(object):
     def clone(self):
         new_map = ObjectMap()
 
-        new_map.ast = self.ast
         new_map._slots = self._slots.copy()
+        new_map._parent_slots = self._parent_slots.copy()
+
+        new_map.ast = self.ast
         new_map.is_block = self.is_block
         new_map.parameters = self.parameters[:]
-        new_map.code_context = self.code_context
-        new_map._parent_slots = self._parent_slots.copy()
+
+        if self.code_context is not None:
+            new_map.code_context = self.code_context #.clone()
+
         new_map.primitive_code = self.primitive_code
 
         return new_map
@@ -329,6 +366,7 @@ class ObjectMap(object):
             return False
 
         del self._slots[slot_name]
+
         return True
 
     def insert_slot(self, slot_index, slot_name, index):
@@ -338,7 +376,7 @@ class ObjectMap(object):
         if slot_index > len(self._slots):
             self.add_slot(slot_name, index)
 
-        new_slots = OrderedDict()
+        new_slots = LightWeightDict()
         for cnt, key in enumerate(self._slots.keys()):
             if cnt == slot_index:
                 new_slots[slot_name] = index
@@ -353,8 +391,9 @@ class ObjectMap(object):
         self._parent_slots[parent_name] = index
 
     def remove_parent(self, parent_name):
-        if parent_name not in self._parent_slots:
+        if not self._parent_slots.has_key(parent_name):
             return False
 
         del self._parent_slots[parent_name]
+
         return True

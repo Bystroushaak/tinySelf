@@ -116,3 +116,5 @@ plantuml.jar
 frame*.png
 parent_map*.png
 callgrind*
+
+.idea

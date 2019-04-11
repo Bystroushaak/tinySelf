@@ -345,12 +345,12 @@ class MessageBase(BaseBox):
 
 class Message(MessageBase):
     def compile(self, context):
-        context.add_literal_str_push_bytecode(self.name)
-
         send_type = SEND_TYPE_UNARY
         if self.is_resend:
             send_type = SEND_TYPE_UNARY_RESEND
             context.add_literal_str_push_bytecode(self.parent_name)
+
+        context.add_literal_str_push_bytecode(self.name)
 
         context.add_bytecode(BYTECODE_SEND)
         context.add_bytecode(send_type)
@@ -375,8 +375,6 @@ class KeywordMessage(MessageBase):
         self.parameters = parameters
 
     def compile(self, context):
-        context.add_literal_str_push_bytecode(self.name)
-
         send_type = SEND_TYPE_KEYWORD
         if self.is_resend:
             send_type = SEND_TYPE_KEYWORD_RESEND
@@ -384,6 +382,8 @@ class KeywordMessage(MessageBase):
 
         for parameter in reversed(self.parameters):
             parameter.compile(context)
+
+        context.add_literal_str_push_bytecode(self.name)
 
         context.add_bytecode(BYTECODE_SEND)
         context.add_bytecode(send_type)
@@ -418,9 +418,9 @@ class BinaryMessage(BaseBox):
         return False
 
     def compile(self, context):
-        context.add_literal_str_push_bytecode(self.name)
-
         self.parameter.compile(context)
+
+        context.add_literal_str_push_bytecode(self.name)
 
         context.add_bytecode(BYTECODE_SEND)
         context.add_bytecode(SEND_TYPE_BINARY)

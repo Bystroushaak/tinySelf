@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 
-from rpython.rlib.jit import JitDriver
+from rpython.rlib import jit
 from rpython.rlib.objectmodel import we_are_translated
 
 from tinySelf.vm.bytecodes import *
@@ -35,7 +35,10 @@ TWO_BYTECODES_LONG = 2
 THREE_BYTECODES_LONG = 3
 EMPTY = Object()
 
-jitdriver = JitDriver(
+
+jit.set_param(None, "enable_opts", "intbounds:rewrite:virtualize:string:pure:earlyforce:heap")
+
+jitdriver = jit.JitDriver(
     greens=['code_obj'],
     reds=['bc_index', 'bytecode', 'frame', 'self'],
     is_recursive=True  # I have no idea why is this required
@@ -161,7 +164,7 @@ class Interpreter(ProcessCycler):
             for _ in range(len(parameter_names) - len(parameters)):
                 parameters.append(PrimitiveNilObject())
 
-        for i in range(len(parameter_names)):
+        for i in xrange(len(parameter_names)):  # TODO: benchmark rewrite to enumerate()
             yield parameter_names[i], parameters[i]
 
     def _create_intermediate_params_obj(self, scope_parent, method_obj,
@@ -241,7 +244,7 @@ class Interpreter(ProcessCycler):
         resend_parent = obj.meta_get_parent(parent_name)
         if resend_parent is None and obj.scope_parent:
             resend_parent = obj.scope_parent.meta_get_parent(parent_name)
-        if resend_parent is None and "*" in obj.scope_parent.map._parent_slots:
+        if resend_parent is None and obj.scope_parent.map._parent_slots.has_key("*"):  # TODO: rewrite
             star_parent = obj.scope_parent.meta_get_parent("*")
             resend_parent = star_parent.meta_get_parent(parent_name)
 
@@ -284,23 +287,22 @@ class Interpreter(ProcessCycler):
         Returns:
             int: Index of next bytecode.
         """
-        message_type = ord(code.bytecodes[bc_index + 1])
-        number_of_parameters = ord(code.bytecodes[bc_index + 2])
+        boxed_message = self.process.frame.pop()
+        assert isinstance(boxed_message, PrimitiveStrObject)
+        message_name = boxed_message.value  # unpack from StrBox
 
-        parameters_values = []
+        parameters = []
+        number_of_parameters = ord(code.bytecodes[bc_index + 2])
         if number_of_parameters > 0:
             for _ in range(number_of_parameters):
-                parameters_values.append(self.process.frame.pop())
+                parameters.append(self.process.frame.pop())
 
         boxed_resend_parent_name = None
+        message_type = ord(code.bytecodes[bc_index + 1])
         if message_type == SEND_TYPE_UNARY_RESEND or \
            message_type == SEND_TYPE_KEYWORD_RESEND:
             boxed_resend_parent_name = self.process.frame.pop()
             assert isinstance(boxed_resend_parent_name, PrimitiveStrObject)
-
-        boxed_message = self.process.frame.pop()
-        assert isinstance(boxed_message, PrimitiveStrObject)
-        message_name = boxed_message.value  # unpack from StrBox
 
         obj = self.process.frame.pop()
         self._set_scope_parent_if_not_already_set(obj, code)
@@ -319,31 +321,31 @@ class Interpreter(ProcessCycler):
                 next_bytecode=ord(code.bytecodes[bc_index + 4]),
                 scope_parent=obj,
                 method_obj=slot,
-                parameters=parameters_values,
+                parameters=parameters,
             )
 
         elif slot.has_primitive_code:
             return_value = slot.primitive_code(
                 slot.primitive_code_self,
                 obj,
-                parameters_values
+                parameters
             )
 
             if return_value is not None:
                 self.process.frame.push(return_value)
 
         elif slot.is_assignment_primitive:
-            if len(parameters_values) != 1:
+            if len(parameters) != 1:
                 raise ValueError("Too many values to set!")
 
             assert len(message_name) > 1
             slot_name = message_name[:-1]
 
             assignee = slot.real_parent
-            ret_val = assignee.set_slot(slot_name, parameters_values[0])
+            ret_val = assignee.set_slot(slot_name, parameters[0])
 
-            if ret_val is None:
-                raise ValueError("Mistery; a slot that was and is not any more: %s" % slot_name)
+            if not ret_val:
+                raise ValueError("Can't set slot %s" % slot_name)
 
         else:
             return_value = slot

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from rply.token import BaseBox
 
+from tinySelf.datastructures.lightweight_dict import LightWeightDictObjects
 from tinySelf.vm.bytecodes import *
 from tinySelf.vm.object_layout import Object
 
@@ -71,7 +72,10 @@ class CodeContext(object):
         self.str_literal_cache = {}
 
         self.literals = []
-        self._params_cache = None
+        self._params_cache = None  # used to cache intermediate parameters obj
+
+        self.recompile = False
+        self.is_recompiled = False
 
     def add_literal(self, literal):
         assert isinstance(literal, LiteralBox)
@@ -126,7 +130,7 @@ class CodeContext(object):
         # I would use bytearray(), but it behaves differently under rpython
         self.bytecodes = str("".join([chr(x) for x in self._mutable_bytecodes]))
         self._mutable_bytecodes = None
-        self.str_literal_cache.clear()
+        self.str_literal_cache = None
 
         for item in self.literals:
             item.finalize()
@@ -158,3 +162,22 @@ class CodeContext(object):
         out += 'bytecodes = (||\n    %s\n).' % bytecodes_list
 
         return out
+
+    def clone(self):
+        cc = CodeContext()
+
+        cc._finalized = self._finalized
+        cc.bytecodes = self.bytecodes
+
+        cc._mutable_bytecodes = self._mutable_bytecodes
+
+        cc.str_literal_cache = self.str_literal_cache
+        cc.literals = self.literals
+
+        cc._params_cache = self._params_cache
+        cc._parent_cache = self._parent_cache
+
+        cc.recompile = self.recompile
+        cc.is_recompiled = self.is_recompiled
+
+        return cc

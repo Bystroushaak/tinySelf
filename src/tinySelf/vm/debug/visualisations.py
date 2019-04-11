@@ -95,7 +95,7 @@ def _render_object(obj, name=None):
     if obj.map._parent_slots:
         o.add_property("---")
         o.add_property("Parents:")
-        for key, val in obj.map._parent_slots.items():
+        for key, val in obj.map._parent_slots.iteritems():
             o.add_property("%s: %s" % (key, id(val)))
 
     if obj.slot_keys:
