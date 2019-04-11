@@ -37,7 +37,7 @@ def _get_number_of_processes(interpreter, _, parameters):
 
 
 def _get_number_of_stack_frames(interpreter, _, parameters):
-    return PrimitiveIntObject(len(interpreter.process.frames))
+    return PrimitiveIntObject(interpreter.process._length)
 
 
 def _set_error_handler(interpreter, _, parameters):
@@ -49,14 +49,15 @@ def _set_error_handler(interpreter, _, parameters):
     return NIL
 
 
-def _get_frame_with_error_handler(frames):
-    shallow_copy = frames[:]
+def _get_frame_with_error_handler(frame_linked_list):
+    if frame_linked_list is None:
+        return None
 
-    while shallow_copy:
-        frame = shallow_copy.pop()
-        if frame.error_handler is not None:
-            shallow_copy.append(frame)
-            return frame
+    while frame_linked_list is not None:
+        if frame_linked_list.error_handler is not None:
+            return frame_linked_list
+
+        frame_linked_list = frame_linked_list.prev_stack
 
     return None
 
@@ -109,8 +110,7 @@ def _raise_error(interpreter, _, parameters):
     msg = parameters[0]
     assert isinstance(msg, Object)
 
-    poped_frames = interpreter.process.frames
-    frame_with_handler = _get_frame_with_error_handler(poped_frames)
+    frame_with_handler = _get_frame_with_error_handler(interpreter.process.frame)
     process = interpreter.remove_active_process()
 
     if frame_with_handler is None:

@@ -61,14 +61,14 @@ def test_process_stack_push_frame_behavior():
     retval = Object()
     ps.frame.push(retval)
 
-    assert len(ps.frames) == 2
-    assert ps.frames[1].stack[-1] == retval
-    assert ps.frames[0].stack[-1] != retval
+    assert ps._length == 2
+    assert ps.frame._stack.obj == retval
+    assert ps.frame.prev_stack._stack.obj != retval
 
     ps.pop_down_and_cleanup_frame()
-    assert len(ps.frames) == 1
-    assert ps.frame.stack[-1] == retval
-    assert ps.frames[0].stack[-1] == retval
+    assert ps._length == 1
+    assert ps.frame._stack.obj == retval
+    assert ps.frame.prev_stack is None
 
 
 def test_process_cycler():

@@ -7,9 +7,18 @@ from tinySelf.vm.object_layout import Object
 NIL = PrimitiveNilObject()
 
 
+class ObjectHolder(object):
+    def __init__(self, obj, prev=None):
+        self.obj = obj
+        self.prev = prev
+
+
 class MethodStack(object):
-    def __init__(self, code_context=None):
-        self.stack = []
+    def __init__(self, code_context=None, prev_stack=None):
+        self._stack = None
+        self._length = 0
+        self.prev_stack = prev_stack
+
         self.bc_index = 0
         self.code_context = code_context
         self.error_handler = None
@@ -18,41 +27,59 @@ class MethodStack(object):
         # used to remove scope parent from the method later
         self.tmp_method_obj_reference = None
 
-    def push(self, item):
-        assert isinstance(item, Object)
-        self.stack.append(item)
+    def push(self, obj):
+        assert isinstance(obj, Object)
+        if self._length == 0:
+            self._stack = ObjectHolder(obj)
+            self._length = 1
+            return
+
+        self._stack = ObjectHolder(obj, prev=self._stack)
+        self._length += 1
 
     def pop(self):
-        return self.stack.pop()
+        if self._length == 0:
+            raise IndexError()
+
+        if self._length == 1:
+            ret = self._stack
+            self._length = 0
+            self._stack = None
+            return ret.obj
+
+        ret = self._stack
+        self._length -= 1
+        self._stack = self._stack.prev
+        return ret.obj
 
     def pop_or_nil(self):
-        if self.stack:
-            return self.pop()
+        if self._length == 0:
+            return NIL
 
-        return NIL
+        return self.pop()
 
 
 class ProcessStack(object):
     def __init__(self, code_context=None):
         self.frame = MethodStack(code_context)
-        self.frames = [self.frame]
+        self._length = 1
 
         self.result = None
         self.finished = False
         self.finished_with_error = False
 
     def is_nested_call(self):
-        return len(self.frames) > 1
+        return self._length > 1
 
     def push_frame(self, code_context, method_obj):
-        self.frame = MethodStack(code_context)
+        self.frame = MethodStack(code_context, prev_stack=self.frame)
         self.frame.self = method_obj
         self.frame.tmp_method_obj_reference = method_obj
 
-        self.frames.append(self.frame)
+        self._length += 1
 
     def top_frame(self):
-        return self.frames[-1]
+        return self.frame
 
     def _cleanup_frame(self):
         if self.frame.code_context:
@@ -66,24 +93,24 @@ class ProcessStack(object):
             self.frame.tmp_method_obj_reference = None
 
     def pop_frame(self):
-        if len(self.frames) == 1:
+        if self._length == 1:
             return
 
-        self.frames.pop()
-        self.frame = self.top_frame()
+        self.frame = self.frame.prev_stack
+        self._length -= 1
 
     def pop_and_clean_frame(self):
         self._cleanup_frame()
         self.pop_frame()
 
     def pop_frame_down(self):
-        if len(self.frames) == 1:
+        if self._length == 1:
             return
 
         result = self.frame.pop_or_nil()
 
-        self.frames.pop()
-        self.frame = self.top_frame()
+        self.frame = self.frame.prev_stack
+        self._length -= 1
 
         self.frame.push(result)
 
