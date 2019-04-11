@@ -83,13 +83,7 @@ class _BareObject(object):
             return result
 
         objects = TwoPointerArray(100)
-        if self.scope_parent is not None and not self.scope_parent.visited:
-            objects.append(self.scope_parent)
-
-        # objects.extend(self._parent_slot_values)
-        if len(self._parent_slot_values) > 0:  # this actually produces faster code
-            for parent in self._parent_slot_values:
-                objects.append(parent)
+        objects.append(self)
 
         result = None
         visited_objects = TwoPointerArray(100)
@@ -110,19 +104,21 @@ class _BareObject(object):
                 result = slot
                 continue
 
-            if obj.scope_parent is not None:
+            if obj.scope_parent is not None and not obj.scope_parent.visited:
                 objects.append(obj.scope_parent)
 
             # objects.extend(obj._parent_slot_values)
             if len(obj._parent_slot_values) > 0:  # this actually produces faster code
                 for parent in obj._parent_slot_values:
-                    objects.append(parent)
+                    if not parent.visited:
+                        objects.append(parent)
 
         visited_as_list = visited_objects.to_list()
         for obj in visited_as_list:
             obj.visited = False
 
-        self._store_to_parent_cache(slot_name, result, visited_as_list)
+        if result is not None:
+            self._store_to_parent_cache(slot_name, result, visited_as_list)
 
         return result
 
@@ -144,41 +140,24 @@ class _BareObject(object):
             return None
 
         objects = TwoPointerArray(100)
-        if self.scope_parent is not None:
-            objects.append(self.scope_parent)
-
-        if len(self._parent_slot_values) > 0:  # this actually produces faster code
-            for parent in self._parent_slot_values:
-                objects.append(parent)
-
-        objects_to_visit = TwoPointerArray(100)
-        while len(objects) > 0:
-            obj = objects.pop_first()
-
-            if obj.visited:
-                continue
-
-            obj.visited = True
-            objects_to_visit.append(obj)
-
-            if obj.scope_parent is not None:
-                objects.append(obj.scope_parent)
-
-            if len(obj._parent_slot_values) > 0:  # this actually produces faster code
-                for parent in obj._parent_slot_values:
-                    objects.append(parent)
+        visited_objects = TwoPointerArray(100)
 
         for item in cached_result.visited_objects:
             if item.verify():
                 item.obj.visited = True
+                visited_objects.append(item.obj)
             else:
                 item.obj.visited = False
-                objects_to_visit.append(item.obj)
+                objects.append(item.obj)
 
-        result = None
-        visited_objects = TwoPointerArray(100)
-        while len(objects_to_visit) > 0:
-            obj = objects_to_visit.pop_first()
+        if not self.visited:
+            objects.append(self)
+        else:
+            visited_objects.append(self)
+
+        result = cached_result.result
+        while len(objects) > 0:
+            obj = objects.pop_first()
             visited_objects.append(obj)
 
             if obj.visited:
@@ -186,24 +165,21 @@ class _BareObject(object):
 
             obj.visited = True
 
-            slot = obj.get_slot(slot_name)
-            if slot is not None:
-                if result is not None:
-                    raise KeyError("Too many parent slots `%s`, use resend!" % slot_name)
-
-                result = slot
-                continue
-
-            if obj.scope_parent is not None:
-                objects_to_visit.append(obj.scope_parent)
+            if obj.scope_parent is not None and not obj.scope_parent.visited:
+                objects.append(obj.scope_parent)
 
             # objects_to_visit.extend(obj._parent_slot_values)
             if len(obj._parent_slot_values) > 0:  # this actually produces faster code
                 for parent in obj._parent_slot_values:
-                    objects_to_visit.append(parent)
+                    if not parent.visited:
+                        objects.append(parent)
 
-        visited_as_list = visited_objects.to_list()
-        for obj in visited_as_list:
+            slot = obj.get_slot(slot_name)
+            if slot is not None:
+                result = slot
+                continue
+
+        for obj in visited_objects.to_list():
             obj.visited = False
 
         return result
