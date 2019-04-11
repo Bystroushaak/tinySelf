@@ -5,6 +5,22 @@ from rply.token import BaseBox
 
 from tinySelf.datastructures.arrays import TwoPointerArray
 from tinySelf.datastructures.lightweight_dict import LightWeightDict
+from tinySelf.datastructures.lightweight_dict import LightWeightDictObjects
+
+
+class CachedSlot(object):
+    def __init__(self, result, visited_objects):
+        self.result = result
+        self.visited_objects = visited_objects
+
+
+class VersionedObject(object):
+    def __init__(self, obj):
+        self.obj = obj
+        self.version = obj.map._version
+
+    def verify(self):
+        return self.obj.map._version == self.version
 
 
 class _BareObject(object):
@@ -62,6 +78,10 @@ class _BareObject(object):
         Raises:
             KeyError: If multiple slots are found.
         """
+        result = self._cached_lookup(slot_name)
+        if result is not None:
+            return result
+
         objects = TwoPointerArray(100)
         if self.scope_parent is not None and not self.scope_parent.visited:
             objects.append(self.scope_parent)
@@ -98,7 +118,92 @@ class _BareObject(object):
                 for parent in obj._parent_slot_values:
                     objects.append(parent)
 
-        for obj in visited_objects.to_list():
+        visited_as_list = visited_objects.to_list()
+        for obj in visited_as_list:
+            obj.visited = False
+
+        self._store_to_parent_cache(slot_name, result, visited_as_list)
+
+        return result
+
+    def _store_to_parent_cache(self, slot_name, result, visited_as_list):
+        if self.map._parent_cache is None:
+            self.map._parent_cache = LightWeightDictObjects()
+
+        self.map._parent_cache.set(
+            slot_name,
+            CachedSlot(result, [VersionedObject(x) for x in visited_as_list])
+        )
+
+    def _cached_lookup(self, slot_name):
+        if self.map._parent_cache is None:
+            return None
+
+        cached_result = self.map._parent_cache.get(slot_name)
+        if cached_result is None:
+            return None
+
+        objects = TwoPointerArray(100)
+        if self.scope_parent is not None:
+            objects.append(self.scope_parent)
+
+        if len(self._parent_slot_values) > 0:  # this actually produces faster code
+            for parent in self._parent_slot_values:
+                objects.append(parent)
+
+        objects_to_visit = TwoPointerArray(100)
+        while len(objects) > 0:
+            obj = objects.pop_first()
+
+            if obj.visited:
+                continue
+
+            obj.visited = True
+            objects_to_visit.append(obj)
+
+            if obj.scope_parent is not None:
+                objects.append(obj.scope_parent)
+
+            if len(obj._parent_slot_values) > 0:  # this actually produces faster code
+                for parent in obj._parent_slot_values:
+                    objects.append(parent)
+
+        for item in cached_result.visited_objects:
+            if item.verify():
+                item.obj.visited = True
+            else:
+                item.obj.visited = False
+                objects_to_visit.append(item.obj)
+
+        result = None
+        visited_objects = TwoPointerArray(100)
+        while len(objects_to_visit) > 0:
+            obj = objects_to_visit.pop_first()
+            visited_objects.append(obj)
+
+            if obj.visited:
+                continue
+
+            obj.visited = True
+
+            slot = obj.get_slot(slot_name)
+            if slot is not None:
+                if result is not None:
+                    raise KeyError("Too many parent slots `%s`, use resend!" % slot_name)
+
+                result = slot
+                continue
+
+            if obj.scope_parent is not None:
+                objects_to_visit.append(obj.scope_parent)
+
+            # objects_to_visit.extend(obj._parent_slot_values)
+            if len(obj._parent_slot_values) > 0:  # this actually produces faster code
+                for parent in obj._parent_slot_values:
+                    objects_to_visit.append(parent)
+
+        visited_as_list = visited_objects.to_list()
+        for obj in visited_as_list:
             obj.visited = False
 
         return result
@@ -230,6 +335,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 
         if self.map._slots.has_key(slot_name):
             self.set_slot(slot_name, value)
+            self.map._version += 1
             return
 
         self._clone_map_if_used_by_multiple_objects()
@@ -262,6 +368,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
     def meta_insert_slot(self, slot_index, slot_name, value):  # TODO: wtf?
         if self.map._slots.has_key(slot_name):
             self.set_slot(slot_name, value)
+            self.map._version += 1
             return
 
         self._clone_map_if_used_by_multiple_objects()
@@ -276,6 +383,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
         if self.map._parent_slots.has_key(parent_name):
             index = self.map._parent_slots[parent_name]
             self._parent_slot_values[index] = value
+            self.map._version += 1
             return
 
         self._clone_map_if_used_by_multiple_objects()
@@ -329,6 +437,9 @@ class ObjectMap(object):
         self._parent_slots = LightWeightDict()
         self._used_in_multiple_objects = False
 
+        self._version = 0
+        self._parent_cache = None
+
         self.is_block = False
 
         self.ast = None
@@ -348,6 +459,10 @@ class ObjectMap(object):
         new_map.is_block = self.is_block
         new_map.parameters = self.parameters[:]
 
+        new_map._version = self._version
+        if self._parent_cache is not None:
+            new_map._parent_cache = self._parent_cache.copy()
+
         if self.code_context is not None:
             new_map.code_context = self.code_context #.clone()
 
@@ -360,12 +475,14 @@ class ObjectMap(object):
         assert isinstance(index, int)
 
         self._slots[slot_name] = index
+        self._version += 1
 
     def remove_slot(self, slot_name):
         if slot_name not in self._slots:
             return False
 
         del self._slots[slot_name]
+        self._version += 1
 
         return True
 
@@ -384,16 +501,19 @@ class ObjectMap(object):
             new_slots[key] = self._slots[key]
 
         self._slots = new_slots
+        self._version += 1
 
     def add_parent(self, parent_name, index):
         assert isinstance(index, int)
 
         self._parent_slots[parent_name] = index
+        self._version += 1
 
     def remove_parent(self, parent_name):
         if not self._parent_slots.has_key(parent_name):
             return False
 
         del self._parent_slots[parent_name]
+        self._version += 1
 
         return True
