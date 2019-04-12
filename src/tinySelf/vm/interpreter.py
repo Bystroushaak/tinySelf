@@ -36,11 +36,30 @@ THREE_BYTECODES_LONG = 3
 EMPTY = Object()
 
 
-jit.set_param(None, "enable_opts", "intbounds:rewrite:virtualize:string:pure:earlyforce:heap")
+def get_printable_location(bc_index, bytecode, code_obj):
+    # XXX can do much better here, by using the disassemble infrastructure
+    # and adding the name of the method of code_obj somehow
+    if bytecode == BYTECODE_SEND:
+        opcode = "SEND"
+    elif bytecode == BYTECODE_PUSH_SELF:
+        opcode = "PUSH_SEND"
+    elif bytecode == BYTECODE_PUSH_LITERAL:
+        opcode = "PUSH_LITERAL"
+    elif bytecode == BYTECODE_RETURN_TOP:
+        opcode = "RETURN_TOP"
+    elif bytecode == BYTECODE_RETURN_IMPLICIT:
+        opcode = "RETURN_IMPLICIT"
+    elif bytecode == BYTECODE_ADD_SLOT:
+        opcode = "ADD_SLOT"
+    else:
+        opcode = "UNKNOWN"
+    return "%s %s" % (opcode, bc_index)
+
 
 jitdriver = jit.JitDriver(
-    greens=['code_obj'],
-    reds=['bc_index', 'bytecode', 'frame', 'self'],
+    greens=['bc_index', 'bytecode', 'code_obj'],
+    reds=['frame', 'self'],
+    get_printable_location=get_printable_location,
     is_recursive=True  # I have no idea why is this required
 )
 
@@ -71,19 +90,29 @@ class Interpreter(ProcessCycler):
     def interpret(self):
         while self.process_count > 0:
             frame = self.process.frame
-            code_obj = frame.code_context
+            code_obj = jit.promote(frame.code_context)
 
-            bytecode = ord(code_obj.bytecodes[frame.bc_index])
+            bc_index = jit.promote(frame.bc_index)
+            bytecode = ord(code_obj.bytecodes[bc_index])
+
+            jitdriver.jit_merge_point(
+                bc_index=bc_index,
+                bytecode=bytecode,
+                code_obj=code_obj,
+                frame=frame,
+                self=self,
+            )
+
 
             bc_len = 0
             if bytecode == BYTECODE_SEND:
-                bc_len = self._do_send(frame.bc_index, code_obj)
+                bc_len = self._do_send(bc_index, code_obj)
 
             elif bytecode == BYTECODE_PUSH_SELF:
-                bc_len = self._do_push_self(frame.bc_index, code_obj)
+                bc_len = self._do_push_self(bc_index, code_obj)
 
             elif bytecode == BYTECODE_PUSH_LITERAL:
-                bc_len = self._do_push_literal(frame.bc_index, code_obj)
+                bc_len = self._do_push_literal(bc_index, code_obj)
 
             elif bytecode == BYTECODE_RETURN_TOP or \
                  bytecode == BYTECODE_RETURN_IMPLICIT:
@@ -106,7 +135,7 @@ class Interpreter(ProcessCycler):
                 continue
 
             elif bytecode == BYTECODE_ADD_SLOT:
-                bc_len = self._do_add_slot(frame.bc_index, code_obj)
+                bc_len = self._do_add_slot(bc_index, code_obj)
 
             # elif bytecode == BYTECODE_SELF_SEND:
             #     self._do_selfSend(bc_index, code_obj, frame)
@@ -126,19 +155,12 @@ class Interpreter(ProcessCycler):
 
                 continue
 
-            frame.bc_index += bc_len
+            bc_index = frame.bc_index = bc_index + bc_len
 
-            jitdriver.jit_merge_point(
-                bc_index=frame.bc_index,
-                bytecode=bytecode,
-                code_obj=code_obj,
-                frame=frame,
-                self=self,
-            )
-
-            if (frame.bc_index % 10) == 0:
+            if (bc_index % 10) == 0:
                 self.next_process()
 
+    @jit.unroll_safe
     def _handle_nonlocal_return(self):
         """
         If the item at the top of the process frame is block which triggered
@@ -167,6 +189,7 @@ class Interpreter(ProcessCycler):
         for i in xrange(len(parameter_names)):  # TODO: benchmark rewrite to enumerate()
             yield parameter_names[i], parameters[i]
 
+    @jit.unroll_safe
     def _create_intermediate_params_obj(self, scope_parent, method_obj,
                                         parameters, prev_scope_parent=None):
         # do not create empty intermediate objects
@@ -278,6 +301,7 @@ class Interpreter(ProcessCycler):
 
         raise ValueError("Missing slot error: `%s`" % message_name)
 
+    @jit.unroll_safe
     def _do_send(self, bc_index, code):
         """
         Args:

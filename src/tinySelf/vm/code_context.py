@@ -63,6 +63,8 @@ class ObjBox(LiteralBox):
 
 
 class CodeContext(object):
+    _immutable_fields_ = ["bytecodes"]
+
     def __init__(self):
         self._finalized = False
 
