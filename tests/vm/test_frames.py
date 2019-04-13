@@ -4,6 +4,7 @@ from pytest import raises
 from tinySelf.vm.frames import MethodStack
 from tinySelf.vm.frames import ProcessStack
 from tinySelf.vm.frames import ProcessCycler
+from tinySelf.vm.code_context import CodeContext
 
 from tinySelf.vm.code_context import CodeContext
 from tinySelf.vm.object_layout import Object
@@ -13,7 +14,7 @@ from tinySelf.vm.interpreter import NIL
 
 
 def test_method_stack():
-    f = MethodStack()
+    f = MethodStack(CodeContext())
     f.push(PrimitiveIntObject(1))
     f.push(PrimitiveIntObject(2))
 
@@ -30,7 +31,7 @@ def test_method_stack():
 
 
 def test_process_stack():
-    ps = ProcessStack()
+    ps = ProcessStack(CodeContext())
 
     assert not ps.is_nested_call()
     assert ps.frame is ps.top_frame()
@@ -46,7 +47,7 @@ def test_process_stack():
 
 
 def test_process_stack_push_frame_behavior():
-    ps = ProcessStack()
+    ps = ProcessStack(CodeContext())
     ps.frame.push(PrimitiveIntObject(1))
 
     assert not ps.is_nested_call()
@@ -62,12 +63,12 @@ def test_process_stack_push_frame_behavior():
     ps.frame.push(retval)
 
     assert ps._length == 2
-    assert ps.frame._stack.obj == retval
-    assert ps.frame.prev_stack._stack.obj != retval
+    assert ps.frame._stack[ps.frame._length - 1] == retval
+    assert ps.frame.prev_stack._stack[ps.frame.prev_stack._length - 1] != retval
 
     ps.pop_down_and_cleanup_frame()
     assert ps._length == 1
-    assert ps.frame._stack.obj == retval
+    assert ps.frame._stack[ps.frame._length - 1] == retval
     assert ps.frame.prev_stack is None
 
 

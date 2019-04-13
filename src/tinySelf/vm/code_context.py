@@ -76,9 +76,6 @@ class CodeContext(object):
         self.literals = []
         self._params_cache = None  # used to cache intermediate parameters obj
 
-        self.recompile = False
-        self.is_recompiled = False
-
     def add_literal(self, literal):
         assert isinstance(literal, LiteralBox)
 
@@ -165,21 +162,6 @@ class CodeContext(object):
 
         return out
 
-    def clone(self):
-        cc = CodeContext()
-
-        cc._finalized = self._finalized
-        cc.bytecodes = self.bytecodes
-
-        cc._mutable_bytecodes = self._mutable_bytecodes
-
-        cc.str_literal_cache = self.str_literal_cache
-        cc.literals = self.literals
-
-        cc._params_cache = self._params_cache
-        cc._parent_cache = self._parent_cache
-
-        cc.recompile = self.recompile
-        cc.is_recompiled = self.is_recompiled
-
-        return cc
+    @property
+    def method_stack_size(self):
+        return len(self.literals) + 1

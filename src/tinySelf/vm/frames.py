@@ -7,20 +7,17 @@ from tinySelf.vm.object_layout import Object
 NIL = PrimitiveNilObject()
 
 
-class ObjectHolder(object):
-    def __init__(self, obj, prev=None):
-        self.obj = obj
-        self.prev = prev
-
-
 class MethodStack(object):
-    def __init__(self, code_context=None, prev_stack=None):
-        self._stack = None
+    def __init__(self, code_context, prev_stack=None):
+        self.code_context = code_context
+
+        self._stack_max_size = code_context.method_stack_size
+        self._stack = [None for _ in xrange(self._stack_max_size)]
         self._length = 0
+
         self.prev_stack = prev_stack
 
         self.bc_index = 0
-        self.code_context = code_context
         self.error_handler = None
         self.self = None
 
@@ -28,29 +25,18 @@ class MethodStack(object):
         self.tmp_method_obj_reference = None
 
     def push(self, obj):
-        assert isinstance(obj, Object)
-        if self._length == 0:
-            self._stack = ObjectHolder(obj)
-            self._length = 1
-            return
-
-        self._stack = ObjectHolder(obj, prev=self._stack)
+        self._stack[self._length] = obj
         self._length += 1
 
     def pop(self):
         if self._length == 0:
             raise IndexError()
 
-        if self._length == 1:
-            ret = self._stack
-            self._length = 0
-            self._stack = None
-            return ret.obj
-
-        ret = self._stack
         self._length -= 1
-        self._stack = self._stack.prev
-        return ret.obj
+        ret = self._stack[self._length]
+        self._stack[self._length] = None
+
+        return ret
 
     def pop_or_nil(self):
         if self._length == 0:
