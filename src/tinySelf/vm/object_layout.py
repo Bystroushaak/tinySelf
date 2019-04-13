@@ -82,11 +82,11 @@ class _BareObject(object):
         if result is not None:
             return result
 
-        objects = TwoPointerArray(100)
+        objects = TwoPointerArray(self.map._last_number_of_visited_objects)
         objects.append(self)
 
         result = None
-        visited_objects = TwoPointerArray(100)
+        visited_objects = TwoPointerArray(self.map._last_number_of_visited_objects)
         while len(objects) > 0:
             obj = objects.pop_first()
 
@@ -117,6 +117,8 @@ class _BareObject(object):
         for obj in visited_as_list:
             obj.visited = False
 
+        self.map._last_number_of_visited_objects = len(visited_objects)
+
         if result is not None:
             self._store_to_parent_cache(slot_name, result, visited_as_list)
 
@@ -139,8 +141,9 @@ class _BareObject(object):
         if cached_result is None:
             return None
 
-        objects = TwoPointerArray(100)
-        visited_objects = TwoPointerArray(100)
+        prealocate_size = len(cached_result.visited_objects) + 10
+        objects = TwoPointerArray(prealocate_size)
+        visited_objects = TwoPointerArray(prealocate_size)
 
         for item in cached_result.visited_objects:
             if item.verify():
@@ -415,6 +418,7 @@ class ObjectMap(object):
 
         self._version = 0
         self._parent_cache = None
+        self._last_number_of_visited_objects = 50
 
         self.is_block = False
 
