@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from collections import OrderedDict
-
 from rpython.rlib import jit
 from rpython.rlib.objectmodel import we_are_translated
 
@@ -12,7 +10,6 @@ from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveStrObject
 from tinySelf.vm.primitives import PrimitiveFloatObject
 from tinySelf.vm.primitives import AssignmentPrimitive
-from tinySelf.vm.primitives import add_primitive_method
 from tinySelf.vm.primitives import gen_interpreter_primitives
 from tinySelf.vm.primitives.interpreter_primitives import ErrorObject
 
