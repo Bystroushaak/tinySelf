@@ -64,7 +64,7 @@ if __name__ == '__main__':
     )
     default_level = 1
     parser.add_argument(
-        "-o",
+        "-O",
         "--optimize",
         default=default_level,
         metavar="LEVEL",
