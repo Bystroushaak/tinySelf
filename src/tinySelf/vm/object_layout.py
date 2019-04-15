@@ -25,16 +25,13 @@ class VersionedObject(object):
 
 class _BareObject(object):
     def __init__(self, obj_map=None):
-        if obj_map is None:
-            obj_map = ObjectMap()
-
-        self.map = obj_map
+        self.map = ObjectMap() if obj_map is None else obj_map
         self.scope_parent = None
 
         self.visited = False
 
-        self._parent_slot_values = []
-        self._slot_values = []
+        self._parent_slot_values = None
+        self._slot_values = None
 
     @property
     def has_code(self):
@@ -58,6 +55,9 @@ class _BareObject(object):
         return True
 
     def get_slot(self, slot_name):
+        if self._slot_values is None:
+            return None
+
         slot_index = self.map._slots.get(slot_name, -1)
 
         if slot_index == -1:
@@ -108,7 +108,8 @@ class _BareObject(object):
                 objects.append(obj.scope_parent)
 
             # objects.extend(obj._parent_slot_values)
-            if len(obj._parent_slot_values) > 0:  # this actually produces faster code
+            # this if actually produces faster code
+            if obj._parent_slot_values is not None:
                 for parent in obj._parent_slot_values:
                     if not parent.visited:
                         objects.append(parent)
@@ -172,7 +173,8 @@ class _BareObject(object):
                 objects.append(obj.scope_parent)
 
             # objects_to_visit.extend(obj._parent_slot_values)
-            if len(obj._parent_slot_values) > 0:  # this actually produces faster code
+            # this if actually produces faster code
+            if obj._parent_slot_values is not None:
                 for parent in obj._parent_slot_values:
                     if not parent.visited:
                         objects.append(parent)
@@ -202,10 +204,11 @@ class _BareObject(object):
         """
         assert isinstance(slot_name, str)
 
-        slot_index = self.map._slots.get(slot_name, -1)
+        if self._slot_values is not None:
+            slot_index = self.map._slots.get(slot_name, -1)
 
-        if slot_index != -1:
-            return self._slot_values[slot_index]
+            if slot_index != -1:
+                return self._slot_values[slot_index]
 
         if self.scope_parent is not None:
             obj = self.scope_parent.get_slot(slot_name)
@@ -217,8 +220,12 @@ class _BareObject(object):
 
     def clone(self):
         obj = Object(obj_map=self.map)
-        obj._slot_values = self._slot_values[:]
-        obj._parent_slot_values = self._parent_slot_values[:]
+
+        if self._slot_values is not None:
+            obj._slot_values = self._slot_values[:]
+        if self._parent_slot_values is not None:
+            obj._parent_slot_values = self._parent_slot_values[:]
+
         obj.scope_parent = self.scope_parent
         self.map._used_in_multiple_objects = True
 
@@ -277,7 +284,7 @@ class _ObjectWithMapEncapsulation(_BareObject):
         return self.map.code_context
 
     @code_context.setter
-    def code_context(self, new_code_context):
+    def code_context(self, new_code_context):  # TODO: add guard if used in multiple objects
         new_map = self.map.clone()
         new_map.code_context = new_code_context
         self.map = new_map
@@ -319,6 +326,9 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 
         self._clone_map_if_used_by_multiple_objects()
 
+        if self._slot_values is None:
+            self._slot_values = []
+
         if not check_duplicates:
             self.map.add_slot(slot_name, len(self._slot_values))
             self._slot_values.append(value)
@@ -352,6 +362,9 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 
         self._clone_map_if_used_by_multiple_objects()
 
+        if self._slot_values is None:
+            self._slot_values = []
+
         self.map.insert_slot(slot_index, slot_name, len(self._slot_values))
 
         self._slot_values.append(value)
@@ -367,10 +380,16 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 
         self._clone_map_if_used_by_multiple_objects()
 
+        if self._parent_slot_values is None:
+            self._parent_slot_values = []
+
         self.map.add_parent(parent_name, len(self._parent_slot_values))
         self._parent_slot_values.append(value)
 
     def meta_get_parent(self, parent_name, alt=None):
+        if self._parent_slot_values is None:
+            return alt
+
         index = self.map._parent_slots.get(parent_name, -1)
 
         if index == -1:
