@@ -26,7 +26,7 @@ def create_copy_with_different_types(cls, new_name, other_replacements=None):
     Returns:
         str: Modified source. Use exec .. to generate code on the fly.
     """
-    source = "\n".join(inspect.getsourcelines(cls)[0])
+    source = "".join(inspect.getsourcelines(cls)[0])
     source = source.replace(cls.__name__, new_name)
 
     if other_replacements is not None:
