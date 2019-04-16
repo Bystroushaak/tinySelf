@@ -636,8 +636,6 @@ class LightWeightDictJustProperties(object):
         self._fourth_value = None
         self._fifth_key = None
         self._fifth_value = None
-        self._sixth_key = None
-        self._sixth_value = None
 
         self._use_properties = True
         self._use_dict = False
@@ -650,8 +648,7 @@ class LightWeightDictJustProperties(object):
                    key == self._second_key or \
                    key == self._third_key or \
                    key == self._fourth_key or \
-                   key == self._fifth_key or \
-                   key == self._sixth_key
+                   key == self._fifth_key
         else:
             return key in self._dict
 
@@ -675,9 +672,6 @@ class LightWeightDictJustProperties(object):
             elif self._fifth_key is None or self._fifth_key == key:
                 self._fifth_key = key
                 self._fifth_value = Container(val)
-            elif self._sixth_key is None or self._sixth_key == key:
-                self._sixth_key = key
-                self._sixth_value = Container(val)
             else:
                 self._use_properties = False
                 self._use_dict = True
@@ -688,7 +682,6 @@ class LightWeightDictJustProperties(object):
                 self._dict[self._third_key] = self._third_value.val
                 self._dict[self._fourth_key] = self._fourth_value.val
                 self._dict[self._fifth_key] = self._fifth_value.val
-                self._dict[self._sixth_key] = self._sixth_value.val
 
                 self._first_key = None
                 self._first_value = None
@@ -700,8 +693,6 @@ class LightWeightDictJustProperties(object):
                 self._fourth_value = None
                 self._fifth_key = None
                 self._fifth_value = None
-                self._sixth_key = None
-                self._sixth_value = None
 
                 return self.set(key, val)
 
@@ -723,8 +714,6 @@ class LightWeightDictJustProperties(object):
                 return self._fourth_value.val
             elif self._fifth_key == key:
                 return self._fifth_value.val
-            elif self._sixth_key == key:
-                return self._sixth_value.val
             else:
                 return alt
         else:
@@ -742,8 +731,6 @@ class LightWeightDictJustProperties(object):
                 return self._fourth_value.val
             elif self._fifth_key == key:
                 return self._fifth_value.val
-            elif self._sixth_key == key:
-                return self._sixth_value.val
             else:
                 raise KeyError("`%s` not found." % key)
         else:
@@ -756,59 +743,44 @@ class LightWeightDictJustProperties(object):
                 self._second_key = self._third_key
                 self._third_key = self._fourth_key
                 self._fourth_key = self._fifth_key
-                self._fifth_key = self._sixth_key
-                self._sixth_key = None
+                self._fifth_key = None
 
                 self._first_value = self._second_value
                 self._second_value = self._third_value
                 self._third_value = self._fourth_value
                 self._fourth_value = self._fifth_value
-                self._fifth_value = self._sixth_value
-                self._sixth_value = None
+                self._fifth_value = None
 
             elif self._second_key == key:
                 self._second_key = self._third_key
                 self._third_key = self._fourth_key
                 self._fourth_key = self._fifth_key
-                self._fifth_key = self._sixth_key
-                self._sixth_key = None
+                self._fifth_key = None
 
                 self._second_value = self._third_value
                 self._third_value = self._fourth_value
                 self._fourth_value = self._fifth_value
-                self._fifth_value = self._sixth_value
-                self._sixth_value = None
+                self._fifth_value = None
 
             elif self._third_key == key:
                 self._third_key = self._fourth_key
                 self._fourth_key = self._fifth_key
-                self._fifth_key = self._sixth_key
-                self._sixth_key = None
+                self._fifth_key = None
 
                 self._third_value = self._fourth_value
                 self._fourth_value = self._fifth_value
-                self._fifth_value = self._sixth_value
-                self._sixth_value = None
+                self._fifth_value = None
 
             elif self._fourth_key == key:
                 self._fourth_key = self._fifth_key
-                self._fifth_key = self._sixth_key
-                self._sixth_key = None
+                self._fifth_key = None
 
                 self._fourth_value = self._fifth_value
-                self._fifth_value = self._sixth_value
-                self._sixth_value = None
+                self._fifth_value = None
 
             elif self._fifth_key == key:
-                self._fifth_key = self._sixth_key
-                self._sixth_key = None
-
-                self._fifth_value = self._sixth_value
-                self._sixth_value = None
-
-            elif self._sixth_key == key:
-                self._sixth_key = None
-                self._sixth_value = None
+                self._fifth_key = None
+                self._fifth_value = None
 
         else:
             if key in self._dict:
@@ -830,8 +802,6 @@ class LightWeightDictJustProperties(object):
                 keys.append(self._fourth_key)
             if self._fifth_key is not None:
                 keys.append(self._fifth_key)
-            if self._sixth_key is not None:
-                keys.append(self._sixth_key)
 
             return keys
 
@@ -851,8 +821,6 @@ class LightWeightDictJustProperties(object):
                 values.append(self._fourth_value.val)
             if self._fifth_key is not None:
                 values.append(self._fifth_value.val)
-            if self._sixth_key is not None:
-                values.append(self._sixth_value.val)
 
             return values
 
@@ -871,8 +839,6 @@ class LightWeightDictJustProperties(object):
             if self._fourth_key is not None:
                 length += 1
             if self._fifth_key is not None:
-                length += 1
-            if self._sixth_key is not None:
                 length += 1
 
             return length
@@ -894,8 +860,6 @@ class LightWeightDictJustProperties(object):
             lwd._fourth_value = self._fourth_value
             lwd._fifth_key = self._fifth_key
             lwd._fifth_value = self._fifth_value
-            lwd._sixth_key = self._sixth_key
-            lwd._sixth_value = self._sixth_value
         else:
             lwd._dict = self._dict
 
@@ -916,9 +880,7 @@ class LightWeightDictJustProperties(object):
                         self._fourth_key == other._fourth_key and
                         self._fourth_value == other._fourth_value and
                         self._fifth_key == other._fifth_key and
-                        self._fifth_value == other._fifth_value and
-                        self._sixth_key == other._sixth_key and
-                        self._sixth_value == other._sixth_value)
+                        self._fifth_value == other._fifth_value)
 
             elif self._use_dict and other._use_dict:
                 return self._dict == other._dict
@@ -961,8 +923,6 @@ class LightWeightDictJustProperties(object):
                 yield self._fourth_key, self._fourth_value
             if self._fifth_key is not None:
                 yield self._fifth_key, self._fifth_value
-            if self._sixth_key is not None:
-                yield self._sixth_key, self._sixth_value
 
         else:
             for k, v in self._dict.iteritems():
