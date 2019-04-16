@@ -231,7 +231,7 @@ class LightWeightDictList(object):
             return len(self._dict)
 
     def copy(self):
-        lwd = LightWeightDict()
+        lwd = LightWeightDictList()
 
         if self._use_properties:
             lwd._first_key = self._first_key
@@ -253,7 +253,7 @@ class LightWeightDictList(object):
         return lwd
 
     def __eq__(self, other):
-        if isinstance(other, LightWeightDict):
+        if isinstance(other, LightWeightDictList):
             if self._use_properties and other._use_properties:
                 return (self._first_key == other._first_key and
                         self._first_value == other._first_value and
@@ -615,6 +615,441 @@ class LightWeightDict(object):
             for i in xrange(self._small_array_len):
                 kv = self._small_array[i]
                 yield kv.key, kv.val
+
+        else:
+            for k, v in self._dict.iteritems():
+                yield k, v
+
+
+class LightWeightDictJustProperties(object):
+    """
+    Implementation with just properties or dict.
+    """
+    def __init__(self):
+        self._first_key = None
+        self._first_value = None
+        self._second_key = None
+        self._second_value = None
+        self._third_key = None
+        self._third_value = None
+        self._fourth_key = None
+        self._fourth_value = None
+        self._fifth_key = None
+        self._fifth_value = None
+        self._sixth_key = None
+        self._sixth_value = None
+        self._seventh_key = None
+        self._seventh_value = None
+        self._eight_key = None
+        self._eight_value = None
+
+        self._use_properties = True
+        self._use_dict = False
+
+        self._dict = None
+
+    def has_key(self, key):
+        if self._use_properties:
+            return key == self._first_key or \
+                   key == self._second_key or \
+                   key == self._third_key or \
+                   key == self._fourth_key or \
+                   key == self._fifth_key or \
+                   key == self._sixth_key or \
+                   key == self._seventh_key or \
+                   key == self._eight_key
+        else:
+            return key in self._dict
+
+    def __contains__(self, key):
+        return self.has_key(key)
+
+    def set(self, key, val):
+        if self._use_properties:
+            if self._first_key is None or self._first_key == key:
+                self._first_key = key
+                self._first_value = Container(val)
+            elif self._second_key is None or self._second_key == key:
+                self._second_key = key
+                self._second_value = Container(val)
+            elif self._third_key is None or self._third_key == key:
+                self._third_key = key
+                self._third_value = Container(val)
+            elif self._fourth_key is None or self._fourth_key == key:
+                self._fourth_key = key
+                self._fourth_value = Container(val)
+            elif self._fifth_key is None or self._fifth_key == key:
+                self._fifth_key = key
+                self._fifth_value = Container(val)
+            elif self._sixth_key is None or self._sixth_key == key:
+                self._sixth_key = key
+                self._sixth_value = Container(val)
+            elif self._seventh_key is None or self._seventh_key == key:
+                self._seventh_key = key
+                self._seventh_value = Container(val)
+            elif self._eight_key is None or self._eight_key == key:
+                self._eight_key = key
+                self._eight_value = Container(val)
+            else:
+                self._use_properties = False
+                self._use_dict = True
+                self._dict = OrderedDict()
+
+                self._dict[self._first_key] = self._first_value.val
+                self._dict[self._second_key] = self._second_value.val
+                self._dict[self._third_key] = self._third_value.val
+                self._dict[self._fourth_key] = self._fourth_value.val
+                self._dict[self._fifth_key] = self._fifth_value.val
+                self._dict[self._sixth_key] = self._sixth_value.val
+                self._dict[self._seventh_key] = self._seventh_value.val
+                self._dict[self._eight_key] = self._eight_value.val
+
+                self._first_key = None
+                self._first_value = None
+                self._second_key = None
+                self._second_value = None
+                self._third_key = None
+                self._third_value = None
+                self._fourth_key = None
+                self._fourth_value = None
+                self._fifth_key = None
+                self._fifth_value = None
+                self._sixth_key = None
+                self._sixth_value = None
+                self._seventh_key = None
+                self._seventh_value = None
+                self._eight_key = None
+                self._eight_value = None
+
+                return self.set(key, val)
+
+        else:
+            self._dict[key] = val
+
+    def __setitem__(self, key, val):
+        self.set(key, val)
+
+    def get(self, key, alt=None):
+        if self._use_properties:
+            if self._first_key == key:
+                return self._first_value.val
+            elif self._second_key == key:
+                return self._second_value.val
+            elif self._third_key == key:
+                return self._third_value.val
+            elif self._fourth_key == key:
+                return self._fourth_value.val
+            elif self._fifth_key == key:
+                return self._fifth_value.val
+            elif self._sixth_key == key:
+                return self._sixth_value.val
+            elif self._seventh_key == key:
+                return self._seventh_value.val
+            elif self._eight_key == key:
+                return self._eight_value.val
+            else:
+                return alt
+        else:
+            return self._dict.get(key, alt)
+
+    def __getitem__(self, key):
+        if self._use_properties:
+            if self._first_key == key:
+                return self._first_value.val
+            elif self._second_key == key:
+                return self._second_value.val
+            elif self._third_key == key:
+                return self._third_value.val
+            elif self._fourth_key == key:
+                return self._fourth_value.val
+            elif self._fifth_key == key:
+                return self._fifth_value.val
+            elif self._sixth_key == key:
+                return self._sixth_value.val
+            elif self._seventh_key == key:
+                return self._seventh_value.val
+            elif self._eight_key == key:
+                return self._eight_value.val
+            else:
+                raise KeyError("`%s` not found." % key)
+        else:
+            return self._dict[key]
+
+    def delete(self, key):
+        if self._use_properties:
+            if self._first_key == key:
+                self._first_key = self._second_key
+                self._second_key = self._third_key
+                self._third_key = self._fourth_key
+                self._fourth_key = self._fifth_key
+                self._fifth_key = self._sixth_key
+                self._sixth_key = self._seventh_key
+                self._seventh_key = self._eight_key
+                self._eight_key = None
+
+                self._first_value = self._second_value
+                self._second_value = self._third_value
+                self._third_value = self._fourth_value
+                self._fourth_value = self._fifth_value
+                self._fifth_value = self._sixth_value
+                self._sixth_value = self._seventh_value
+                self._seventh_value = self._eight_value
+                self._eight_value = None
+
+            elif self._second_key == key:
+                self._second_key = self._third_key
+                self._third_key = self._fourth_key
+                self._fourth_key = self._fifth_key
+                self._fifth_key = self._sixth_key
+                self._sixth_key = self._seventh_key
+                self._seventh_key = self._eight_key
+                self._eight_key = None
+
+                self._second_value = self._third_value
+                self._third_value = self._fourth_value
+                self._fourth_value = self._fifth_value
+                self._fifth_value = self._sixth_value
+                self._sixth_value = self._seventh_value
+                self._seventh_value = self._eight_value
+                self._eight_value = None
+
+            elif self._third_key == key:
+                self._third_key = self._fourth_key
+                self._fourth_key = self._fifth_key
+                self._fifth_key = self._sixth_key
+                self._sixth_key = self._seventh_key
+                self._seventh_key = self._eight_key
+                self._eight_key = None
+
+                self._third_value = self._fourth_value
+                self._fourth_value = self._fifth_value
+                self._fifth_value = self._sixth_value
+                self._sixth_value = self._seventh_value
+                self._seventh_value = self._eight_value
+                self._eight_value = None
+
+            elif self._fourth_key == key:
+                self._fourth_key = self._fifth_key
+                self._fifth_key = self._sixth_key
+                self._sixth_key = self._seventh_key
+                self._seventh_key = self._eight_key
+                self._eight_key = None
+
+                self._fourth_value = self._fifth_value
+                self._fifth_value = self._sixth_value
+                self._sixth_value = self._seventh_value
+                self._seventh_value = self._eight_value
+                self._eight_value = None
+
+            elif self._fifth_key == key:
+                self._fifth_key = self._sixth_key
+                self._sixth_key = self._seventh_key
+                self._seventh_key = self._eight_key
+                self._eight_key = None
+
+                self._fifth_value = self._sixth_value
+                self._sixth_value = self._seventh_value
+                self._seventh_value = self._eight_value
+                self._eight_value = None
+
+            elif self._sixth_key == key:
+                self._sixth_key = self._seventh_key
+                self._seventh_key = self._eight_key
+                self._eight_key = None
+
+                self._sixth_value = self._seventh_value
+                self._seventh_value = self._eight_value
+                self._eight_value = None
+
+            elif self._seventh_key == key:
+                self._seventh_key = self._eight_key
+                self._eight_key = None
+
+                self._seventh_value = self._eight_value
+                self._eight_value = None
+
+            elif self._eight_key == key:
+                self._eight_key = None
+
+                self._eight_value = None
+
+        else:
+            if key in self._dict:
+                del self._dict[key]
+
+    def __delitem__(self, key):
+        return self.delete(key)
+
+    def keys(self):
+        if self._use_properties:
+            keys = []
+            if self._first_key is not None:
+                keys.append(self._first_key)
+            if self._second_key is not None:
+                keys.append(self._second_key)
+            if self._third_key is not None:
+                keys.append(self._third_key)
+            if self._fourth_key is not None:
+                keys.append(self._fourth_key)
+            if self._fifth_key is not None:
+                keys.append(self._fifth_key)
+            if self._sixth_key is not None:
+                keys.append(self._sixth_key)
+            if self._seventh_key is not None:
+                keys.append(self._seventh_key)
+            if self._eight_key is not None:
+                keys.append(self._eight_key)
+
+            return keys
+
+        else:
+            return self._dict.keys()
+
+    def values(self):
+        if self._use_properties:
+            values = []
+            if self._first_key is not None:
+                values.append(self._first_value.val)
+            if self._second_key is not None:
+                values.append(self._second_value.val)
+            if self._third_key is not None:
+                values.append(self._third_value.val)
+            if self._fourth_key is not None:
+                values.append(self._fourth_value.val)
+            if self._fifth_key is not None:
+                values.append(self._fifth_value.val)
+            if self._sixth_key is not None:
+                values.append(self._sixth_value.val)
+            if self._seventh_key is not None:
+                values.append(self._seventh_value.val)
+            if self._eight_key is not None:
+                values.append(self._eight_value.val)
+
+            return values
+
+        else:
+            return self._dict.values()
+
+    def __len__(self):
+        if self._use_properties:
+            length = 0
+            if self._first_key is not None:
+                length += 1
+            if self._second_key is not None:
+                length += 1
+            if self._third_key is not None:
+                length += 1
+            if self._fourth_key is not None:
+                length += 1
+            if self._fifth_key is not None:
+                length += 1
+            if self._sixth_key is not None:
+                length += 1
+            if self._seventh_key is not None:
+                length += 1
+            if self._eight_key is not None:
+                length += 1
+
+            return length
+
+        else:
+            return len(self._dict)
+
+    def copy(self):
+        lwd = LightWeightDictJustProperties()
+
+        if self._use_properties:
+            lwd._first_key = self._first_key
+            lwd._first_value = self._first_value
+            lwd._second_key = self._second_key
+            lwd._second_value = self._second_value
+            lwd._third_key = self._third_key
+            lwd._third_value = self._third_value
+            lwd._fourth_key = self._fourth_key
+            lwd._fourth_value = self._fourth_value
+            lwd._fifth_key = self._fifth_key
+            lwd._fifth_value = self._fifth_value
+            lwd._sixth_key = self._sixth_key
+            lwd._sixth_value = self._sixth_value
+            lwd._seventh_key = self._seventh_key
+            lwd._seventh_value = self._seventh_value
+            lwd._eight_key = self._eight_key
+            lwd._eight_value = self._eight_value
+        else:
+            lwd._dict = self._dict
+
+        lwd._use_properties = self._use_properties
+        lwd._use_dict = self._use_dict
+
+        return lwd
+
+    def __eq__(self, other):
+        if isinstance(other, LightWeightDictJustProperties):
+            if self._use_properties and other._use_properties:
+                return (self._first_key == other._first_key and
+                        self._first_value == other._first_value and
+                        self._second_key == other._second_key and
+                        self._second_value == other._second_value and
+                        self._third_key == other._third_key and
+                        self._third_value == other._third_value and
+                        self._fourth_key == other._fourth_key and
+                        self._fourth_value == other._fourth_value and
+                        self._fifth_key == other._fifth_key and
+                        self._fifth_value == other._fifth_value and
+                        self._sixth_key == other._sixth_key and
+                        self._sixth_value == other._sixth_value and
+                        self._seventh_key == other._seventh_key and
+                        self._seventh_value == other._seventh_value and
+                        self._eight_key == other._eight_key and
+                        self._eight_value == other._eight_value)
+
+            elif self._use_dict and other._use_dict:
+                return self._dict == other._dict
+
+            else:
+                if self.keys() != other.keys():
+                    return False
+
+                for k, v in self.iteritems():
+                    if other.get(k) != v:
+                        return False
+
+                return True
+
+        elif isinstance(other, dict):
+            if self._use_dict:
+                return self._dict == other
+
+            other_lwd = LightWeightDictJustProperties()
+            for k, v in other.iteritems():
+                other_lwd[k] = v
+
+            return self == other_lwd
+
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def iteritems(self):
+        if self._use_properties:
+            if self._first_key is not None:
+                yield self._first_key, self._first_value.val
+            if self._second_key is not None:
+                yield self._second_key, self._second_value.val
+            if self._third_key is not None:
+                yield self._third_key, self._third_value.val
+            if self._fourth_key is not None:
+                yield self._fourth_key, self._fourth_value
+            if self._fifth_key is not None:
+                yield self._fifth_key, self._fifth_value
+            if self._sixth_key is not None:
+                yield self._sixth_key, self._sixth_value
+            if self._seventh_key is not None:
+                yield self._seventh_key, self._seventh_value
+            if self._eight_key is not None:
+                yield self._eight_key, self._eight_value
 
         else:
             for k, v in self._dict.iteritems():
