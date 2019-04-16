@@ -628,8 +628,6 @@ class LightWeightDictJustProperties(object):
     def __init__(self):
         self._first_key = None
         self._first_value = None
-        self._second_key = None
-        self._second_value = None
 
         self._use_properties = True
         self._use_dict = False
@@ -638,8 +636,7 @@ class LightWeightDictJustProperties(object):
 
     def has_key(self, key):
         if self._use_properties:
-            return key == self._first_key or \
-                   key == self._second_key
+            return key == self._first_key
         else:
             return key in self._dict
 
@@ -651,21 +648,15 @@ class LightWeightDictJustProperties(object):
             if self._first_key is None or self._first_key == key:
                 self._first_key = key
                 self._first_value = Container(val)
-            elif self._second_key is None or self._second_key == key:
-                self._second_key = key
-                self._second_value = Container(val)
             else:
                 self._use_properties = False
                 self._use_dict = True
                 self._dict = OrderedDict()
 
                 self._dict[self._first_key] = self._first_value.val
-                self._dict[self._second_key] = self._second_value.val
 
                 self._first_key = None
                 self._first_value = None
-                self._second_key = None
-                self._second_value = None
 
                 return self.set(key, val)
 
@@ -679,8 +670,6 @@ class LightWeightDictJustProperties(object):
         if self._use_properties:
             if self._first_key == key:
                 return self._first_value.val
-            elif self._second_key == key:
-                return self._second_value.val
             else:
                 return alt
         else:
@@ -690,8 +679,6 @@ class LightWeightDictJustProperties(object):
         if self._use_properties:
             if self._first_key == key:
                 return self._first_value.val
-            elif self._second_key == key:
-                return self._second_value.val
             else:
                 raise KeyError("`%s` not found." % key)
         else:
@@ -700,15 +687,9 @@ class LightWeightDictJustProperties(object):
     def delete(self, key):
         if self._use_properties:
             if self._first_key == key:
-                self._first_key = self._second_key
-                self._second_key = None
+                self._first_key = None
 
-                self._first_value = self._second_value
-                self._second_value = None
-
-            elif self._second_key == key:
-                self._second_key = None
-                self._second_value = None
+                self._first_value = None
 
         else:
             if key in self._dict:
@@ -722,8 +703,6 @@ class LightWeightDictJustProperties(object):
             keys = []
             if self._first_key is not None:
                 keys.append(self._first_key)
-            if self._second_key is not None:
-                keys.append(self._second_key)
 
             return keys
 
@@ -735,8 +714,6 @@ class LightWeightDictJustProperties(object):
             values = []
             if self._first_key is not None:
                 values.append(self._first_value.val)
-            if self._second_key is not None:
-                values.append(self._second_value.val)
 
             return values
 
@@ -747,8 +724,6 @@ class LightWeightDictJustProperties(object):
         if self._use_properties:
             length = 0
             if self._first_key is not None:
-                length += 1
-            if self._second_key is not None:
                 length += 1
 
             return length
@@ -762,8 +737,6 @@ class LightWeightDictJustProperties(object):
         if self._use_properties:
             lwd._first_key = self._first_key
             lwd._first_value = self._first_value
-            lwd._second_key = self._second_key
-            lwd._second_value = self._second_value
         else:
             lwd._dict = self._dict
 
@@ -776,9 +749,7 @@ class LightWeightDictJustProperties(object):
         if isinstance(other, LightWeightDictJustProperties):
             if self._use_properties and other._use_properties:
                 return (self._first_key == other._first_key and
-                        self._first_value == other._first_value and
-                        self._second_key == other._second_key and
-                        self._second_value == other._second_value)
+                        self._first_value == other._first_value)
 
             elif self._use_dict and other._use_dict:
                 return self._dict == other._dict
@@ -813,8 +784,6 @@ class LightWeightDictJustProperties(object):
         if self._use_properties:
             if self._first_key is not None:
                 yield self._first_key, self._first_value.val
-            if self._second_key is not None:
-                yield self._second_key, self._second_value.val
 
         else:
             for k, v in self._dict.iteritems():
