@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from tinySelf.config import USE_LINKED_LIST_METHOD_STACK
+
 from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.code_context import CodeContext
 from tinySelf.vm.object_layout import Object
@@ -7,7 +9,59 @@ from tinySelf.vm.object_layout import Object
 NIL = PrimitiveNilObject()
 
 
-class MethodStack(object):
+class ObjectHolder(object):
+    def __init__(self, obj, prev=None):
+        self.obj = obj
+        self.prev = prev
+
+
+class MethodStackLinkedList(object):
+    def __init__(self, code_context=None, prev_stack=None):
+        self._stack = None
+        self._length = 0
+        self.prev_stack = prev_stack
+
+        self.bc_index = 0
+        self.code_context = code_context
+        self.error_handler = None
+        self.self = None
+
+        # used to remove scope parent from the method later
+        self.tmp_method_obj_reference = None
+
+    def push(self, obj):
+        assert isinstance(obj, Object)
+        if self._length == 0:
+            self._stack = ObjectHolder(obj)
+            self._length = 1
+            return
+
+        self._stack = ObjectHolder(obj, prev=self._stack)
+        self._length += 1
+
+    def pop(self):
+        if self._length == 0:
+            raise IndexError()
+
+        if self._length == 1:
+            ret = self._stack
+            self._length = 0
+            self._stack = None
+            return ret.obj
+
+        ret = self._stack
+        self._length -= 1
+        self._stack = self._stack.prev
+        return ret.obj
+
+    def pop_or_nil(self):
+        if self._length == 0:
+            return NIL
+
+        return self.pop()
+
+
+class MethodStackPreallocatedArray(object):
     def __init__(self, code_context, prev_stack=None):
         self.code_context = code_context
 
@@ -43,6 +97,12 @@ class MethodStack(object):
             return NIL
 
         return self.pop()
+
+
+if USE_LINKED_LIST_METHOD_STACK:
+    MethodStack = MethodStackLinkedList
+else:
+    MethodStack = MethodStackPreallocatedArray
 
 
 class ProcessStack(object):

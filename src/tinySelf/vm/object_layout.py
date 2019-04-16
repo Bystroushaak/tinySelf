@@ -6,6 +6,7 @@ from rply.token import BaseBox
 from tinySelf.datastructures.arrays import TwoPointerArray
 from tinySelf.datastructures.lightweight_dict import LightWeightDict
 from tinySelf.datastructures.lightweight_dict import LightWeightDictObjects
+from tinySelf.config import OBJ_MAP_LAST_NUMBER_OF_VISITED_OBJS
 
 
 class CachedSlot(object):
@@ -437,7 +438,7 @@ class ObjectMap(object):
 
         self._version = 0
         self._parent_cache = None
-        self._last_number_of_visited_objects = 50
+        self._last_number_of_visited_objects = OBJ_MAP_LAST_NUMBER_OF_VISITED_OBJS
 
         self.is_block = False
 
