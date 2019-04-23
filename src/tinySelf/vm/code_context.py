@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from rply.token import BaseBox
 
-from tinySelf.datastructures.lightweight_dict import LightWeightDictObjects
+from tinySelf.shared.lightweight_dict import LightWeightDictObjects
 from tinySelf.vm.bytecodes import *
 from tinySelf.vm.object_layout import Object
 

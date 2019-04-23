@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from tinySelf.datastructures.lightweight_dict import LightWeightDict
+from tinySelf.shared.lightweight_dict import LightWeightDict
 
 
 def test_lightweight_dict_init():

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from tinySelf.datastructures.arrays import TwoPointerArray
+from tinySelf.shared.arrays import TwoPointerArray
 
 
 def test_twopointerarray():

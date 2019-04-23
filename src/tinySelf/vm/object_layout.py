@@ -3,10 +3,10 @@ from collections import OrderedDict
 
 from rply.token import BaseBox
 
-from tinySelf.datastructures.arrays import TwoPointerArray
-from tinySelf.datastructures.lightweight_dict import LightWeightDict
-from tinySelf.datastructures.lightweight_dict import LightWeightDictObjects
 from tinySelf.config import OBJ_MAP_LAST_NUMBER_OF_VISITED_OBJS
+from tinySelf.shared.arrays import TwoPointerArray
+from tinySelf.shared.lightweight_dict import LightWeightDict
+from tinySelf.shared.lightweight_dict import LightWeightDictObjects
 
 
 class CachedSlot(object):

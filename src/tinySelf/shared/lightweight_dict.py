@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 
-from tinySelf.datastructures.code_generalization import create_copy_with_different_types
+from tinySelf.shared.code_generalization import create_copy_with_different_types
 
 
 class Container(object):

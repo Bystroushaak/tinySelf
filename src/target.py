@@ -12,7 +12,7 @@ from tinySelf.r_io import writeln
 from tinySelf.r_io import ewriteln
 from tinySelf.r_io import stdin_readline
 
-from tinySelf.version import VERSION
+from tinySelf.config import VERSION
 
 from tinySelf.parser import lex_and_parse
 from tinySelf.parser import lex_and_parse_as_root
@@ -36,7 +36,7 @@ def run_interactive():
             writeln()
             return 0
 
-        line = "(| run = (|| " + line + " ) |) run"
+        line = "(| run = (||\n" + line + "\n) |) run"
 
         try:
             for expr in lex_and_parse(line):
@@ -45,10 +45,9 @@ def run_interactive():
                 interpreter.interpret()
 
                 if process.finished_with_error:
-                    print "Error:", process.result.__str__()
+                    ewriteln("Error:" + process.result.__str__())
                 else:
-                    if process.result != NIL:
-                        print process.result.__str__()
+                    ewriteln(process.result.__str__())
 
         except ParsingError as e:
             ewriteln("Parse error.")
@@ -79,7 +78,7 @@ def show_ast(path):
     with open(path) as f:
         try:
             for expr in lex_and_parse(f.read()):
-                print expr.__str__()
+                writeln(expr.__str__())
         except ParsingError as e:
             ewriteln("Parse error.")
             if e.message:
@@ -101,7 +100,7 @@ def compile_file(path):
                 ewriteln(e.message)
             return 1
 
-    print code.debug_repr()
+    writeln(code.debug_repr())
 
     return 0
 
@@ -168,8 +167,8 @@ def parse_args(argv):
             return 0
 
         if argv[1] in ["-v", "--version"]:
-            print "tSelf", VERSION
-            print get_compiler_info()
+            writeln("tSelf" + VERSION)
+            writeln(get_compiler_info())
             return 0
 
         elif argv[1].startswith("-"):
@@ -191,8 +190,6 @@ def parse_args(argv):
     else:
         ewriteln("Unknown arguments `%s`!" % str(argv[1:]))
         return 1
-
-    return 0
 
 
 def main(argv):

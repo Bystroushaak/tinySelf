@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from tinySelf.datastructures.code_generalization import create_copy_with_different_types
+from tinySelf.shared.code_generalization import create_copy_with_different_types
 
 
 class TwoPointerArray(object):

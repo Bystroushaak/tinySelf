@@ -2,6 +2,8 @@
 from tinySelf.r_io import write
 from tinySelf.r_io import writeln
 
+from tinySelf.parser.ast_tokens import _unescape_sequences
+
 from tinySelf.vm.object_layout import Object
 
 from tinySelf.vm.primitives.cache import ObjCache
@@ -48,7 +50,7 @@ class PrimitiveStrObject(Object):
             PrimitiveStrObject._OBJ_CACHE.store(self)
 
     def __str__(self):
-        return self.value
+        return "'" + _unescape_sequences(self.value) + "'"
 
     def __eq__(self, obj):
         if not isinstance(obj, PrimitiveStrObject):

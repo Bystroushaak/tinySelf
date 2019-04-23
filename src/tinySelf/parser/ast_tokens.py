@@ -278,7 +278,7 @@ class FloatNumber(BaseBox):
         return "FloatNumber(%s)" % self.value
 
 
-def _escape_sequences(inp):
+def _unescape_sequences(inp):
     if len(inp) < 2:
         return inp
 
@@ -306,7 +306,7 @@ def _escape_sequences(inp):
 
 class String(BaseBox):  # TODO: remove?
     def __init__(self, value):
-        self.value = _escape_sequences(value)
+        self.value = _unescape_sequences(value)
 
     def compile(self, context):
         index = context.add_literal_str(self.value)
