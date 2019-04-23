@@ -36,18 +36,16 @@ def run_interactive():
             writeln()
             return 0
 
+        line = "(| run = (|| " + line + " ) |) run"
+
         try:
             for expr in lex_and_parse(line):
                 code = expr.compile(CodeContext())
-                process = interpreter.add_process(code)
+                process = interpreter.add_process(code.finalize())
                 interpreter.interpret()
 
                 if process.finished_with_error:
                     print "Error:", process.result.__str__()
-                    print
-                    print "Code object:"
-                    print
-                    print code.debug_repr()
                 else:
                     if process.result != NIL:
                         print process.result.__str__()

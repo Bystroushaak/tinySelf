@@ -71,13 +71,16 @@ def test_process_stack_push_frame_behavior(code_context_with_literals):
     retval = Object()
     ps.frame.push(retval)
 
-    assert ps._length == 2
-    assert ps.frame._stack[ps.frame._length - 1] == retval
-    assert ps.frame.prev_stack._stack[ps.frame.prev_stack._length - 1] != retval
+    assert ps.length == 2
+    stack = list(ps.frame)
+    assert stack[-1] == retval
 
     ps.pop_down_and_cleanup_frame()
-    assert ps._length == 1
-    assert ps.frame._stack[ps.frame._length - 1] == retval
+
+    assert ps.length == 1
+    stack = list(ps.frame)
+    assert stack[-1] == retval
+    assert stack[-2] != retval
     assert ps.frame.prev_stack is None
 
 

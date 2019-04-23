@@ -228,13 +228,13 @@ def test_unhandled_error():
         )
     |) test""")
 
-    context = ast[0].compile(CodeContext())
-    interpreter = Interpreter(universe=get_primitives(), code_context=context)
+    interpreter = Interpreter(universe=get_primitives())
+    process = interpreter.add_process(ast[0].compile(CodeContext()))
 
     interpreter.interpret()
-    assert interpreter.process.finished
-    assert interpreter.process.finished_with_error
-    assert interpreter.process.result == PrimitiveStrObject("Test")
+    assert process.finished
+    assert process.finished_with_error
+    assert process.result == PrimitiveStrObject("Test")
 
 
 def test_set_error_handler_and_handle_error():

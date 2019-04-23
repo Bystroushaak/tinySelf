@@ -12,6 +12,7 @@ from tinySelf.vm.primitives import PrimitiveFloatObject
 from tinySelf.vm.primitives import AssignmentPrimitive
 from tinySelf.vm.primitives import gen_interpreter_primitives
 from tinySelf.vm.primitives.interpreter_primitives import ErrorObject
+from tinySelf.vm.primitives.interpreter_primitives import _raise_error
 
 from tinySelf.vm.code_context import IntBox
 from tinySelf.vm.code_context import StrBox
@@ -99,7 +100,6 @@ class Interpreter(ProcessCycler):
                 frame=frame,
                 self=self,
             )
-
 
             bc_len = 0
             if bytecode == BYTECODE_SEND:
@@ -276,27 +276,25 @@ class Interpreter(ProcessCycler):
         return resend_parent.slot_lookup(message_name)
 
     def _handle_missing_slot(self, obj, code, message_name, bc_index):
-        # TODO: rewrite from prints to something more sensible
-        # TODO: interpreter error instead of exception
-
+        debug_msg = ""
         if obj.ast:
-            print "Missing slot `%s` on (line %s):" % (message_name, obj.ast.source_pos.start_line)
-            print
-            print obj.ast.source_pos.source_snippet
+            debug_msg += "Missing slot `%s` on (line %s):\n\n%s\n\n" % (
+                message_name,
+                obj.ast.source_pos.start_line,
+                obj.ast.source_pos.source_snippet
+            )
         else:
-            print "Missing slot `%s`:" % message_name
-            print
-            print obj.__str__()
+            debug_msg += "Missing slot `%s`:\n\n%s\n\n" % (message_name, obj.__str__())
 
-        print
-        print "Failed at bytecode number %d" % bc_index
-        print code.debug_repr()
+        debug_msg += "Failed at bytecode number %d\n" % bc_index
+        debug_msg += code.debug_repr()
 
         if not we_are_translated():
             process_stack_to_plantuml(self.process)
             obj_map_to_plantuml(obj, prefix="obj_parent_map")
 
-        raise ValueError("Missing slot error: `%s`" % message_name)
+        _raise_error(self, None, [PrimitiveStrObject(debug_msg)])
+        return THREE_BYTECODES_LONG
 
     @jit.unroll_safe
     def _do_send(self, bc_index, code):

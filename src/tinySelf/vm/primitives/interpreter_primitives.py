@@ -37,7 +37,7 @@ def _get_number_of_processes(interpreter, _, parameters):
 
 
 def _get_number_of_stack_frames(interpreter, _, parameters):
-    return PrimitiveIntObject(interpreter.process._length)
+    return PrimitiveIntObject(interpreter.process.length)
 
 
 def _set_error_handler(interpreter, _, parameters):
@@ -117,9 +117,6 @@ def _raise_error(interpreter, _, parameters):
         process.result = msg
         process.finished = True
         process.finished_with_error = True
-
-        if interpreter.process_count == 0:
-            interpreter.process = process
 
         return None
 

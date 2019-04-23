@@ -18,7 +18,7 @@ class ObjectHolder(object):
 class MethodStackLinkedList(object):
     def __init__(self, code_context=None, prev_stack=None):
         self._stack = None
-        self._length = 0
+        self.length = 0
         self.prev_stack = prev_stack
 
         self.bc_index = 0
@@ -31,34 +31,43 @@ class MethodStackLinkedList(object):
 
     def push(self, obj):
         assert isinstance(obj, Object)
-        if self._length == 0:
+        if self.length == 0:
             self._stack = ObjectHolder(obj)
-            self._length = 1
+            self.length = 1
             return
 
         self._stack = ObjectHolder(obj, prev=self._stack)
-        self._length += 1
+        self.length += 1
 
     def pop(self):
-        if self._length == 0:
+        if self.length == 0:
             raise IndexError()
 
-        if self._length == 1:
+        if self.length == 1:
             ret = self._stack
-            self._length = 0
+            self.length = 0
             self._stack = None
             return ret.obj
 
         ret = self._stack
-        self._length -= 1
+        self.length -= 1
         self._stack = self._stack.prev
         return ret.obj
 
     def pop_or_nil(self):
-        if self._length == 0:
+        if self.length == 0:
             return NIL
 
         return self.pop()
+
+    def __iter__(self):
+        out = []
+        item = self._stack
+        while item is not None:
+            out.insert(0, item.obj)
+            item = item.prev
+
+        return iter(out)
 
 
 class MethodStackPreallocatedArray(object):
@@ -67,7 +76,7 @@ class MethodStackPreallocatedArray(object):
 
         self._stack_max_size = code_context.method_stack_size
         self._stack = [None for _ in xrange(self._stack_max_size)]
-        self._length = 0
+        self.length = 0
 
         self.prev_stack = prev_stack
 
@@ -79,24 +88,27 @@ class MethodStackPreallocatedArray(object):
         self.tmp_method_obj_reference = None
 
     def push(self, obj):
-        self._stack[self._length] = obj
-        self._length += 1
+        self._stack[self.length] = obj
+        self.length += 1
 
     def pop(self):
-        if self._length == 0:
+        if self.length == 0:
             raise IndexError()
 
-        self._length -= 1
-        ret = self._stack[self._length]
-        self._stack[self._length] = None
+        self.length -= 1
+        ret = self._stack[self.length]
+        self._stack[self.length] = None
 
         return ret
 
     def pop_or_nil(self):
-        if self._length == 0:
+        if self.length == 0:
             return NIL
 
         return self.pop()
+
+    def __iter__(self):
+        return iter([x for x in self._stack if x is not None])
 
 
 if USE_LINKED_LIST_METHOD_STACK:
@@ -108,21 +120,21 @@ else:
 class ProcessStack(object):
     def __init__(self, code_context=None):
         self.frame = MethodStack(code_context)
-        self._length = 1
+        self.length = 1
 
         self.result = None
         self.finished = False
         self.finished_with_error = False
 
     def is_nested_call(self):
-        return self._length > 1
+        return self.length > 1
 
     def push_frame(self, code_context, method_obj):
         self.frame = MethodStack(code_context, prev_stack=self.frame)
         self.frame.self = method_obj
         self.frame.tmp_method_obj_reference = method_obj
 
-        self._length += 1
+        self.length += 1
 
     def top_frame(self):
         return self.frame
@@ -139,24 +151,24 @@ class ProcessStack(object):
             self.frame.tmp_method_obj_reference = None
 
     def pop_frame(self):
-        if self._length == 1:
+        if self.length == 1:
             return
 
         self.frame = self.frame.prev_stack
-        self._length -= 1
+        self.length -= 1
 
     def pop_and_clean_frame(self):
         self._cleanup_frame()
         self.pop_frame()
 
     def pop_frame_down(self):
-        if self._length == 1:
+        if self.length == 1:
             return
 
         result = self.frame.pop_or_nil()
 
         self.frame = self.frame.prev_stack
-        self._length -= 1
+        self.length -= 1
 
         self.frame.push(result)
 
@@ -220,6 +232,9 @@ class ProcessCycler:
         return process
 
     def remove_active_process(self):
+        if self.process is None:
+            return None
+
         if self.process not in self.processes:
             process = self.process
 

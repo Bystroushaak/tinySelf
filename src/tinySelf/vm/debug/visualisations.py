@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from plantuml_composer import Root
-from plantuml_composer import Class
 from plantuml_composer import Object
 from plantuml_composer import Frame
 
@@ -39,7 +38,9 @@ def _get_object_graph(obj):
             continue
 
         objs.append(o.scope_parent)
-        objs.extend(o._parent_slot_values)
+
+        if o._parent_slot_values is not None:
+            objs.extend(o._parent_slot_values)
 
     return objs_to_print
 
@@ -123,7 +124,7 @@ def _render_method_stack(cnt, method_stack):
     settings.connect(self_obj, pos="r", desc=".code_context.self")
 
     prev = settings
-    for i, obj in enumerate(method_stack.stack):
+    for i, obj in enumerate(method_stack):
         plantuml_obj = _render_object(obj, name="%s_%s_%s" % (id(obj), cnt, i))
 
         f.add(plantuml_obj)
@@ -146,8 +147,15 @@ def process_stack_to_plantuml(process, numbered=False, prefix="frame"):
     settings.add_property("finished_with_error: %s" % process.finished_with_error)
     ps.add(settings)
 
+    def iterate_frames(process):
+        frame = process.frame
+
+        while frame:
+            yield frame
+            frame = frame.prev_stack
+
     prev = None
-    for cnt, frame in enumerate(process.frames):
+    for cnt, frame in enumerate(reversed(list(iterate_frames(process)))):
         plantuml_frame = _render_method_stack(cnt, frame)
         ps.add(plantuml_frame)
 
