@@ -7,6 +7,9 @@ from tinySelf.vm.bytecodes import *
 from tinySelf.vm.code_context import CodeContext
 from tinySelf.vm.object_layout import Object as ObjectRepresentation
 
+from tinySelf.shared.string_repr import escape
+from tinySelf.shared.string_repr import unescape_esc_seq
+
 
 def _repr_list_of_baseboxes(l):
     results = []
@@ -278,35 +281,9 @@ class FloatNumber(BaseBox):
         return "FloatNumber(%s)" % self.value
 
 
-def _unescape_sequences(inp):
-    if len(inp) < 2:
-        return inp
-
-    out = ""
-    last = inp[0]
-    inp = inp[1:] + "-"
-
-    escape = last == "\\"
-    for c in inp:
-        if escape:
-            if c == "n":
-                last = "\n"
-            elif c == "t":
-                last = "\t"
-            else:
-                last = c
-
-        out += last
-
-        last = "" if escape else c
-        escape = not escape if c == "\\" else False
-
-    return out
-
-
-class String(BaseBox):  # TODO: remove?
+class String(BaseBox):
     def __init__(self, value):
-        self.value = _unescape_sequences(value)
+        self.value = unescape_esc_seq(value)
 
     def compile(self, context):
         index = context.add_literal_str(self.value)
@@ -325,7 +302,7 @@ class String(BaseBox):  # TODO: remove?
         return not self.__eq__(obj)
 
     def __str__(self):
-        return "'%s'" % self.value  # TODO: escaping
+        return "'%s'" % escape(self.value)
 
 
 class MessageBase(BaseBox):

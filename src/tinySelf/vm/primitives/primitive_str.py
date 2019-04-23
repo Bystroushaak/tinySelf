@@ -2,9 +2,9 @@
 from tinySelf.r_io import write
 from tinySelf.r_io import writeln
 
-from tinySelf.parser.ast_tokens import _unescape_sequences
-
 from tinySelf.vm.object_layout import Object
+
+from tinySelf.shared.string_repr import escape
 
 from tinySelf.vm.primitives.cache import ObjCache
 from tinySelf.vm.primitives.primitive_nil import PrimitiveNilObject
@@ -50,7 +50,7 @@ class PrimitiveStrObject(Object):
             PrimitiveStrObject._OBJ_CACHE.store(self)
 
     def __str__(self):
-        return "'" + _unescape_sequences(self.value) + "'"
+        return "'" + escape(self.value) + "'"
 
     def __eq__(self, obj):
         if not isinstance(obj, PrimitiveStrObject):
