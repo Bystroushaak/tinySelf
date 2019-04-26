@@ -177,14 +177,18 @@ class Interpreter(ProcessCycler):
 
     def _put_together_parameters(self, parameter_names, parameters):
         if len(parameter_names) < len(parameters):
-            raise ValueError("Too many parameters!")
+            raise ValueError("Too many parameters!")  # TODO: rewrite to internal error
 
+        # add padding of unspecified parameter values with `nil`
         if len(parameter_names) > len(parameters):
             for _ in range(len(parameter_names) - len(parameters)):
-                parameters.append(PrimitiveNilObject())
+                parameters.append(NIL)
 
-        for i in xrange(len(parameter_names)):  # TODO: benchmark rewrite to enumerate()
+        i = 0
+        parameter_names_len = len(parameter_names)
+        while i < parameter_names_len:
             yield parameter_names[i], parameters[i]
+            i += 1
 
     @jit.unroll_safe
     def _create_intermediate_params_obj(self, scope_parent, method_obj,
