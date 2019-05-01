@@ -30,6 +30,12 @@ def list_at(_, self, parameters):
     return self.value[obj.value]
 
 
+def list_length(_, self, parameters):
+    assert isinstance(self, PrimitiveListObject)
+
+    return PrimitiveIntObject(len(self.value))
+
+
 class PrimitiveListObject(Object):
     _OBJ_CACHE = ObjCache()
     _immutable_fields_ = ["value"]
@@ -46,6 +52,7 @@ class PrimitiveListObject(Object):
         add_primitive_fn(self, "clone", list_clone, [])
         add_primitive_fn(self, "append:", list_append, ["obj"])
         add_primitive_fn(self, "at:", list_at, ["index"])
+        add_primitive_fn(self, "length", list_length, [])
 
         if PrimitiveListObject._OBJ_CACHE.map is None:
             PrimitiveListObject._OBJ_CACHE.store(self)

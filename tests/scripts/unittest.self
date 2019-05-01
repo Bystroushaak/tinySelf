@@ -128,6 +128,7 @@
         l: primitives list clone.
         l append: 1.
         assert: [ (l at: 0) == 1 ].
+        assert: [ (l length) == 1 ].
     ).
 
     run_tests = (||
