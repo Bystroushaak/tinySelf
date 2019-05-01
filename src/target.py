@@ -27,7 +27,7 @@ NIL = PrimitiveNilObject()
 
 
 def run_interactive():
-    _, interpreter = virtual_machine("()")
+    _, interpreter = virtual_machine("(| tmp. |)")
 
     while True:
         line = stdin_readline(":> ")

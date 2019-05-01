@@ -1,13 +1,33 @@
 # -*- coding: utf-8 -*-
 from tinySelf.vm.object_layout import Object
+
 from tinySelf.vm.primitives.cache import ObjCache
+from tinySelf.vm.primitives.primitive_int import PrimitiveIntObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 
-def clone_list(_, self, parameters):
+def list_clone(_, self, parameters):
     assert isinstance(self, PrimitiveListObject)
 
     return PrimitiveListObject(self.value[:])
+
+
+def list_append(_, self, parameters):
+    obj = parameters[0]
+    assert isinstance(obj, Object)
+    assert isinstance(self, PrimitiveListObject)
+
+    self.value.append(obj)
+
+    return obj
+
+
+def list_at(_, self, parameters):
+    obj = parameters[0]
+    assert isinstance(obj, PrimitiveIntObject)
+    assert isinstance(self, PrimitiveListObject)
+
+    return self.value[obj.value]
 
 
 class PrimitiveListObject(Object):
@@ -23,7 +43,9 @@ class PrimitiveListObject(Object):
             self._slot_values = PrimitiveListObject._OBJ_CACHE.slots
             return
 
-        add_primitive_fn(self, "clone", clone_list, [])
+        add_primitive_fn(self, "clone", list_clone, [])
+        add_primitive_fn(self, "append:", list_append, ["obj"])
+        add_primitive_fn(self, "at:", list_at, ["index"])
 
         if PrimitiveListObject._OBJ_CACHE.map is None:
             PrimitiveListObject._OBJ_CACHE.store(self)

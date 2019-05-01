@@ -126,6 +126,8 @@
 
     test_primitive_list = (| l. |
         l: primitives list clone.
+        l append: 1.
+        assert: [ (l at: 0) == 1 ].
     ).
 
     run_tests = (||
