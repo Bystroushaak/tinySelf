@@ -10,6 +10,7 @@ from tinySelf.vm.primitives.primitive_float import PrimitiveFloatObject
 from tinySelf.vm.primitives.primitive_nil import PrimitiveNilObject
 from tinySelf.vm.primitives.primitive_true import PrimitiveTrueObject
 from tinySelf.vm.primitives.primitive_false import PrimitiveFalseObject
+from tinySelf.vm.primitives.primitive_list import PrimitiveListObject
 
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_method
@@ -102,7 +103,6 @@ def get_primitives():
     Returns:
         obj: Instance of tinySelf's Object.
     """
-
     primitives = Object()
 
     # add_primitive_fn(primitives, "primitiveInt", lambda x: PrimitiveIntObject(x), ["literal"])
@@ -112,6 +112,7 @@ def get_primitives():
     primitives.meta_add_slot("true", PrimitiveTrueObject())
     primitives.meta_add_slot("false", PrimitiveFalseObject())
     primitives.meta_add_slot("block_traits", _USER_EDITABLE_BLOCK_TRAIT)
+    primitives.meta_add_slot("list", PrimitiveListObject([]))
 
     primitives.meta_add_slot("time", get_primitive_time_object())
 

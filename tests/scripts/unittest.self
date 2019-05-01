@@ -124,10 +124,15 @@
         ^raised_error.
     ).
 
+    test_primitive_list = (| l. |
+        l: primitives list clone.
+    ).
+
     run_tests = (||
         true_comparision.
         false_comparision.
         nil_comparision.
+        test_primitive_list.
 
         test_that_parameters_are_rw_slots.
         test_double_return_from_block.
