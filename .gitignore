@@ -111,7 +111,7 @@ tSelf
 .pytest_cache/*
 .vscode/*
 .history
-*.plantuml
+/*.plantuml
 plantuml.jar
 frame*.png
 parent_map*.png

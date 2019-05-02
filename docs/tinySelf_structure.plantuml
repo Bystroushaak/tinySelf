@@ -1,0 +1,96 @@
+@startuml
+
+object SourceCode {
+}
+
+package Parser as "tinySelf.parser" {
+
+    object Lexer {
+    }
+
+    object Parser {
+    }
+
+    object Compiler {
+    }
+}
+
+
+object Stdlib {
+}
+
+package VM as "tinySelf.vm" {
+    object Interpreter {
+    }
+
+    object Bytecodes {
+    }
+
+    object CodeContext {
+    }
+
+    object Frames {
+    }
+
+    object ObjectLayout {
+    }
+
+    object VirtualMachine {
+    }
+
+    Primitives .u..> Interpreter: is used
+    Bytecodes .l.> Interpreter: is used
+    Bytecodes .u..> Compiler: is used
+
+    CodeContext .u.> Interpreter
+    Frames .u.> Interpreter
+    ObjectLayout .u.> Interpreter
+
+    Stdlib -r--> VirtualMachine
+    Stdlib -u[hidden]- SourceCode
+
+    package Primitives as "tinySelf.vm.primitives  " {
+        object Primitives {
+        }
+        object PrimitiveInt {
+        }
+        object PrimitiveFloat {
+        }
+        object PrimitiveStr {
+        }
+        object PrimitiveNil {
+        }
+        object PrimitiveTrue {
+        }
+        object PrimitiveFalse {
+        }
+        object PrimitiveList {
+        }
+        object PrimitiveTime {
+        }
+        object Mirrors {
+        }
+        object InterpreterPrimitives {
+        }
+
+        PrimitiveInt -u-> Primitives
+        PrimitiveFloat -u-> Primitives
+        PrimitiveStr -u-> Primitives
+        PrimitiveNil -u--> Primitives
+        PrimitiveTrue -u--> Primitives
+        PrimitiveFalse -u--> Primitives
+        PrimitiveList -u--> Primitives
+        PrimitiveTime -u---> Primitives
+        Mirrors -u---> Primitives
+        InterpreterPrimitives -u---> Primitives
+    }
+}
+
+SourceCode -r-> Lexer: characters
+Lexer -r-> Parser: tokens
+Parser -r-> Compiler: AST
+
+Compiler -d-> VirtualMachine: bytecode
+VirtualMachine -d-> Interpreter
+
+@enduml
