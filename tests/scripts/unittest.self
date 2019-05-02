@@ -130,7 +130,7 @@
         ].
     ).
 
-    test_primitive_list = (| l. |
+    test_primitive_list = (| l. other. |
         l: primitives list clone.
         l append: 1.
         assert: [ (l at: 0) == 1 ].
@@ -140,6 +140,16 @@
         assert: [ (l at: 1) == 2 ].
         l at: 0 Put: 0.
         assert: [ (l at: 0) == 0 ].
+
+        other: primitives list clone.
+        other append: 'a'.
+        other append: 'b'.
+
+        l extend: other.
+        assert: [ (l at: 0) == 0 ].
+        assert: [ (l at: 1) == 2 ].
+        assert: [ (l at: 2) == 'a' ].
+        assert: [ (l at: 3) == 'b' ].
     ).
 
     run_tests = (||

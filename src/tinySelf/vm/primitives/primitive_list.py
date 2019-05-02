@@ -50,11 +50,14 @@ def list_at_i_put_x(interpreter, self, parameters):
 
 
 def list_extend(interpreter, self, parameters):
-    pass
+    obj = parameters[0]
+    assert isinstance(self, PrimitiveListObject)
 
-
-def list_join(interpreter, self, parameters):
-    pass
+    if isinstance(obj, PrimitiveListObject):
+        self.value.extend(obj.value)
+        return self
+    else:
+        raise ValueError("Not implemented yet!") # TODO: implement as call to tinySelf code
 
 
 def list_reverse(interpreter, self, parameters):
@@ -76,6 +79,7 @@ class PrimitiveListObject(Object):
 
         add_primitive_fn(self, "clone", list_clone, [])
         add_primitive_fn(self, "append:", list_append, ["obj"])
+        add_primitive_fn(self, "extend:", list_extend, ["obj"])
         add_primitive_fn(self, "at:", list_at, ["index"])
         add_primitive_fn(self, "length", list_length, [])
         add_primitive_fn(self, "at:Put:", list_at_i_put_x, ["index", "obj"])
