@@ -82,7 +82,10 @@ class Root(BaseBox):
     def __init__(self, tree=[]):
         self.ast = tree
 
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         for item in self.ast:
             item.compile(context)
 
@@ -93,7 +96,10 @@ class Root(BaseBox):
 
 
 class Self(BaseBox):
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         context.add_bytecode(BYTECODE_PUSH_SELF)
 
         return context
@@ -109,7 +115,10 @@ class Self(BaseBox):
 
 
 class Nil(Self):
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         context.add_bytecode(BYTECODE_PUSH_LITERAL)
         context.add_bytecode(LITERAL_TYPE_NIL)
         context.add_bytecode(0)
@@ -146,7 +155,10 @@ class Object(BaseBox):
 
         context.add_bytecode(BYTECODE_ADD_SLOT)
 
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         obj = ObjectRepresentation()
         obj.meta_set_ast(self)
         obj.meta_set_parameters(self.params)
@@ -202,7 +214,10 @@ class Object(BaseBox):
 
 
 class Block(Object):
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         block = ObjectRepresentation()
         block.meta_set_ast(self)
         block.meta_set_parameters(self.params)
@@ -237,7 +252,10 @@ class IntNumber(BaseBox):
     def __init__(self, value):
         self.value = value
 
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         index = context.add_literal_int(self.value)
 
         context.add_bytecode(BYTECODE_PUSH_LITERAL)
@@ -261,7 +279,10 @@ class FloatNumber(BaseBox):
     def __init__(self, value):
         self.value = value
 
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         index = context.add_literal_float(self.value)
 
         context.add_bytecode(BYTECODE_PUSH_LITERAL)
@@ -285,7 +306,10 @@ class String(BaseBox):
     def __init__(self, value):
         self.value = unescape_esc_seq(value)
 
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         index = context.add_literal_str(self.value)
 
         context.add_bytecode(BYTECODE_PUSH_LITERAL)
@@ -321,7 +345,10 @@ class MessageBase(BaseBox):
 
 
 class Message(MessageBase):
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         send_type = SEND_TYPE_UNARY
         if self.is_resend:
             send_type = SEND_TYPE_UNARY_RESEND
@@ -351,7 +378,10 @@ class KeywordMessage(MessageBase):
         MessageBase.__init__(self, name)  # weird stuff
         self.parameters = parameters
 
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         send_type = SEND_TYPE_KEYWORD
         if self.is_resend:
             send_type = SEND_TYPE_KEYWORD_RESEND
@@ -394,7 +424,10 @@ class BinaryMessage(BaseBox):
     def is_resend(self):
         return False
 
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         self.parameter.compile(context)
 
         context.add_literal_str_push_bytecode(self.name)
@@ -425,7 +458,10 @@ class Send(BaseBox):
         self.obj = obj
         self.msg = msg
 
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         self.obj.compile(context)
         self.msg.compile(context)
 
@@ -453,7 +489,10 @@ class Resend(BaseBox):
         self.parent_name = parent_name
         self.msg = msg
 
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         context.add_bytecode(BYTECODE_PUSH_SELF)
         self.msg.compile(context)
 
@@ -489,7 +528,10 @@ class Cascade(BaseBox):
         self.obj = obj
         self.msgs = msgs
 
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         for msg in self.msgs:
             self.obj.compile(context)
             msg.compile(context)
@@ -516,7 +558,10 @@ class Return(BaseBox):
     def __init__(self, value):
         self.value = value
 
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         self.value.compile(context)
         context.add_bytecode(BYTECODE_RETURN_IMPLICIT)
 
@@ -534,7 +579,10 @@ class Return(BaseBox):
 
 
 class AssignmentPrimitive(BaseBox):
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         context.add_bytecode(BYTECODE_PUSH_LITERAL)
         context.add_bytecode(LITERAL_TYPE_ASSIGNMENT)
         context.add_bytecode(0)
@@ -555,7 +603,10 @@ class Comment(BaseBox):
     def __init__(self, msg):
         self.msg = msg
 
-    def compile(self, context):
+    def compile(self, context=None):
+        if context is None:
+            context = CodeContext()
+
         return context
 
     def __eq__(self, obj):
