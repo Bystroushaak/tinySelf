@@ -28,7 +28,7 @@ def list_at(interpreter, self, parameters):
     assert isinstance(obj, PrimitiveIntObject)
     assert isinstance(self, PrimitiveListObject)
 
-    return self.value[obj.value]
+    return self.value[int(obj.value)]
 
 
 def list_length(interpreter, self, parameters):
@@ -44,7 +44,7 @@ def list_at_i_put_x(interpreter, self, parameters):
     assert isinstance(obj, Object)
     assert isinstance(self, PrimitiveListObject)
 
-    self.value[index.value] = obj
+    self.value[int(index.value)] = obj
 
     return obj
 
@@ -60,8 +60,10 @@ def list_extend(interpreter, self, parameters):
         raise ValueError("Not implemented yet!") # TODO: implement as call to tinySelf code
 
 
-def list_reverse(interpreter, self, parameters):
-    pass
+def list_reversed(interpreter, self, parameters):
+    assert isinstance(self, PrimitiveListObject)
+
+    return PrimitiveListObject([x for x in reversed(self.value)])
 
 
 class PrimitiveListObject(Object):
@@ -77,19 +79,24 @@ class PrimitiveListObject(Object):
             self._slot_values = PrimitiveListObject._OBJ_CACHE.slots
             return
 
+        add_primitive_fn(self, "at:", list_at, ["index"])
         add_primitive_fn(self, "clone", list_clone, [])
+        add_primitive_fn(self, "length", list_length, [])
         add_primitive_fn(self, "append:", list_append, ["obj"])
         add_primitive_fn(self, "extend:", list_extend, ["obj"])
-        add_primitive_fn(self, "at:", list_at, ["index"])
-        add_primitive_fn(self, "length", list_length, [])
         add_primitive_fn(self, "at:Put:", list_at_i_put_x, ["index", "obj"])
+        add_primitive_fn(self, "reversed", list_reversed, [])
 
         if PrimitiveListObject._OBJ_CACHE.map is None:
             PrimitiveListObject._OBJ_CACHE.store(self)
 
     def __str__(self):
-        # return "'" + escape(self.value) + "'"
-        return "[]"
+        # I would use something more elegant, but rpython doesn't let me..
+        items = ""
+        for x in self.value:
+            items += x.__str__()
+
+        return "[%s]" % items
 
     def __eq__(self, obj):
         if not isinstance(obj, PrimitiveListObject):
