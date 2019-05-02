@@ -124,17 +124,29 @@
         ^raised_error.
     ).
 
+    test_eval = (||
+        assert: [
+            (primitives interpreter evalMethodObj: "(|| 'okurka')") == "okurka"
+        ].
+    ).
+
     test_primitive_list = (| l. |
         l: primitives list clone.
         l append: 1.
         assert: [ (l at: 0) == 1 ].
         assert: [ (l length) == 1 ].
+
+        l append: 2.
+        assert: [ (l at: 1) == 2 ].
+        l at: 0 Put: 0.
+        assert: [ (l at: 0) == 0 ].
     ).
 
     run_tests = (||
         true_comparision.
         false_comparision.
         nil_comparision.
+        test_eval.
         test_primitive_list.
 
         test_that_parameters_are_rw_slots.
