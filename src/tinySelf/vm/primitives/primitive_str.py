@@ -9,6 +9,8 @@ from tinySelf.shared.string_repr import escape
 from tinySelf.vm.primitives.cache import ObjCache
 from tinySelf.vm.primitives.primitive_nil import PrimitiveNilObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
+from tinySelf.vm.primitives.primitive_true import PrimitiveTrueObject
+from tinySelf.vm.primitives.primitive_true import PrimitiveFalseObject
 
 
 def add_strings(interpreter, self, parameters):
@@ -30,6 +32,21 @@ def print_string(interpreter, self, parameters):
     return PrimitiveNilObject()
 
 
+def compare_strings(interpreter, self, parameters):
+    obj = parameters[0]
+    assert isinstance(obj, Object)
+    assert isinstance(self, PrimitiveStrObject)
+
+    if isinstance(obj, PrimitiveStrObject):
+        if obj.value == self.value:
+            return PrimitiveTrueObject()
+        else:
+            return PrimitiveFalseObject()
+
+    # TODO: implement as call to tinySelf code
+    raise ValueError("Can't yet compare other sequences with strings.")
+
+
 class PrimitiveStrObject(Object):
     _OBJ_CACHE = ObjCache()
     _immutable_fields_ = ["value"]
@@ -45,6 +62,7 @@ class PrimitiveStrObject(Object):
 
         add_primitive_fn(self, "+", add_strings, ["obj"])
         add_primitive_fn(self, "print", print_string, [])
+        add_primitive_fn(self, "==", compare_strings, ["obj"])
 
         if PrimitiveStrObject._OBJ_CACHE.map is None:
             PrimitiveStrObject._OBJ_CACHE.store(self)
