@@ -8,6 +8,7 @@ from tinySelf.vm.object_layout import Object
 
 from tinySelf.vm.code_context import CodeContext
 
+from tinySelf.parser import lex_and_parse
 from tinySelf.parser import lex_and_parse_as_root
 
 
@@ -176,6 +177,33 @@ def _run_script(interpreter, scope_parent, parameters):
     )
 
 
+def call_tinyself_code_from_primitive(interpreter, code_str, parameters):
+    assert isinstance(code_str, str)
+
+    method_obj_ast = lex_and_parse(code_str)[0].code[0]
+    code = method_obj_ast.compile()
+    code.finalize()
+
+    method_obj = Object()
+    method_obj.map.code_context = code
+    method_obj.map.ast = method_obj_ast
+    method_obj.parameters = [x[0] for x in parameters]
+
+    interpreter._push_code_obj_for_interpretation(
+        next_bytecode=0,  # disable TCO
+        scope_parent=interpreter.process.frame.self,
+        method_obj=method_obj,
+        parameters=parameters,
+    )
+
+
+def _eval_method_obj(interpreter, scope_parent, parameters):
+    code = parameters[0]
+    assert isinstance(code, PrimitiveStrObject)
+
+    call_tinyself_code_from_primitive(interpreter, code.value, [])
+
+
 def gen_interpreter_primitives(interpreter):
     interpreter_namespace = Object()
 
@@ -192,5 +220,7 @@ def gen_interpreter_primitives(interpreter):
     add_primitive_fn(interpreter_namespace, "restoreProcess:With:",
                      _restore_process_with, ["msg", "err_obj"])
     add_primitive_fn(interpreter_namespace, "runScript:", _run_script, ["path"])
+    add_primitive_fn(interpreter_namespace, "evalMethodObj:",
+                     _eval_method_obj, ["code"])
 
     return interpreter_namespace

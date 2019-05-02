@@ -40,3 +40,4 @@ def add_primitive_fn(obj, slot_name, primitive_fn, arguments):
     obj.meta_add_slot(slot_name, primitive_code_obj)
 
     return primitive_code_obj
+
