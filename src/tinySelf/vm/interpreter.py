@@ -349,7 +349,7 @@ class Interpreter(ProcessCycler):
 
         elif slot.has_primitive_code:
             return_value = slot.primitive_code(
-                slot.primitive_code_self,
+                self,
                 obj,
                 parameters
             )

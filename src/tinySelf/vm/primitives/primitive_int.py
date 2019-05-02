@@ -8,7 +8,7 @@ from tinySelf.vm.primitives.primitive_float import PrimitiveFloatObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 
-def add(_, self, parameters):
+def add(interpreter, self, parameters):
     obj = parameters[0]
     # yeah, this can't be factored out, I've tried..
     assert isinstance(self, PrimitiveIntObject)
@@ -17,7 +17,7 @@ def add(_, self, parameters):
     return obj.result_type(self.value + obj.value)
 
 
-def substract(_, self, parameters):
+def substract(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveIntObject)
     assert isinstance(obj, _NumberObject)
@@ -25,7 +25,7 @@ def substract(_, self, parameters):
     return obj.result_type(self.value - obj.value)
 
 
-def multiply(_, self, parameters):
+def multiply(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveIntObject)
     assert isinstance(obj, _NumberObject)
@@ -33,7 +33,7 @@ def multiply(_, self, parameters):
     return obj.result_type(self.value * obj.value)
 
 
-def divide(_, self, parameters):
+def divide(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveIntObject)
     assert isinstance(obj, _NumberObject)
@@ -41,7 +41,7 @@ def divide(_, self, parameters):
     return obj.result_type(self.value / obj.value)
 
 
-def modulo(_, self, parameters):
+def modulo(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveIntObject)
     assert isinstance(obj, PrimitiveIntObject)
@@ -49,7 +49,7 @@ def modulo(_, self, parameters):
     return obj.result_type(int(self.value) % int(obj.value))
 
 
-def lt(_, self, parameters):
+def lt(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveIntObject)
     assert isinstance(obj, _NumberObject)
@@ -60,7 +60,7 @@ def lt(_, self, parameters):
         return PrimitiveFalseObject()
 
 
-def lte(_, self, parameters):
+def lte(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveIntObject)
     assert isinstance(obj, _NumberObject)
@@ -71,7 +71,7 @@ def lte(_, self, parameters):
         return PrimitiveFalseObject()
 
 
-def gt(_, self, parameters):
+def gt(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveIntObject)
     assert isinstance(obj, _NumberObject)
@@ -82,7 +82,7 @@ def gt(_, self, parameters):
         return PrimitiveFalseObject()
 
 
-def gte(_, self, parameters):
+def gte(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveIntObject)
     assert isinstance(obj, _NumberObject)
@@ -93,7 +93,7 @@ def gte(_, self, parameters):
         return PrimitiveFalseObject()
 
 
-def compare(_, self, parameters):
+def compare(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveIntObject)
     assert isinstance(obj, _NumberObject)
@@ -104,12 +104,12 @@ def compare(_, self, parameters):
         return PrimitiveFalseObject()
 
 
-def as_string(_, self, parameters):
+def as_string(interpreter, self, parameters):
     assert isinstance(self, PrimitiveIntObject)
     return PrimitiveStrObject(str(self.value))
 
 
-def as_float(_, self, parameters):
+def as_float(interpreter, self, parameters):
     assert isinstance(self, PrimitiveIntObject)
     return PrimitiveFloatObject(float(self.value))
 
@@ -120,7 +120,7 @@ class PrimitiveIntObject(_NumberObject):
     def __init__(self, value, obj_map=None):
         _NumberObject.__init__(self, PrimitiveIntObject._OBJ_CACHE.map)
 
-        # assert isinstance(value, int)
+        assert isinstance(value, int)
         self.value = value
 
         if PrimitiveIntObject._OBJ_CACHE.map is not None:

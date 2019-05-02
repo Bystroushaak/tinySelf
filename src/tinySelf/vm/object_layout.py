@@ -295,10 +295,6 @@ class _ObjectWithMapEncapsulation(_BareObject):
         return self.map.primitive_code
 
     @property
-    def primitive_code_self(self):
-        return self.map.primitive_code_self
-
-    @property
     def has_slots(self):
         return bool(self._slot_values)
 
@@ -445,7 +441,6 @@ class ObjectMap(object):
         self.ast = None
         self.code_context = None
         self.primitive_code = None
-        self.primitive_code_self = None
 
         self.parameters = []
 

@@ -6,7 +6,7 @@ from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 from tinySelf.vm.primitives.primitive_float import PrimitiveFloatObject
 
 
-def get_timestamp(context, time_obj, parameters):
+def get_timestamp(interpreter, time_obj, parameters):
     return PrimitiveFloatObject(time.time())
 
 

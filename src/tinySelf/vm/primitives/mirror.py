@@ -4,7 +4,7 @@ from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 
-def primitive_add_slot(_, mirror, parameters):
+def primitive_add_slot(interpreter, mirror, parameters):
     assert isinstance(mirror, Mirror)
     name = parameters[0]
     assert isinstance(name, PrimitiveStrObject)

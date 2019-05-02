@@ -13,7 +13,6 @@ from tinySelf.vm.primitives.primitive_false import PrimitiveFalseObject
 from tinySelf.vm.primitives.primitive_list import PrimitiveListObject
 
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
-from tinySelf.vm.primitives.add_primitive_fn import add_primitive_method
 
 from tinySelf.vm.primitives.interpreter_primitives import ErrorObject
 from tinySelf.vm.primitives.interpreter_primitives import gen_interpreter_primitives
@@ -49,12 +48,12 @@ class BlockTrait(Object):
 _USER_EDITABLE_BLOCK_TRAIT = BlockTrait()
 
 
-def _print_block_source(context, block_obj, parameters):
+def _print_block_source(interpreter, block_obj, parameters):
     ast = block_obj.get_slot("value").ast
     return PrimitiveStrObject(ast.source_pos.source_snippet)
 
 
-def _get_lineno(context, block_obj, parameters):
+def _get_lineno(interpreter, block_obj, parameters):
     ast = block_obj.get_slot("value").ast
     return PrimitiveIntObject(ast.source_pos.start_line)
 
@@ -89,7 +88,7 @@ def add_block_trait(block):
     return obj
 
 
-def _create_mirror(_, __, parameters):
+def _create_mirror(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(obj, Object)
 

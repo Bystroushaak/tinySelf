@@ -25,54 +25,49 @@ class _NumberObject(Object):
         return False
 
 
-def add(_, self, parameters):
+def add(interpreter, self, parameters):
     obj = parameters[0]
 
     # yeah, this can't be factored out, I've tried..
     assert isinstance(self, PrimitiveFloatObject)
     assert isinstance(obj, _NumberObject)
     assert isinstance(self.value, float)
-    # assert isinstance(obj.float_value, float)
 
     return PrimitiveFloatObject(self.value + obj.float_value)
 
 
-def substract(_, self, parameters):
+def substract(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveFloatObject)
     assert isinstance(obj, _NumberObject)
     assert isinstance(self.value, float)
-    # assert isinstance(obj.float_value, float)
 
     return PrimitiveFloatObject(self.value - obj.float_value)
 
 
-def multiply(_, self, parameters):
+def multiply(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveFloatObject)
     assert isinstance(obj, _NumberObject)
     assert isinstance(self.value, float)
-    # assert isinstance(obj.float_value, float)
 
     return PrimitiveFloatObject(self.value * obj.float_value)
 
 
-def divide(_, self, parameters):
+def divide(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveFloatObject)
     assert isinstance(obj, _NumberObject)
     assert isinstance(self.value, float)
-    # assert isinstance(obj.float_value, float)
 
     return PrimitiveFloatObject(self.value / obj.float_value)
 
 
-def lt(_, self, parameters):
+def lt(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveFloatObject)
     assert isinstance(obj, _NumberObject)
     assert isinstance(self.value, float)
-    # assert isinstance(obj.value, float)
 
     if self.value < obj.value:
         return PrimitiveTrueObject()
@@ -80,12 +75,11 @@ def lt(_, self, parameters):
         return PrimitiveFalseObject()
 
 
-def lte(_, self, parameters):
+def lte(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveFloatObject)
     assert isinstance(obj, _NumberObject)
     assert isinstance(self.value, float)
-    # assert isinstance(obj.value, float)
 
     if self.value <= obj.value:
         return PrimitiveTrueObject()
@@ -93,12 +87,11 @@ def lte(_, self, parameters):
         return PrimitiveFalseObject()
 
 
-def gt(_, self, parameters):
+def gt(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveFloatObject)
     assert isinstance(obj, _NumberObject)
     assert isinstance(self.value, float)
-    # assert isinstance(obj.value, float)
 
     if self.value > obj.value:
         return PrimitiveTrueObject()
@@ -106,12 +99,11 @@ def gt(_, self, parameters):
         return PrimitiveFalseObject()
 
 
-def gte(_, self, parameters):
+def gte(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveFloatObject)
     assert isinstance(obj, _NumberObject)
     assert isinstance(self.value, float)
-    # assert isinstance(obj.value, float)
 
     if self.value >= obj.value:
         return PrimitiveTrueObject()
@@ -119,12 +111,11 @@ def gte(_, self, parameters):
         return PrimitiveFalseObject()
 
 
-def compare(_, self, parameters):
+def compare(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(self, PrimitiveFloatObject)
     assert isinstance(obj, _NumberObject)
     assert isinstance(self.value, float)
-    # assert isinstance(obj._asvalue, float)
 
     if self.value == obj.value:
         return PrimitiveTrueObject()
@@ -132,12 +123,12 @@ def compare(_, self, parameters):
         return PrimitiveFalseObject()
 
 
-def as_string(_, self, parameters):
+def as_string(interpreter, self, parameters):
     assert isinstance(self, PrimitiveFloatObject)
     return PrimitiveStrObject(str(self.value))
 
 
-def as_int(_, self, parameters):
+def as_int(interpreter, self, parameters):
     from tinySelf.vm.primitives.primitive_int import PrimitiveIntObject
 
     assert isinstance(self, PrimitiveFloatObject)

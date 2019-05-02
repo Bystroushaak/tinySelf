@@ -2,7 +2,7 @@
 from tinySelf.vm.primitives import PrimitiveStrObject
 from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveNilObject
-from tinySelf.vm.primitives.add_primitive_fn import add_primitive_method
+from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 from tinySelf.vm.object_layout import Object
 
@@ -32,15 +32,15 @@ class ErrorObject(Object):
         return "ErrorObject(%s)" % self.message
 
 
-def _get_number_of_processes(interpreter, _, parameters):
+def _get_number_of_processes(interpreter, self, parameters):
     return PrimitiveIntObject(len(interpreter.processes))
 
 
-def _get_number_of_stack_frames(interpreter, _, parameters):
+def _get_number_of_stack_frames(interpreter, self, parameters):
     return PrimitiveIntObject(interpreter.process.length)
 
 
-def _set_error_handler(interpreter, _, parameters):
+def _set_error_handler(interpreter, self, parameters):
     blck = parameters[0]
     assert isinstance(blck, Object)
 
@@ -62,7 +62,7 @@ def _get_frame_with_error_handler(frame_linked_list):
     return None
 
 
-def _halt(interpreter, _, parameters):
+def _halt(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(obj, Object)
 
@@ -78,7 +78,7 @@ def _halt(interpreter, _, parameters):
     return obj
 
 
-def _restore_process_with(interpreter, _, parameters):
+def _restore_process_with(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(obj, Object)
     with_obj = parameters[1]
@@ -93,7 +93,7 @@ def _restore_process_with(interpreter, _, parameters):
     return None
 
 
-def _restore_process(interpreter, _, parameters):
+def _restore_process(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(obj, Object)
 
@@ -106,7 +106,7 @@ def _restore_process(interpreter, _, parameters):
     return None
 
 
-def _raise_error(interpreter, _, parameters):
+def _raise_error(interpreter, self, parameters):
     msg = parameters[0]
     assert isinstance(msg, Object)
 
@@ -179,21 +179,18 @@ def _run_script(interpreter, scope_parent, parameters):
 def gen_interpreter_primitives(interpreter):
     interpreter_namespace = Object()
 
-    add_primitive_method(interpreter, interpreter_namespace, "numberOfProcesses",
-                         _get_number_of_processes, [])
-    add_primitive_method(interpreter, interpreter_namespace, "numberOfFrames",
-                         _get_number_of_stack_frames, [])
-    add_primitive_method(interpreter, interpreter_namespace, "setErrorHandler:",
-                         _set_error_handler, ["blck"])
-    add_primitive_method(interpreter, interpreter_namespace, "error:",
-                         _raise_error, ["obj"])
-    add_primitive_method(interpreter, interpreter_namespace, "halt:",
-                         _halt, ["obj"])
-    add_primitive_method(interpreter, interpreter_namespace, "restoreProcess:",
-                         _restore_process, ["err_obj"])
-    add_primitive_method(interpreter, interpreter_namespace, "restoreProcess:With:",
-                         _restore_process_with, ["msg", "err_obj"])
-    add_primitive_method(interpreter, interpreter_namespace, "runScript:",
-                         _run_script, ["path"])
+    add_primitive_fn(interpreter_namespace, "numberOfProcesses",
+                     _get_number_of_processes, [])
+    add_primitive_fn(interpreter_namespace, "numberOfFrames",
+                     _get_number_of_stack_frames, [])
+    add_primitive_fn(interpreter_namespace, "setErrorHandler:", _set_error_handler,
+                     ["blck"])
+    add_primitive_fn(interpreter_namespace, "error:", _raise_error, ["obj"])
+    add_primitive_fn(interpreter_namespace, "halt:", _halt, ["obj"])
+    add_primitive_fn(interpreter_namespace, "restoreProcess:", _restore_process,
+                     ["err_obj"])
+    add_primitive_fn(interpreter_namespace, "restoreProcess:With:",
+                     _restore_process_with, ["msg", "err_obj"])
+    add_primitive_fn(interpreter_namespace, "runScript:", _run_script, ["path"])
 
     return interpreter_namespace

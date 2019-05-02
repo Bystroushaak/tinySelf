@@ -11,7 +11,7 @@ from tinySelf.vm.primitives.primitive_nil import PrimitiveNilObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 
-def add_strings(_, self, parameters):
+def add_strings(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(obj, PrimitiveStrObject)
     assert isinstance(self, PrimitiveStrObject)
@@ -21,7 +21,7 @@ def add_strings(_, self, parameters):
     return PrimitiveStrObject(self.value + obj.value)
 
 
-def print_string(_, self, parameters):
+def print_string(interpreter, self, parameters):
     assert isinstance(self, PrimitiveStrObject)
     assert isinstance(self.value, str)
 

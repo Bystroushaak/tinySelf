@@ -4,15 +4,16 @@ from tinySelf.vm.object_layout import Object
 from tinySelf.vm.primitives.cache import ObjCache
 from tinySelf.vm.primitives.primitive_int import PrimitiveIntObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
+from tinySelf.vm.primitives.interpreter_primitives import call_tinyself_code_from_primitive
 
 
-def list_clone(_, self, parameters):
+def list_clone(interpreter, self, parameters):
     assert isinstance(self, PrimitiveListObject)
 
     return PrimitiveListObject(self.value[:])
 
 
-def list_append(_, self, parameters):
+def list_append(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(obj, Object)
     assert isinstance(self, PrimitiveListObject)
@@ -22,7 +23,7 @@ def list_append(_, self, parameters):
     return obj
 
 
-def list_at(_, self, parameters):
+def list_at(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(obj, PrimitiveIntObject)
     assert isinstance(self, PrimitiveListObject)
@@ -30,10 +31,34 @@ def list_at(_, self, parameters):
     return self.value[obj.value]
 
 
-def list_length(_, self, parameters):
+def list_length(interpreter, self, parameters):
     assert isinstance(self, PrimitiveListObject)
 
     return PrimitiveIntObject(len(self.value))
+
+
+def list_at_i_put_x(interpreter, self, parameters):
+    index = parameters[0]
+    obj = parameters[1]
+    assert isinstance(index, PrimitiveIntObject)
+    assert isinstance(obj, Object)
+    assert isinstance(self, PrimitiveListObject)
+
+    self.value[index.value] = obj
+
+    return obj
+
+
+def list_extend(interpreter, self, parameters):
+    pass
+
+
+def list_join(interpreter, self, parameters):
+    pass
+
+
+def list_reverse(interpreter, self, parameters):
+    pass
 
 
 class PrimitiveListObject(Object):
@@ -53,6 +78,7 @@ class PrimitiveListObject(Object):
         add_primitive_fn(self, "append:", list_append, ["obj"])
         add_primitive_fn(self, "at:", list_at, ["index"])
         add_primitive_fn(self, "length", list_length, [])
+        add_primitive_fn(self, "at:Put:", list_at_i_put_x, ["index", "obj"])
 
         if PrimitiveListObject._OBJ_CACHE.map is None:
             PrimitiveListObject._OBJ_CACHE.store(self)

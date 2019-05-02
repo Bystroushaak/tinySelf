@@ -3,7 +3,7 @@ from tinySelf.vm.object_layout import Object
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 
-def is_false(_, self, parameters):
+def is_false(interpreter, self, parameters):
     from tinySelf.vm.primitives.primitive_true import PrimitiveTrueObject
     obj = parameters[0]
 
