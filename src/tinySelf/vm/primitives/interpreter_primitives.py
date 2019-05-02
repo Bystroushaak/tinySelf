@@ -10,6 +10,7 @@ from tinySelf.vm.code_context import CodeContext
 
 from tinySelf.parser import lex_and_parse
 from tinySelf.parser import lex_and_parse_as_root
+from tinySelf.parser.ast_tokens import Object as AstObject
 
 
 NIL = PrimitiveNilObject()
@@ -180,14 +181,21 @@ def _run_script(interpreter, scope_parent, parameters):
 def call_tinyself_code_from_primitive(interpreter, code_str, parameters):
     assert isinstance(code_str, str)
 
-    method_obj_ast = lex_and_parse(code_str)[0].code[0]
+    wrapping_obj = lex_and_parse(code_str)[0]
+    assert isinstance(wrapping_obj, AstObject)
+
+    method_obj_ast = wrapping_obj.code[0]
     code = method_obj_ast.compile()
     code.finalize()
 
     method_obj = Object()
     method_obj.map.code_context = code
-    method_obj.map.ast = method_obj_ast
-    method_obj.parameters = [x[0] for x in parameters]
+    method_obj.map.ast = wrapping_obj
+
+    if parameters:
+        assert isinstance(parameters[0], list)
+        assert len(parameters[0]) > 1
+        method_obj.parameters = [x[0] for x, y in parameters]
 
     interpreter._push_code_obj_for_interpretation(
         next_bytecode=0,  # disable TCO

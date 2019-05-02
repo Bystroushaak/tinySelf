@@ -120,8 +120,7 @@ class PrimitiveIntObject(_NumberObject):
     def __init__(self, value, obj_map=None):
         _NumberObject.__init__(self, PrimitiveIntObject._OBJ_CACHE.map)
 
-        assert isinstance(value, int)
-        self.value = value
+        self.value = int(value)
 
         if PrimitiveIntObject._OBJ_CACHE.map is not None:
             self._slot_values = PrimitiveIntObject._OBJ_CACHE.slots
