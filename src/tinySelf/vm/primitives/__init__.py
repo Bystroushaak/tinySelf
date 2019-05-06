@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from collections import OrderedDict
+
 from tinySelf.vm.object_layout import Object
 
 from tinySelf.vm.primitives.mirror import Mirror
@@ -11,6 +13,7 @@ from tinySelf.vm.primitives.primitive_nil import PrimitiveNilObject
 from tinySelf.vm.primitives.primitive_true import PrimitiveTrueObject
 from tinySelf.vm.primitives.primitive_false import PrimitiveFalseObject
 from tinySelf.vm.primitives.primitive_list import PrimitiveListObject
+from tinySelf.vm.primitives.primitive_dict import PrimitiveDictObject
 
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
@@ -104,14 +107,12 @@ def get_primitives():
     """
     primitives = Object()
 
-    # add_primitive_fn(primitives, "primitiveInt", lambda x: PrimitiveIntObject(x), ["literal"])
-    # add_primitive_fn(primitives, "primitiveStr", lambda x: PrimitiveStrObject(x), ["literal"])
-
     primitives.meta_add_slot("nil", PrimitiveNilObject())
     primitives.meta_add_slot("true", PrimitiveTrueObject())
     primitives.meta_add_slot("false", PrimitiveFalseObject())
     primitives.meta_add_slot("block_traits", _USER_EDITABLE_BLOCK_TRAIT)
     primitives.meta_add_slot("list", PrimitiveListObject([]))
+    primitives.meta_add_slot("dict", PrimitiveDictObject(OrderedDict()))
 
     primitives.meta_add_slot("time", get_primitive_time_object())
 
