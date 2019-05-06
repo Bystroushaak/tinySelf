@@ -158,7 +158,7 @@ class CodeContext(object):
         out += '\n  ).\n\n'
 
         bytecodes_list = ", ".join([str(ord(x)) for x in self.bytecodes])
-        out += 'bytecodes = (||\n    %s\n).' % bytecodes_list
+        out += 'bytecodes = (||\n    %s\n). |)' % bytecodes_list
 
         return out
 

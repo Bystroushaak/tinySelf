@@ -17,17 +17,16 @@ from tinySelf.config import VERSION
 from tinySelf.parser import lex_and_parse
 from tinySelf.parser import lex_and_parse_as_root
 
-from tinySelf.vm.object_layout import Object
+from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.code_context import CodeContext
 from tinySelf.vm.virtual_machine import virtual_machine
-from tinySelf.vm.primitives import PrimitiveNilObject
 
 
 NIL = PrimitiveNilObject()
 
 
 def run_interactive():
-    _, interpreter = virtual_machine("(| tmp. |)")
+    _, interpreter = virtual_machine("()")
 
     while True:
         line = stdin_readline(":> ")
@@ -167,7 +166,7 @@ def parse_args(argv):
             return 0
 
         if argv[1] in ["-v", "--version"]:
-            writeln("tSelf" + VERSION)
+            writeln("tSelf " + VERSION)
             writeln(get_compiler_info())
             return 0
 

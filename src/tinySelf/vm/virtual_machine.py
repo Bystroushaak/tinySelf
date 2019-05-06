@@ -12,9 +12,9 @@ from tinySelf.vm.object_layout import Object
 
 def run_stdlib(interpreter, stdlib_source):
     stdlib_ast = lex_and_parse_as_root(stdlib_source)
-    code = stdlib_ast.compile(CodeContext())
-
+    code = stdlib_ast.compile()
     stdlib_process = interpreter.add_process(code.finalize())
+
     interpreter.interpret()
 
     if stdlib_process.finished_with_error:
