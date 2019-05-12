@@ -41,6 +41,39 @@ def print_string_newline(interpreter, self, parameters):
     return PrimitiveNilObject()
 
 
+def string_endswith(interpreter, self, parameters):
+    obj = parameters[0]
+    assert isinstance(obj, PrimitiveStrObject)
+    assert isinstance(self, PrimitiveStrObject)
+
+    if self.value.endswith(obj.value):
+        return PrimitiveTrueObject()
+    else:
+        return PrimitiveFalseObject()
+
+
+def string_startswith(interpreter, self, parameters):
+    obj = parameters[0]
+    assert isinstance(obj, PrimitiveStrObject)
+    assert isinstance(self, PrimitiveStrObject)
+
+    if self.value.startswith(obj.value):
+        return PrimitiveTrueObject()
+    else:
+        return PrimitiveFalseObject()
+
+
+def string_contains(interpreter, self, parameters):
+    obj = parameters[0]
+    assert isinstance(obj, PrimitiveStrObject)
+    assert isinstance(self, PrimitiveStrObject)
+
+    if obj.value in self.value:
+        return PrimitiveTrueObject()
+    else:
+        return PrimitiveFalseObject()
+
+
 def compare_strings(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(obj, Object)
@@ -72,6 +105,9 @@ class PrimitiveStrObject(Object):
         add_primitive_fn(self, "+", add_strings, ["obj"])
         add_primitive_fn(self, "print", print_string, [])
         add_primitive_fn(self, "printLine", print_string_newline, [])
+        add_primitive_fn(self, "startsWith:", string_startswith, ["str"])
+        add_primitive_fn(self, "endsWith:", string_endswith, ["str"])
+        add_primitive_fn(self, "contains:", string_contains, ["str"])
         add_primitive_fn(self, "==", compare_strings, ["obj"])
 
         if PrimitiveStrObject._OBJ_CACHE.map is None:
