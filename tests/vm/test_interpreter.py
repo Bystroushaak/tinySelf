@@ -269,7 +269,7 @@ def test_running_self_unittest_file():
 
     interpreter = Interpreter(universe)
     for item in ast:
-        process = interpreter.add_process(item.compile(CodeContext()))
+        process = interpreter.add_process(item.compile(), "unittest.self")
         interpreter.interpret()
 
         assert process.finished
