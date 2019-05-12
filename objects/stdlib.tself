@@ -34,6 +34,7 @@
                     '`assert:` failed (line ' + (what getLineNumber asString) + '):\n\n\t' + (what asString)
                 )
             ].
+            true.
         ).
         universe_mirror toSlot: 'assertNot:' Add: (| :what |
             what value ifTrue: [
@@ -41,6 +42,7 @@
                     '`assertNot:` failed (line ' + (what getLineNumber asString) + '):\n\n\t' + (what asString)
                 )
             ].
+            true.
         ).
     ).
     init_blocks = (| block_traits_mirror |

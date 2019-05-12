@@ -8,6 +8,7 @@ from tinySelf.vm.primitives import add_block_trait
 from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveStrObject
+from tinySelf.vm.primitives import PrimitiveListObject
 from tinySelf.vm.primitives import PrimitiveFloatObject
 from tinySelf.vm.primitives import AssignmentPrimitive
 from tinySelf.vm.primitives import gen_interpreter_primitives
@@ -204,7 +205,11 @@ class Interpreter(ProcessCycler):
                 if not method_obj.is_block and method_obj.has_code:
                     return scope_parent
 
-                return prev_scope_parent
+                if not method_obj.is_block:
+                    return prev_scope_parent
+
+                if not method_obj.will_have_slots:
+                    return prev_scope_parent
 
             return scope_parent
 
@@ -337,7 +342,17 @@ class Interpreter(ProcessCycler):
             slot = obj.slot_lookup(message_name)
 
         if slot is None:
-            return self._handle_missing_slot(obj, code, message_name, bc_index)
+            do_not_understand = obj.slot_lookup("doNotUnderstand:Parameters:")
+            if do_not_understand is None:
+                return self._handle_missing_slot(obj, code, message_name, bc_index)
+
+            do_not_understand_params = [
+                 PrimitiveStrObject(message_name),
+                 PrimitiveListObject(parameters)
+            ]
+
+            slot = do_not_understand
+            parameters = do_not_understand_params
 
         if slot.has_code:
             self._push_code_obj_for_interpretation(
