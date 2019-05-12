@@ -52,6 +52,8 @@ class _BareObject(object):
         if slot_index == -1:
             return False
 
+        self.map._version += 1
+
         self._slot_values[slot_index] = value
         return True
 

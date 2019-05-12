@@ -178,30 +178,29 @@ def _run_script(interpreter, scope_parent, parameters):
     )
 
 
-def call_tinyself_code_from_primitive(interpreter, code_str, parameters):
+def call_tinyself_code_from_primitive(interpreter, code_str, code_parameters_values):
     assert isinstance(code_str, str)
 
     wrapping_obj = lex_and_parse(code_str)[0]
     assert isinstance(wrapping_obj, AstObject)
 
-    method_obj_ast = wrapping_obj.code[0]
-    code = method_obj_ast.compile()
+    code = wrapping_obj.compile()
     code.finalize()
 
     method_obj = Object()
-    method_obj.map.code_context = code
     method_obj.map.ast = wrapping_obj
+    method_obj.scope_parent = interpreter.process.frame.self
 
-    if parameters:
-        assert isinstance(parameters[0], list)
-        assert len(parameters[0]) > 1
-        method_obj.parameters = [x[0] for x, y in parameters]
+    # this may be a bit unintuitive, but whole surrounding object is compiled
+    # and I want just the code object without slot pushing, which is the first
+    # object literal in the compiled object
+    method_obj.map.code_context = code.literals[0].value.code_context
 
     interpreter._push_code_obj_for_interpretation(
         next_bytecode=0,  # disable TCO
         scope_parent=interpreter.process.frame.self,
         method_obj=method_obj,
-        parameters=parameters,
+        parameters=code_parameters_values,
     )
 
 
