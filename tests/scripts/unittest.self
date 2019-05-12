@@ -157,6 +157,27 @@
         ].
     ).
 
+    test_run_script_invalid_obj = (| raised_error <- false. |
+        primitives interpreter setErrorHandler: [:msg. :err_process |
+           raised_error: true.
+           primitives interpreter restoreProcess: err_process.
+        ].
+        primitives interpreter runScript: 1.
+
+        ^raised_error.
+    ).
+
+    test_primitive_int = (| raised_error <- false. |
+        primitives interpreter setErrorHandler: [:msg. :err_process |
+           raised_error: true.
+           primitives interpreter restoreProcess: err_process.
+        ].
+
+        1 / 0.
+
+        assert: [ raised_error ].
+    ).
+
     test_primitive_str = (||
         assert: [ "asd" == "asd" ].
         assertNot: [ "asd" == "---" ].
@@ -203,6 +224,7 @@
         nil_comparision.
         test_eval.
         test_do_not_understand.
+        test_primitive_int.
         test_primitive_str.
         test_primitive_list.
 

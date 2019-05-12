@@ -39,11 +39,6 @@ def test_PrimitiveIntObject_divide():
     call_primitive_int_binary_op(6, "/", 2, equals=3)
 
 
-def test_PrimitiveIntObject_divide_by_zero():
-    with pytest.raises(ZeroDivisionError):
-        call_primitive_int_binary_op(3, "/", 0, equals=0)
-
-
 def test_PrimitiveIntObject_modulo():
     call_primitive_int_binary_op(4, "%", 3, equals=1)
 
