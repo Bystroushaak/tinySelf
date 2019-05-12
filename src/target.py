@@ -26,7 +26,7 @@ NIL = PrimitiveNilObject()
 
 
 def run_interactive():
-    _, interpreter = virtual_machine("()")
+    _, interpreter = virtual_machine("(||)", "-", *_read_stdlib())
 
     while True:
         line = stdin_readline(":> ")
@@ -59,7 +59,7 @@ def run_interactive():
 
 def run_script(path):
     with open(path) as f:
-        process, interpreter = virtual_machine(f.read())
+        process, interpreter = virtual_machine(f.read(), path, *_read_stdlib())
 
     if process.finished_with_error:
         ewrite("Error: ")
@@ -71,6 +71,25 @@ def run_script(path):
         return 1
 
     return 0
+
+
+def _read_stdlib():
+    """
+    Return tuple with content of stdlib file and path to it.
+    """
+    tinyself_path_var = os.environ.get("TINYSELF_PATH", "objects/stdlib.tself")
+    stdlib_paths = tinyself_path_var.split(":")
+
+    for path in stdlib_paths:
+        if not os.path.exists(path):
+            ewriteln("`TINYSELF_PATH=`%s` doesn't exist, skipping.." % path)
+            continue
+
+        with open(path) as f:
+            return f.read(), path
+
+    ewriteln("Can't read stdlib, no `TINYSELF_PATH` env variable given.")
+    return "", ""
 
 
 def show_ast(path):

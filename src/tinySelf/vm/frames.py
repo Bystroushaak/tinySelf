@@ -25,6 +25,7 @@ class MethodStackLinkedList(object):
         self.code_context = code_context
         self.error_handler = None
         self.self = None
+        self.source_path = ""
 
         # used to remove scope parent from the method later
         self.tmp_method_obj_reference = None
@@ -83,6 +84,7 @@ class MethodStackPreallocatedArray(object):
         self.bc_index = 0
         self.error_handler = None
         self.self = None
+        self.source_path = ""
 
         # used to remove scope parent from the method later
         self.tmp_method_obj_reference = None
@@ -118,8 +120,9 @@ else:
 
 
 class ProcessStack(object):
-    def __init__(self, code_context=None):
+    def __init__(self, code_context=None, source_path=""):
         self.frame = MethodStack(code_context)
+        self.frame.source_path = source_path
         self.length = 1
 
         self.result = None
@@ -179,6 +182,15 @@ class ProcessStack(object):
     def as_tself_object(self):
         return Object()
 
+    def __iter__(self):
+        out = []
+        item = self.frame
+        while item is not None:
+            out.insert(0, item)
+            item = item.prev_stack
+
+        return iter(out)
+
 
 class ProcessCycler:
     def __init__(self, code_context=None):
@@ -190,12 +202,12 @@ class ProcessCycler:
         if code_context is not None:
             self.add_process(code_context)
 
-    def add_process(self, code_context):
+    def add_process(self, code_context, path=""):
         assert isinstance(code_context, CodeContext)
 
         code_context.finalize()
 
-        new_process = ProcessStack(code_context)
+        new_process = ProcessStack(code_context, path)
         self.processes.append(new_process)
         self.process_count += 1
 

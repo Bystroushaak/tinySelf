@@ -10,10 +10,9 @@ from tinySelf.vm.code_context import CodeContext
 from tinySelf.vm.object_layout import Object
 
 
-def run_stdlib(interpreter, stdlib_source):
+def run_stdlib(interpreter, stdlib_source, stdlib_path):
     stdlib_ast = lex_and_parse_as_root(stdlib_source)
-    code = stdlib_ast.compile()
-    stdlib_process = interpreter.add_process(code.finalize())
+    stdlib_process = interpreter.add_process(stdlib_ast.compile(), stdlib_path)
 
     interpreter.interpret()
 
@@ -27,22 +26,21 @@ def run_stdlib(interpreter, stdlib_source):
     return True
 
 
-def virtual_machine(source, stdlib_source=""):
+def virtual_machine(source, source_path, stdlib_source, stdlib_path):
     universe = Object()
     universe.meta_add_slot("primitives", get_primitives())
 
     interpreter = Interpreter(universe)
 
     if stdlib_source:
-        if not run_stdlib(interpreter, stdlib_source):
+        if not run_stdlib(interpreter, stdlib_source, stdlib_path):
             return None, interpreter
 
     ast = lex_and_parse_as_root(source)
     if not ast:
         return None, interpreter
 
-    code = ast.compile(CodeContext())
-    process = interpreter.add_process(code.finalize())
+    process = interpreter.add_process(ast.compile(), source_path)
     interpreter.interpret()
 
     return process, interpreter
