@@ -77,7 +77,13 @@ def _read_stdlib():
     """
     Return tuple with content of stdlib file and path to it.
     """
-    tinyself_path_var = os.environ.get("TINYSELF_PATH", "objects/stdlib.tself")
+    tinyself_path_var = os.environ.get("TINYSELF_PATH")
+
+    # I would use .get() with alt param, but that results in Argument number
+    # mismatch under RPython
+    if not tinyself_path_var:
+        tinyself_path_var = "objects/stdlib.tself"
+
     stdlib_paths = tinyself_path_var.split(":")
 
     for path in stdlib_paths:

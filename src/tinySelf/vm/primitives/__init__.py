@@ -117,7 +117,7 @@ def get_primitives():
     primitives.meta_add_slot("false", PrimitiveFalseObject())
     primitives.meta_add_slot("block_traits", _USER_EDITABLE_BLOCK_TRAIT)
     primitives.meta_add_slot("list", PrimitiveListObject([]))
-    primitives.meta_add_slot("dict", PrimitiveDictObject(OrderedDict()))
+    # primitives.meta_add_slot("dict", PrimitiveDictObject(OrderedDict()))
 
     primitives.meta_add_slot("time", get_primitive_time_object())
 

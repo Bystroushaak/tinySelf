@@ -6,6 +6,7 @@ from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 from tinySelf.vm.object_layout import Object
 
+from tinySelf.vm.code_context import ObjBox
 from tinySelf.vm.code_context import CodeContext
 
 from tinySelf.parser import lex_and_parse
@@ -196,7 +197,9 @@ def call_tinyself_code_from_primitive(interpreter, code_str, code_parameters_val
     # this may be a bit unintuitive, but whole surrounding object is compiled
     # and I want just the code object without slot pushing, which is the first
     # object literal in the compiled object
-    method_obj.map.code_context = code.literals[0].value.code_context
+    first_literal = code.literals[0]
+    assert isinstance(first_literal, ObjBox)
+    method_obj.map.code_context = first_literal.value.code_context
 
     interpreter._push_code_obj_for_interpretation(
         next_bytecode=0,  # disable TCO
