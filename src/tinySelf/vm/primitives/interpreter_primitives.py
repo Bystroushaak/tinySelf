@@ -177,6 +177,8 @@ def _run_script(interpreter, scope_parent, parameters):
         parameters=[],
     )
 
+    interpreter.process.frame.source_path = path.value
+
 
 def call_tinyself_code_from_primitive(interpreter, code_str, code_parameters_values):
     assert isinstance(code_str, str)
