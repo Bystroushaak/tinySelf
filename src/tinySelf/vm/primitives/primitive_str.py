@@ -32,6 +32,15 @@ def print_string(interpreter, self, parameters):
     return PrimitiveNilObject()
 
 
+def print_string_newline(interpreter, self, parameters):
+    assert isinstance(self, PrimitiveStrObject)
+    assert isinstance(self.value, str)
+
+    writeln(self.value)
+
+    return PrimitiveNilObject()
+
+
 def compare_strings(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(obj, Object)
@@ -62,6 +71,7 @@ class PrimitiveStrObject(Object):
 
         add_primitive_fn(self, "+", add_strings, ["obj"])
         add_primitive_fn(self, "print", print_string, [])
+        add_primitive_fn(self, "printLine", print_string_newline, [])
         add_primitive_fn(self, "==", compare_strings, ["obj"])
 
         if PrimitiveStrObject._OBJ_CACHE.map is None:
