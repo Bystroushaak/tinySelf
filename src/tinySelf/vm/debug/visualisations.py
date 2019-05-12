@@ -9,9 +9,14 @@ FRAMESET_COUNTER = 0
 
 
 def dump_obj_to_plantuml(f, o):
-    f.write('class %s as "%s (%s)" {\n' % (id(o), id(o), o.__class__.__name__))
+    name = o.__class__.__name__
+    if o and o.is_block:
+        name = "Block"
+
+    f.write('class %s as "%s (%s)" {\n' % (id(o), id(o), name))
 
     if o:
+        f.write("    Params: %s\n" % o.parameters)
         for key in o.slot_keys:
             f.write("    %s (%s)\n" % (key, id(o.get_slot(key))))
 
