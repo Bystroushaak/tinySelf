@@ -87,6 +87,11 @@ _BLOCK_TRAIT_PROTOTYPE = _create_block_trait_prototype()
 def add_block_trait(block):
     obj = _BLOCK_TRAIT_PROTOTYPE.clone()
     obj.set_slot("value", block)
+    obj.set_slot("with:", block)
+    obj.set_slot("with:With:", block)
+    obj.set_slot("with:With:With:", block)
+    obj.set_slot("with:With:With:With:", block)
+    obj.set_slot("withAll:", block)
 
     return obj
 
