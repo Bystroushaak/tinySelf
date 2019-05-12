@@ -124,9 +124,13 @@
         ^raised_error.
     ).
 
-    test_eval = (||
+    test_eval = (| a <- 1. |
         assert: [
             (primitives interpreter evalMethodObj: "(|| 'okurka')") == "okurka"
+        ].
+        assert: [
+            # test that multiple statements actually works, see #103
+            (primitives interpreter evalMethodObj: "(|| a: a + 1. a: a + 1. a )") == 3.
         ].
     ).
 
