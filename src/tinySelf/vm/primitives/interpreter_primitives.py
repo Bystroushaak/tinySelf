@@ -211,6 +211,17 @@ def _eval_method_obj(interpreter, scope_parent, parameters):
     call_tinyself_code_from_primitive(interpreter, code.value, [])
 
 
+def _get_script_path(interpreter, scope_parent, parameters):
+    paths = [frame.source_path
+             for frame in interpreter.process
+             if frame.source_path]
+
+    if not paths:
+        return PrimitiveStrObject("")
+
+    return PrimitiveStrObject(paths.pop())
+
+
 def gen_interpreter_primitives(interpreter):
     interpreter_namespace = Object()
 
@@ -229,5 +240,7 @@ def gen_interpreter_primitives(interpreter):
     add_primitive_fn(interpreter_namespace, "runScript:", _run_script, ["path"])
     add_primitive_fn(interpreter_namespace, "evalMethodObj:",
                      _eval_method_obj, ["code"])
+    add_primitive_fn(interpreter_namespace, "scriptPath",
+                     _get_script_path, [])
 
     return interpreter_namespace

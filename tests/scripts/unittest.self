@@ -177,7 +177,10 @@
         test_run_script.
 
         assert: [ primitives time timestamp > 1546723901.1 ].
+        assert: [
+            primitives interpreter scriptPath == "tests/scripts/unittest.self"
+        ].
 
-        "all tests ok\n" print.
+        "All tests ok." printLine.
     )
 |) run_tests.
