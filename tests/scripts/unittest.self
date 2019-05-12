@@ -134,6 +134,20 @@
         ].
     ).
 
+    test_primitive_str = (||
+        assert: [ "asd" == "asd" ].
+        assertNot: [ "asd" == "---" ].
+
+        assert: [ "asd" startsWith: "as" ].
+        assertNot: [ "asd" startsWith: "d" ].
+
+        assert: [ "asd" endsWith: "sd" ].
+        assertNot: [ "asd" endsWith: "a" ].
+
+        assert: [ "asd" contains: "s" ].
+        assertNot: [ "asd" contains: "x" ].
+    ).
+
     test_primitive_list = (| l. other. reversed. |
         l: primitives list clone.
         l append: 1.
@@ -165,6 +179,7 @@
         false_comparision.
         nil_comparision.
         test_eval.
+        test_primitive_str.
         test_primitive_list.
 
         test_that_parameters_are_rw_slots.
@@ -177,9 +192,7 @@
         test_run_script.
 
         assert: [ primitives time timestamp > 1546723901.1 ].
-        assert: [
-            primitives interpreter scriptPath == "tests/scripts/unittest.self"
-        ].
+        assert: [ primitives interpreter scriptPath endsWith: "unittest.self" ].
 
         "All tests ok." printLine.
     )
