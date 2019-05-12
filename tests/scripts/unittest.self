@@ -35,6 +35,7 @@
                     '`assert:` failed (line ' + (what getLineNumber asString) + '):\n\n\t' + (what asString)
                 )
             ].
+            true.
         ).
         universe_mirror toSlot: 'assertNot:' Add: (| :what |
             what value ifTrue: [
@@ -42,6 +43,7 @@
                     '`assertNot:` failed (line ' + (what getLineNumber asString) + '):\n\n\t' + (what asString)
                 )
             ].
+            true.
         ).
 
         block_traits_mirror: primitives mirrorOn: block_traits.
@@ -134,6 +136,27 @@
         ].
     ).
 
+    test_do_not_understand = (| return_name. return_parameters. |
+        return_name: (|
+            doNotUnderstand: msg Parameters: p = (|| msg. ).
+        |).
+
+        assert: [ return_name asd == "asd" ].
+        assert: [ (return_name asd: 1 With: 2) == "asd:With:" ].
+
+        return_parameters: (|
+            doNotUnderstand: msg Parameters: p = (|| p. ).
+        |).
+
+        assert: [ return_parameters asd length == 0 ].
+        assert: [ (return_parameters + 1) length == 1 ].
+        assert: [| params. |
+            params: (return_parameters asd: 1 With: 2).
+            assert: [ (params at: 0) == 1 ].
+            assert: [ (params at: 1) == 2 ].
+        ].
+    ).
+
     test_primitive_str = (||
         assert: [ "asd" == "asd" ].
         assertNot: [ "asd" == "---" ].
@@ -179,6 +202,7 @@
         false_comparision.
         nil_comparision.
         test_eval.
+        test_do_not_understand.
         test_primitive_str.
         test_primitive_list.
 
