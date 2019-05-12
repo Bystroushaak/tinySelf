@@ -38,6 +38,14 @@ def divide(interpreter, self, parameters):
     assert isinstance(self, PrimitiveIntObject)
     assert isinstance(obj, _NumberObject)
 
+    if obj.value == 0:
+        from tinySelf.vm.primitives.interpreter_primitives import _raise_error
+        return _raise_error(
+            interpreter,
+            None,
+            [PrimitiveStrObject("Division by zero.")]
+        )
+
     return obj.result_type(self.value / obj.value)
 
 
