@@ -371,8 +371,7 @@ class Interpreter(ProcessCycler):
                 raise ValueError("Can't set slot %s" % slot_name)
 
         else:
-            return_value = slot
-            self.process.frame.push(return_value)
+            self.process.frame.push(slot)  # slot is a return value
 
         return THREE_BYTECODES_LONG
 
