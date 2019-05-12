@@ -168,9 +168,11 @@ class Object(BaseBox):
         context.add_bytecode(LITERAL_TYPE_OBJ)
         context.add_bytecode(index)
 
+        will_have_slots = False
         for name, value in self.slots.iteritems():
             self._add_slot_to_bytecode(context, name, value)
             context.add_bytecode(SLOT_NORMAL)
+            will_have_slots = True
 
         for name, value in self.parents.iteritems():
             self._add_slot_to_bytecode(context, name, value)
@@ -178,11 +180,10 @@ class Object(BaseBox):
 
         if self.code:
             new_context = CodeContext()
+            new_context.will_have_slots = will_have_slots
             obj.meta_set_code_context(new_context)
             for item in self.code:
                 item.compile(new_context)
-
-            obj.map.code_context = new_context
 
         return context
 
@@ -230,20 +231,22 @@ class Block(Object):
         context.add_bytecode(LITERAL_TYPE_BLOCK)
         context.add_bytecode(index)
 
+        will_have_slots = False
         for name, value in self.slots.iteritems():
             self._add_slot_to_bytecode(context, name, value)
             context.add_bytecode(SLOT_NORMAL)
+            will_have_slots = True
 
         for name, value in self.parents.iteritems():
             self._add_slot_to_bytecode(context, name, value)
             context.add_bytecode(SLOT_PARENT)
 
-        new_context = CodeContext()
-        block.meta_set_code_context(new_context)
-        for item in self.code:
-            item.compile(new_context)
-
-        block.map.code_context = new_context
+        if self.code:
+            new_context = CodeContext()
+            new_context.will_have_slots = will_have_slots
+            block.meta_set_code_context(new_context)
+            for item in self.code:
+                item.compile(new_context)
 
         return context
 

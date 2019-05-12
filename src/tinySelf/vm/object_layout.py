@@ -235,6 +235,9 @@ class _BareObject(object):
         return obj
 
     def __str__(self):
+        if self.map.is_block:
+            return "Block(%s)" % ", ".join(self.map._slots.keys())
+
         return "Object(%s)" % ", ".join(self.map._slots.keys())
 
 
@@ -299,6 +302,13 @@ class _ObjectWithMapEncapsulation(_BareObject):
     @property
     def has_slots(self):
         return bool(self._slot_values)
+
+    @property
+    def will_have_slots(self):
+        if self.map.code_context is not None:
+            return self.map.code_context.will_have_slots
+
+        return False
 
     @property
     def has_parents(self):

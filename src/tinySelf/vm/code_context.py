@@ -76,6 +76,10 @@ class CodeContext(object):
         self.literals = []
         self._params_cache = None  # used to cache intermediate parameters obj
 
+        # used in ._create_intermediate_params_obj() to not to agressively
+        # cache objects with slots
+        self.will_have_slots = False
+
     def add_literal(self, literal):
         assert isinstance(literal, LiteralBox)
 
