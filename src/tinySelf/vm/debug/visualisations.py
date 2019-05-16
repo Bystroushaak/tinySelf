@@ -50,7 +50,7 @@ def _get_object_graph(obj):
     return objs_to_print
 
 
-def obj_map_to_plantuml(obj, numbered=False, print_depth=False, prefix="parent_map"):
+def obj_map_to_plantuml(obj, numbered=False, print_depth=False, prefix="obj_parent_map"):
     if numbered:
         global OBJ_MAP_COUNTER
         f = open("%s_%d.plantuml" % (prefix, OBJ_MAP_COUNTER), "w")
