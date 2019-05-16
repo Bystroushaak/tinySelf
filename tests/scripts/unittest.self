@@ -218,6 +218,23 @@
         assert: [ (reversed at: 1) == 'a' ].
     ).
 
+    test_primitive_dict = (| d. custom_obj. did_run <- false. ret_fail. |
+        d: primitives dict clone.
+        d at: 1 Put: "X".
+        assert: [ (d at: 1) == "X" ].
+        assert: [ (d at: 2) == nil ].
+
+        custom_obj: (| == obj = (|| did_run: true. true). |).
+        d at: custom_obj Put: 1.
+
+        assert: [ (d at: custom_obj) == 1. ].
+        assert: [ did_run is: true ].
+        assert: [ (d at: 1) == "X". ].
+
+        d at: 9999 Fail: [ ret_fail: true ].
+        assert: [ ret_fail is: true ].
+    ).
+
     run_tests = (||
         true_comparision.
         false_comparision.
@@ -227,6 +244,7 @@
         test_primitive_int.
         test_primitive_str.
         test_primitive_list.
+        test_primitive_dict.
 
         test_that_parameters_are_rw_slots.
         test_double_return_from_block.
