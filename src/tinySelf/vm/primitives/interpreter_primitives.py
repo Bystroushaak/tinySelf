@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from rpython.rlib.objectmodel import we_are_translated
+
 from tinySelf.vm.primitives import PrimitiveStrObject
 from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveNilObject
@@ -226,28 +228,58 @@ def call_tinyself_code_from_primitive(interpreter, code_str, code_parameters_val
 
 class EvalException(Exception):
     def __init__(self, msg, process):
-        super(EvalException, self).__init__(msg)
+        if not we_are_translated():
+            super(EvalException, self).__init__(msg)
+
+        self.message = msg
         self.process = process
 
 
-def eval_immediately(interpreter, method, scope_parent, method_parameters,
-                      raise_exception=False):
-    self = interpreter.process.frame.self
+def eval_immediately(interpreter, scope_parent, self_obj, method,
+                     method_parameters, raise_exception=False):
+    """
+    Run `method` in the `interpreter`.
+
+    Args:
+        interpreter (Interpreter): Instance of the interpreter.
+        scope_parent (Object): This will be used as scope parent for method.
+        self_obj (Object): Context in which `method` is defined.
+        method (Object): Code object to run.
+        method_parameters (list): List of parameters for `method`.
+        raise_exception (bool): Raise exception or raise internal tinySelf
+            error? Default `False`.
+
+    Raises:
+        EvalException: If the `method` finished with error and `raise_exception`
+            is set to `True`.
+
+    Returns:
+        Object: Result of the running process.
+    """
     interpreter.stash_push()
 
     process = interpreter.add_process(method.code_context)
-    interpreter.process.frame.self = scope_parent
-    method.scope_parent = None
-    interpreter._push_code_obj_for_interpretation(0, self, method, method_parameters)
+
+    # TODO: self_obj or method???! wtf, why?
+    self_obj.scope_parent = interpreter._create_intermediate_params_obj(
+        scope_parent=scope_parent,
+        method_obj=method,
+        parameters=method_parameters,
+        prev_scope_parent=method.scope_parent,
+    )
+    interpreter.process.frame.self = self_obj
+    interpreter.process.frame.tmp_method_obj_reference = method
+
     interpreter.interpret()
 
     interpreter.stash_pop()
 
     if process.finished_with_error:
         if raise_exception:
-            raise EvalException("Process finished with error", process)
+            raise EvalException("Process finished with error %s" % process.result,
+                                process)
         else:
-            return primitive_fn_raise_error(interpreter, self, [process.result])
+            return primitive_fn_raise_error(interpreter, method, [process.result])
 
     return process.result
 
