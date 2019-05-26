@@ -13,7 +13,7 @@ from tinySelf.vm.primitives import PrimitiveFloatObject
 from tinySelf.vm.primitives import AssignmentPrimitive
 from tinySelf.vm.primitives import gen_interpreter_primitives
 from tinySelf.vm.primitives.interpreter_primitives import ErrorObject
-from tinySelf.vm.primitives.interpreter_primitives import _raise_error
+from tinySelf.vm.primitives.interpreter_primitives import primitive_fn_raise_error
 
 from tinySelf.vm.code_context import IntBox
 from tinySelf.vm.code_context import StrBox
@@ -194,6 +194,7 @@ class Interpreter(ProcessCycler):
     @jit.unroll_safe
     def _create_intermediate_params_obj(self, scope_parent, method_obj,
                                         parameters, prev_scope_parent=None):
+
         # do not create empty intermediate objects
         if not method_obj.parameters:
             # this is used to remember in what context is the block executed,
@@ -302,7 +303,7 @@ class Interpreter(ProcessCycler):
             process_stack_to_plantuml(self.process)
             obj_map_to_plantuml(obj, prefix="obj_parent_map")
 
-        _raise_error(self, None, [PrimitiveStrObject(debug_msg)])
+        primitive_fn_raise_error(self, None, [PrimitiveStrObject(debug_msg)])
         return THREE_BYTECODES_LONG
 
     @jit.unroll_safe
@@ -363,6 +364,12 @@ class Interpreter(ProcessCycler):
             )
 
         elif slot.has_primitive_code:
+            # primitives need "self" to be actually the object they are expecting,
+            # for example for dicts it have to be dict, not some descendant
+            # in the parent chain
+            if obj.get_slot(message_name) is None:  # TODO: rewrite
+                obj = slot.scope_parent
+
             return_value = slot.primitive_code(
                 self,
                 obj,

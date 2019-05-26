@@ -20,6 +20,7 @@ class GlobalContext(object):
     def __init__(self):
         self.interpreter = None
         self.hash = None
+        self.scope_parent = None
 
 
 GLOBAL_CONTEXT = GlobalContext()
@@ -30,15 +31,23 @@ def eq_fn(obj, other):
 
     eq_slot = obj.get_slot("==")
     if eq_slot is None:
-        return primitive_fn_raise_error(interpreter, None,
-                                        [PrimitiveStrObject("== slot not found.")])
+        primitive_fn_raise_error(interpreter, None,
+                                 [PrimitiveStrObject("== slot not found.")])
+        return False
 
     if eq_slot.has_primitive_code:
         result = eq_slot.primitive_code(interpreter, obj, [other])
     else:
-        result = eval_immediately(interpreter, eq_slot, obj, [other])
+        result = eval_immediately(
+                interpreter=interpreter,
+                scope_parent=GLOBAL_CONTEXT.scope_parent,
+                self_obj=obj,
+                method=eq_slot,
+                method_parameters=[other],
+                raise_exception=True
+        )
         if result is None:
-            return
+            return False
 
     if result == PrimitiveNilObject():
         return False
@@ -49,14 +58,11 @@ def eq_fn(obj, other):
 
 
 def hash_fn(obj):  # TODO: run tinySelf code?
-    if isinstance(obj, PrimitiveIntObject):
-        return hash(obj.value)
-    elif isinstance(obj, PrimitiveStrObject):
-        return hash(obj.value)
-    elif isinstance(obj, PrimitiveFloatObject):
-        return hash(obj.value)
-    else:
-        return hash("".join(obj.slot_keys))
+    hash = 0
+    for c in "".join(obj.slot_keys):
+        hash += ord(c)
+
+    return hash
 
 
 ObjectDict = r_ordereddict(eq_fn, hash_fn)
@@ -74,6 +80,7 @@ def dict_at(interpreter, self, parameters):
     assert isinstance(self, PrimitiveDictObject)
 
     GLOBAL_CONTEXT.interpreter = interpreter
+    GLOBAL_CONTEXT.scope_parent = interpreter.process.frame.self
 
     result = self.value.get(key, None)
 
@@ -90,6 +97,7 @@ def dict_at_fail(interpreter, self, parameters):
     assert isinstance(self, PrimitiveDictObject)
 
     GLOBAL_CONTEXT.interpreter = interpreter
+    GLOBAL_CONTEXT.scope_parent = interpreter.process.frame.self
 
     result = self.value.get(key, None)
 
@@ -105,7 +113,6 @@ def dict_length(interpreter, self, parameters):
     return PrimitiveIntObject(len(self.value))
 
 
-# TODO: FUCK! implementovat vlastni dict pro Object
 def dict_at_key_put_obj(interpreter, self, parameters):
     key = parameters[0]
     obj = parameters[1]
@@ -114,8 +121,11 @@ def dict_at_key_put_obj(interpreter, self, parameters):
     assert isinstance(obj, Object)
 
     GLOBAL_CONTEXT.interpreter = interpreter
+    GLOBAL_CONTEXT.scope_parent = interpreter.process.frame.self
 
     self.value[key] = obj
+
+    return obj
 
 
 class PrimitiveDictObject(Object):
