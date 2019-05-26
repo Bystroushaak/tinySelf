@@ -69,11 +69,22 @@
         ).
     ).
 
+    init_dicts = (| dict_mirror |
+        dict_mirror: primitives mirrorOn: dict.
+
+        dict_mirror toSlot: 'at:Fail:' Add: (| :key. :fail_blck. result |
+            result: (self at: key).
+            (result is: nil) ifTrue: [ ^ fail_blck value. ].
+            ^result.
+        ).
+    ).
+
     init = (||
         init_true.
         init_false.
         init_nil.
         init_asserts.
         init_blocks.
+        init_dicts.
     ).
 |) init.
