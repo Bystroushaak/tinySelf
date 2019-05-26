@@ -142,7 +142,7 @@ class ProcessStack(object):
     def top_frame(self):
         return self.frame
 
-    def _cleanup_frame(self):
+    def _cleanup_frame(self):  # TODO: remove?
         if self.frame.code_context:
             self.frame.code_context.self = None
 
