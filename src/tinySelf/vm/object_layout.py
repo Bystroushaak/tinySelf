@@ -27,12 +27,21 @@ class VersionedObject(object):
 class _BareObject(object):
     def __init__(self, obj_map=None):
         self.map = ObjectMap() if obj_map is None else obj_map
-        self.scope_parent = None
+        self._scope_parent = None
 
         self.visited = False
 
         self._parent_slot_values = None
         self._slot_values = None
+
+    @property
+    def scope_parent(self):
+        return self._scope_parent
+
+    @scope_parent.setter
+    def scope_parent(self, sp):
+        self.map._version += 1
+        self._scope_parent = sp
 
     @property
     def has_code(self):
