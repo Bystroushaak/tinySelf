@@ -12,6 +12,7 @@ def primitive_add_slot(interpreter, mirror, parameters):
     assert isinstance(val, Object)
 
     mirror.obj_to_mirror.meta_add_slot(name.value, val)
+    val.scope_parent = None  # old scope_parent is no longer valid
 
     return mirror.obj_to_mirror
 
@@ -23,8 +24,7 @@ class Mirror(Object):
         assert isinstance(obj_to_mirror, Object)
         self.obj_to_mirror = obj_to_mirror
 
-        add_primitive_fn(self, "toSlot:Add:", primitive_add_slot,
-                         ["name", "obj"])
+        add_primitive_fn(self, "toSlot:Add:", primitive_add_slot, ["name", "obj"])
 
     def __eq__(self, obj):
         if not isinstance(obj, Mirror):
