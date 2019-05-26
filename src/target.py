@@ -17,6 +17,8 @@ from tinySelf.config import VERSION
 from tinySelf.parser import lex_and_parse
 from tinySelf.parser import lex_and_parse_as_root
 
+from tinySelf.shared.string_repr import unescape_esc_seq
+
 from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.code_context import CodeContext
 from tinySelf.vm.virtual_machine import virtual_machine
@@ -63,7 +65,7 @@ def run_script(path):
 
     if process.finished_with_error:
         ewrite("Error: ")
-        ewriteln(process.result.__str__())
+        ewriteln(unescape_esc_seq(process.result.__str__()))
         ewriteln("\n")
         ewriteln("CodeContext debug:")
         ewriteln(process.frame.code_context.debug_repr())
