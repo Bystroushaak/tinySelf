@@ -203,16 +203,17 @@ class _BareObject(object):
 
     def slot_lookup(self, slot_name):
         """
-        Look for the slot_name in own slots, if not found, delagate the search
+        Look for the slot_name in own slots, if not found, delegate the search
         to the parents.
+
+        First value of the returned tuple indicates whether the slot was found
+        in the object directly (=True), or in the parent (=False).
 
         Args:
             slot_name (str): ...
-            local_lookup_cache (bool, default False): Count lookups and trigger
-                dynamic recompilation on frequent access.
 
         Returns:
-            obj: Resolved Object, or None.
+            tuple: (bool: Was in obj?, Object: Resolved Object or None)
         """
         assert isinstance(slot_name, str)
 
@@ -220,15 +221,15 @@ class _BareObject(object):
             slot_index = self.map._slots.get(slot_name, -1)
 
             if slot_index != -1:
-                return self._slot_values[slot_index]
+                return True, self._slot_values[slot_index]
 
         if self.scope_parent is not None:
             obj = self.scope_parent.get_slot(slot_name)
 
             if obj is not None:
-                return obj
+                return False, obj
 
-        return self.parent_lookup(slot_name)
+        return False, self.parent_lookup(slot_name)
 
     def clone(self):
         obj = Object(obj_map=self.map)

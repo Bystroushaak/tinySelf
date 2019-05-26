@@ -283,7 +283,9 @@ class Interpreter(ProcessCycler):
                 "Can't do resend; parent `%s` not found!" % parent_name
             )
 
-        return resend_parent.slot_lookup(message_name)
+        _, result = resend_parent.slot_lookup(message_name)
+
+        return result
 
     def _handle_missing_slot(self, obj, code, message_name, bc_index):
         debug_msg = ""
@@ -339,11 +341,12 @@ class Interpreter(ProcessCycler):
         if boxed_resend_parent_name is not None:
             parent_name = boxed_resend_parent_name.value
             slot = self._resend_to_parent(obj, parent_name, message_name)
+            slot_found_directly_in_obj = False
         else:
-            slot = obj.slot_lookup(message_name)
+            slot_found_directly_in_obj, slot = obj.slot_lookup(message_name)
 
         if slot is None:
-            do_not_understand = obj.slot_lookup("doNotUnderstand:Parameters:")
+            _, do_not_understand = obj.slot_lookup("doNotUnderstand:Parameters:")
             if do_not_understand is None:
                 return self._handle_missing_slot(obj, code, message_name, bc_index)
 
@@ -367,7 +370,7 @@ class Interpreter(ProcessCycler):
             # primitives need "self" to be actually the object they are expecting,
             # for example for dicts it have to be dict, not some descendant
             # in the parent chain
-            if obj.get_slot(message_name) is None:  # TODO: rewrite
+            if not slot_found_directly_in_obj:
                 obj = slot.scope_parent
 
             return_value = slot.primitive_code(
