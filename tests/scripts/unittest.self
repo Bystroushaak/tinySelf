@@ -218,18 +218,34 @@
         assert: [ (reversed at: 1) == 'a' ].
     ).
 
-    test_primitive_dict = (| d. custom_obj. did_run <- false. ret_fail. |
+    test_primitive_dict = (| d. custom_obj. another_obj. did_run. ret_fail. |
         d: primitives dict clone.
         d at: 1 Put: "X".
         assert: [ (d at: 1) == "X" ].
         assert: [ (d at: 2) == nil ].
 
-        custom_obj: (| == obj = (|| did_run: true. true). |).
+        custom_obj: (|
+            name = "first".
+            val = 1.
+            == o = (||
+                did_run: true.
+                val == (o val)
+            ).
+        |).
         d at: custom_obj Put: 1.
+
+        another_obj: (|
+            name = "second".
+            val = 2.
+            == obj = (||
+                did_run: true.
+                val == (obj val)
+            ).
+        |).
+        d at: another_obj Put: 2.
 
         assert: [ (d at: custom_obj) == 1. ].
         assert: [ did_run is: true ].
-        assert: [ (d at: 1) == "X". ].
 
         d at: 9999 Fail: [ ret_fail: true ].
         assert: [ ret_fail is: true ].
