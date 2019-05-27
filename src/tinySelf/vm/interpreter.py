@@ -379,7 +379,7 @@ class Interpreter(ProcessCycler):
                 parameters
             )
 
-            if return_value is not None:
+            if return_value is not None and self.process is not None:
                 self.process.frame.push(return_value)
 
         elif slot.is_assignment_primitive:

@@ -32,9 +32,8 @@ def virtual_machine(source, source_path, stdlib_source, stdlib_path):
 
     interpreter = Interpreter(universe)
 
-    if stdlib_source:
-        if not run_stdlib(interpreter, stdlib_source, stdlib_path):
-            return None, interpreter
+    if stdlib_source and not run_stdlib(interpreter, stdlib_source, stdlib_path):
+        return None, interpreter
 
     ast = lex_and_parse_as_root(source)
     if not ast:
