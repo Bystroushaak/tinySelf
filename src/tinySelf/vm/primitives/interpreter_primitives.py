@@ -238,7 +238,13 @@ class EvalException(Exception):
 def eval_immediately(interpreter, scope_parent, self_obj, method,
                      method_parameters, raise_exception=False):
     """
-    Run `method` in the `interpreter`.
+    Run `method` in the `interpreter` immediately - that is stop everything
+    else, disable parallelism, and run the code until it ends.
+
+    Warning:
+        This should be used only when the result is really immediately needed
+        in the primitive. If you need standard eval, use
+        :fn:`call_tinyself_code_from_primitive`.
 
     Args:
         interpreter (Interpreter): Instance of the interpreter.
@@ -260,7 +266,9 @@ def eval_immediately(interpreter, scope_parent, self_obj, method,
 
     process = interpreter.add_process(method.code_context)
 
-    # TODO: self_obj or method???! wtf, why?
+    # scope_parent in `self_obj` because PUSH_SELF bytecode is one of the first
+    # instructions executed and practically everything happens in the context
+    # of "self", not in the context of the code method
     self_obj.scope_parent = interpreter._create_intermediate_params_obj(
         scope_parent=scope_parent,
         method_obj=method,
