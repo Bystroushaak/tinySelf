@@ -44,7 +44,7 @@ def eq_fn(obj, other):
                 self_obj=obj,
                 method=eq_slot,
                 method_parameters=[other],
-                raise_exception=True
+                raise_exception=False
         )
         if result is None:
             return False
@@ -57,12 +57,33 @@ def eq_fn(obj, other):
     return True
 
 
-def hash_fn(obj):  # TODO: run tinySelf code?
-    hash = 0
-    for c in "".join(obj.slot_keys):
-        hash += ord(c)
+def hash_fn(obj):
+    hash_slot = obj.get_slot("hash")
 
-    return hash
+    # compute hash from the slot names
+    if hash_slot is None:
+        hash = 0
+        for c in "".join(obj.slot_keys):
+            hash += ord(c)
+
+        return hash
+
+    interpreter = GLOBAL_CONTEXT.interpreter
+    result = eval_immediately(
+            interpreter=interpreter,
+            scope_parent=GLOBAL_CONTEXT.scope_parent,
+            self_obj=obj,
+            method=hash_slot,
+            method_parameters=[],
+            raise_exception=True
+    )
+
+    if not isinstance(result, PrimitiveIntObject):
+        msg = "Object's `hash` message must return int when put to dict."
+        primitive_fn_raise_error(interpreter, None, [PrimitiveStrObject(msg)])
+        return 1
+
+    return result.value
 
 
 ObjectDict = r_ordereddict(eq_fn, hash_fn)
