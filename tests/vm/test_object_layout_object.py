@@ -322,8 +322,8 @@ def slot_lookup():
     o.meta_add_parent("p", flat)
 
     assert o.get_slot("xex") is None
-    assert o.slot_lookup("xex") is val
-    assert o.slot_lookup("flat") is flat
+    assert o.slot_lookup("xex")[1] is val
+    assert o.slot_lookup("flat")[1] is flat
 
 
 def test_slot_lookup_from_scope_parent():
@@ -335,7 +335,7 @@ def test_slot_lookup_from_scope_parent():
     o.scope_parent = p
 
     assert o.get_slot("xex") is None
-    assert o.slot_lookup("xex") is val
+    assert o.slot_lookup("xex")[1] is val
 
 
 def test_slot_lookup_from_scope_parent_and_then_parents():
@@ -350,7 +350,7 @@ def test_slot_lookup_from_scope_parent_and_then_parents():
     o.scope_parent = Object()
     o.scope_parent.meta_add_parent("*", interobj)
 
-    assert o.slot_lookup("a") is val
+    assert o.slot_lookup("a")[1] is val
 
 
 def test_has_code():

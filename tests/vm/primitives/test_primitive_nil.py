@@ -12,15 +12,15 @@ def test_PrimitiveNilObject():
 def test_PrimitiveNilObject_is():
     o = PrimitiveNilObject()
 
-    is_slot = o.slot_lookup("is:")
+    _, is_slot = o.slot_lookup("is:")
     result = is_slot.map.primitive_code(None, o, [PrimitiveNilObject()])
     assert result == PrimitiveTrueObject()
 
-    is_slot = o.slot_lookup("is:")
+    _, is_slot = o.slot_lookup("is:")
     result = is_slot.map.primitive_code(None, o, [PrimitiveIntObject(3)])
     assert result == PrimitiveFalseObject()
 
-    is_slot = o.slot_lookup("is:")
+    _, is_slot = o.slot_lookup("is:")
     result = is_slot.map.primitive_code(None, o, [PrimitiveTrueObject()])
     assert result == PrimitiveFalseObject()
 
@@ -28,14 +28,14 @@ def test_PrimitiveNilObject_is():
 def test_PrimitiveNilObject_equals():
     o = PrimitiveNilObject()
 
-    eq_slot = o.slot_lookup("==")
+    _, eq_slot = o.slot_lookup("==")
     result = eq_slot.map.primitive_code(None, o, [PrimitiveNilObject()])
     assert result == PrimitiveTrueObject()
 
-    eq_slot = o.slot_lookup("==")
+    _, eq_slot = o.slot_lookup("==")
     result = eq_slot.map.primitive_code(None, o, [PrimitiveIntObject(3)])
     assert result == PrimitiveFalseObject()
 
-    eq_slot = o.slot_lookup("==")
+    _, eq_slot = o.slot_lookup("==")
     result = eq_slot.map.primitive_code(None, o, [PrimitiveTrueObject()])
     assert result == PrimitiveFalseObject()

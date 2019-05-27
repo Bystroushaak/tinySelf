@@ -13,7 +13,7 @@ def call_primitive_int_binary_op(first, op, second, equals):
     if isinstance(equals, (int, long)):
         equals = PrimitiveIntObject(equals)
 
-    primitive_slot = o.slot_lookup(op)
+    _, primitive_slot = o.slot_lookup(op)
     assert primitive_slot.map.primitive_code
     result = primitive_slot.map.primitive_code(None, o, [PrimitiveIntObject(second)])
     assert result == equals
@@ -70,7 +70,7 @@ def test_PrimitiveIntObject_lower_or_equal():
 def test_PrimitiveIntObject_as_primitive_string():
     o = PrimitiveIntObject(2)
 
-    plus_slot = o.slot_lookup("asString")
+    _, plus_slot = o.slot_lookup("asString")
     assert plus_slot.map.primitive_code
     result = plus_slot.map.primitive_code(None, o, [])
     assert result == PrimitiveStrObject("2")
