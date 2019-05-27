@@ -247,8 +247,22 @@
         assert: [ (d at: custom_obj) == 1. ].
         assert: [ did_run is: true ].
 
+        ret_fail: false.
         d at: 9999 Fail: [ ret_fail: true ].
         assert: [ ret_fail is: true ].
+
+        # test custom hash
+        d: primitives dict clone.
+
+        did_run: false.
+        custom_obj: (|
+            val = 1.
+            hash = (|| did_run: true. ^1 ).
+            == o = (|| ^ val == (o val)).
+        |).
+        d at: custom_obj Put: 1.
+
+        assert: [ did_run is: true ].
     ).
 
     run_tests = (||
