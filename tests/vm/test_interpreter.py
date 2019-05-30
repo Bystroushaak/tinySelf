@@ -258,6 +258,72 @@ def test_set_error_handler_and_handle_error():
     assert result == PrimitiveIntObject(2)
 
 
+def test_double_return_from_block():
+    source = """(|
+    init_true = (| true_mirror |
+        true_mirror: primitives mirrorOn: true.
+        true_mirror toSlot: 'ifTrue:' Add: (| :blck | blck value).
+        true_mirror toSlot: 'ifFalse:' Add: (| :blck | nil.).
+    ).
+    init_false = (| false_mirror |
+        false_mirror: primitives mirrorOn: false.
+        false_mirror toSlot: 'ifTrue:' Add: (| :blck | nil).
+        false_mirror toSlot: 'ifFalse:' Add: (| :blck | blck value.).
+    ).
+
+    test_standard_double_return = (| did_run <- false. |
+        true ifTrue: [ did_run: true. ^ 1 ].
+
+        did_run ifFalse: [
+            primitives interpreter error: 'Block did not run.'.
+        ].
+
+        primitives interpreter error: 'Block did not returned.'.
+
+        ^ 0.
+    ).
+
+    test_double_return = (| dict_mirror |
+        dict_mirror: primitives mirrorOn: dict.
+
+        dict_mirror toSlot: 'at:Fail:' Add: (
+            | :key. :fail_blck. result = nil. block_run <- false. |
+
+            (result is: nil) ifTrue: [ block_run: true. ^ fail_blck value ].
+
+            block_run ifFalse: [
+                primitives interpreter error: 'Fail block did not run.'.
+            ].
+
+            primitives interpreter error: 'Fail block did not returned.'.
+
+            ^0.
+        ).
+    ).
+
+    run = (| d |
+        init_true.
+        init_false.
+
+        (test_standard_double_return == 1) ifFalse: [
+            primitives interpreter error: 'Bad value returned from test_standard_double_return.'.
+        ].
+
+        test_double_return.
+
+        d: dict clone.
+        ((d at: 99 Fail: [ 1 ]) == 1) ifFalse: [
+            primitives interpreter error: 'Bad value returned from test_double_return.'.
+        ].
+    ).
+|) run"""
+
+    process, interpreter = virtual_machine(source, "none")
+
+    assert process.finished
+    assert not process.finished_with_error, process.result.__str__()
+
+
 def test_running_self_unittest_file():
     dirname = os.path.dirname(__file__)
     source_file_path = os.path.join(dirname, "../scripts/unittest.self")
