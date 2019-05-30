@@ -262,17 +262,15 @@ def test_double_return_from_block():
     source = """(|
     init_true = (| true_mirror |
         true_mirror: primitives mirrorOn: true.
-        true_mirror toSlot: 'ifTrue:' Add: (| :blck | blck value).
         true_mirror toSlot: 'ifFalse:' Add: (| :blck | nil.).
     ).
     init_false = (| false_mirror |
         false_mirror: primitives mirrorOn: false.
-        false_mirror toSlot: 'ifTrue:' Add: (| :blck | nil).
         false_mirror toSlot: 'ifFalse:' Add: (| :blck | blck value.).
     ).
 
     test_standard_double_return = (| did_run <- false. |
-        true ifTrue: [ did_run: true. ^ 1 ].
+        [ did_run: true. ^ 1 ] value.
 
         did_run ifFalse: [
             primitives interpreter error: 'Block did not run.'.
@@ -284,12 +282,10 @@ def test_double_return_from_block():
     ).
 
     test_double_return = (| dict_mirror |
-        dict_mirror: primitives mirrorOn: dict.
+        dict_mirror: primitives mirrorOn: true.
 
-        dict_mirror toSlot: 'at:Fail:' Add: (
-            | :key. :fail_blck. result = nil. block_run <- false. |
-
-            (result is: nil) ifTrue: [ block_run: true. ^ fail_blck value ].
+        dict_mirror toSlot: 'run_blck:' Add: (| :blck. block_run <- false. |
+            [ block_run: true. ^ blck value. ] value.
 
             block_run ifFalse: [
                 primitives interpreter error: 'Fail block did not run.'.
@@ -311,8 +307,7 @@ def test_double_return_from_block():
 
         test_double_return.
 
-        d: dict clone.
-        ((d at: 99 Fail: [ 1 ]) == 1) ifFalse: [
+        ((true run_blck: [ 1 ]) == 1) ifFalse: [
             primitives interpreter error: 'Bad value returned from test_double_return.'.
         ].
     ).
