@@ -144,8 +144,15 @@ class CodeContext(object):
 
     def debug_repr(self):
         out = '(|\n  literals = (| l <- dict clone. |\n    l\n'
-        for cnt, i in enumerate(self.literals):
-            out += '      at: %d Put: "%s(%s)";\n' % (cnt, i.__class__.__name__, i.__str__())
+        for cnt, literal in enumerate(self.literals):
+            out += '      at: %d Put: "%s(%s)";\n' % (cnt, literal.__class__.__name__,
+                                                      literal.__str__())
+
+            # if isinstance(literal, ObjBox):
+            #     item = literal.value
+            #
+            #     if item.has_code and item.code_context:
+            #         out = item.code_context.debug_repr() + "\n\n" + out
 
         # meh, rpython and his proven non-negative bounds..
         index = len(out) - 2

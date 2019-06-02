@@ -11,6 +11,7 @@
             true_blck value.
         ).
     ).
+
     init_false = (| false_mirror |
         false_mirror: primitives mirrorOn: false.
 
@@ -23,9 +24,16 @@
             false_blck value.
         ).
     ).
+
     init_nil = (| nil_mirror |
         nil.
     ).
+
+    init_int = (| int_mirror |
+        #universe_mirror: primitives mirrorOn: int.
+        nil.
+    ).
+
     init_asserts = (| universe_mirror |
         universe_mirror: primitives mirrorOn: universe.
         universe_mirror toSlot: 'assert:' Add: (| :what |
@@ -45,6 +53,7 @@
             true.
         ).
     ).
+
     init_blocks = (| block_traits_mirror |
         block_traits_mirror: primitives mirrorOn: block_traits.
         block_traits_mirror toSlot: 'whileTrue:' Add: (| :blck |
@@ -69,11 +78,23 @@
         ).
     ).
 
+    init_dicts = (| dict_mirror |
+        dict_mirror: primitives mirrorOn: dict.
+
+        dict_mirror toSlot: 'at:Fail:' Add: (| :key. :fail_blck. result |
+            result: (self at: key).
+            (result is: nil) ifTrue: [ ^ fail_blck value ].
+            ^result.
+        ).
+    ).
+
     init = (||
         init_true.
         init_false.
         init_nil.
+        init_int.
         init_asserts.
         init_blocks.
+        init_dicts.
     ).
 |) init.

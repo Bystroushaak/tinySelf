@@ -142,7 +142,7 @@ class ProcessStack(object):
     def top_frame(self):
         return self.frame
 
-    def _cleanup_frame(self):
+    def _cleanup_frame(self):  # TODO: remove?
         if self.frame.code_context:
             self.frame.code_context.self = None
 
@@ -194,10 +194,12 @@ class ProcessStack(object):
 
 class ProcessCycler:
     def __init__(self, code_context=None):
+        self.stash = []
+
         self.cycler = 0
         self.process = None
-        self.processes = []
         self.process_count = 0
+        self.processes = []
 
         if code_context is not None:
             self.add_process(code_context)
@@ -267,3 +269,25 @@ class ProcessCycler:
 
         if self.cycler >= self.process_count:
             self.cycler = 0
+
+    def stash_push(self):
+        copy = ProcessCycler()
+        copy.cycler = self.cycler
+        copy.process = self.process
+        copy.process_count = self.process_count
+        copy.processes = self.processes
+
+        self.stash.append(copy)
+
+        self.cycler = 0
+        self.process = None
+        self.process_count = 0
+        self.processes = []
+
+    def stash_pop(self):
+        copy = self.stash.pop()
+
+        self.cycler = copy.cycler
+        self.process = copy.process
+        self.process_count = copy.process_count
+        self.processes = copy.processes

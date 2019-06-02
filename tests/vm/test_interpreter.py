@@ -9,12 +9,12 @@ from tinySelf.vm.primitives import get_primitives
 from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveStrObject
 
-from tinySelf.vm.interpreter import NIL
 from tinySelf.vm.interpreter import Interpreter
 
 from tinySelf.vm.code_context import CodeContext
 
-from tinySelf.vm.object_layout import Object
+from tinySelf.vm.virtual_machine import virtual_machine
+
 
 
 def test_interpreter():
@@ -258,19 +258,58 @@ def test_set_error_handler_and_handle_error():
     assert result == PrimitiveIntObject(2)
 
 
+def test_double_return_from_block():
+    source = """(|
+    init_true = (| true_mirror |
+        true_mirror: primitives mirrorOn: true.
+        true_mirror toSlot: 'ifFalse:' Add: (| :blck | nil.).
+    ).
+    init_false = (| false_mirror |
+        false_mirror: primitives mirrorOn: false.
+        false_mirror toSlot: 'ifFalse:' Add: (| :blck | blck value.).
+    ).
+
+    test_double_return: blck = (| did_run <- false. |
+        [ did_run: true. ^ blck value ] value.
+
+        did_run ifFalse: [
+            primitives interpreter error: 'Block did not run.'.
+        ].
+
+        primitives interpreter error: 'Block did not returned.'.
+
+        ^ 0.
+    ).
+
+    run = (| d |
+        init_true.
+        init_false.
+
+        ((test_double_return: [ 1 ]) == 1) ifFalse: [
+            primitives interpreter error: 'Bad value returned from test_double_return.'.
+        ].
+    ).
+|) run"""
+
+    process, interpreter = virtual_machine(source, "none")
+
+    assert process.finished
+    assert not process.finished_with_error, process.result.__str__()
+
+
 def test_running_self_unittest_file():
-    universe = Object()
-    universe.meta_add_slot("primitives", get_primitives())
-
     dirname = os.path.dirname(__file__)
-    source_file_path = os.path.join(dirname, "..", "scripts", "unittest.self")
+    source_file_path = os.path.join(dirname, "../scripts/unittest.self")
+    stdlib_file_path = os.path.join(dirname, "../../objects/stdlib.tself")
+
     with open(source_file_path) as source_file:
-        ast = lex_and_parse(source_file.read())
+        with open(stdlib_file_path) as stdlib_file:
+            process, interpreter = virtual_machine(
+                    source_file.read(),
+                    source_file_path,
+                    stdlib_file.read(),
+                    stdlib_file_path
+            )
 
-    interpreter = Interpreter(universe)
-    for item in ast:
-        process = interpreter.add_process(item.compile(), "unittest.self")
-        interpreter.interpret()
-
-        assert process.finished
-        assert not process.finished_with_error
+    assert process.finished
+    assert not process.finished_with_error, process.result.__str__()

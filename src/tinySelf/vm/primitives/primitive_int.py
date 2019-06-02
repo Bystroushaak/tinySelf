@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from tinySelf.r_io import write
+
 from tinySelf.vm.primitives.cache import ObjCache
 from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
 from tinySelf.vm.primitives.primitive_true import PrimitiveTrueObject
@@ -39,8 +41,8 @@ def divide(interpreter, self, parameters):
     assert isinstance(obj, _NumberObject)
 
     if obj.value == 0:
-        from tinySelf.vm.primitives.interpreter_primitives import _raise_error
-        return _raise_error(
+        from tinySelf.vm.primitives.interpreter_primitives import primitive_fn_raise_error
+        return primitive_fn_raise_error(
             interpreter,
             None,
             [PrimitiveStrObject("Division by zero.")]
@@ -122,6 +124,15 @@ def as_float(interpreter, self, parameters):
     return PrimitiveFloatObject(float(self.value))
 
 
+def print_int(interpreter, self, parameters):
+    assert isinstance(self, PrimitiveIntObject)
+
+    as_str = str(self.value)
+    write(as_str)
+
+    return PrimitiveStrObject(as_str)
+
+
 class PrimitiveIntObject(_NumberObject):
     _OBJ_CACHE = ObjCache()
     _immutable_fields_ = ["value"]
@@ -146,6 +157,7 @@ class PrimitiveIntObject(_NumberObject):
         add_primitive_fn(self, "==", compare, ["obj"])
         add_primitive_fn(self, "asString", as_string, [])
         add_primitive_fn(self, "asFloat", as_float, [])
+        add_primitive_fn(self, "print", print_int, [])
 
         if PrimitiveIntObject._OBJ_CACHE.map is None:
             PrimitiveIntObject._OBJ_CACHE.store(self)

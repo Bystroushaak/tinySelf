@@ -84,6 +84,7 @@
     ).
 
     test_while = (| i <- 0. |
+        # also test tail call optimization
         [ i < 100 ] whileTrue: [
             assert: [ primitives interpreter numberOfFrames < 10 ].
             i: i + 1.
@@ -218,6 +219,54 @@
         assert: [ (reversed at: 1) == 'a' ].
     ).
 
+    test_primitive_dict = (| d. custom_obj. another_obj. did_run. ret_fail. |
+        d: primitives dict clone.
+        d at: 1 Put: "X".
+        assert: [ (d at: 1) == "X" ].
+        assert: [ (d at: 2) == nil ].
+
+        custom_obj: (|
+            name = "first".
+            val = 1.
+            == o = (||
+                did_run: true.
+                val == (o val)
+            ).
+        |).
+        d at: custom_obj Put: 1.
+
+        another_obj: (|
+            name = "second".
+            val = 2.
+            == obj = (||
+                did_run: true.
+                val == (obj val)
+            ).
+        |).
+        d at: another_obj Put: 2.
+
+        assert: [ (d at: custom_obj) == 1. ].
+        assert: [ did_run is: true ].
+
+        ret_fail: false.
+        d at: 9999 Fail: [ ret_fail: true ].
+        assert: [ ret_fail is: true ].
+        assert: [ (d at: 2222 Fail: [ 1 ]) == 1 ].
+
+        # test custom hash
+        d: primitives dict clone.
+
+        did_run: false.
+        custom_obj: (|
+            val = 1.
+            hash = (|| did_run: true. ^1 ).
+            == o = (|| ^ val == (o val)).
+        |).
+        d at: custom_obj Put: 1.
+
+        assert: [ did_run is: true ].
+    ).
+
     run_tests = (||
         true_comparision.
         false_comparision.
@@ -227,6 +276,7 @@
         test_primitive_int.
         test_primitive_str.
         test_primitive_list.
+        test_primitive_dict.
 
         test_that_parameters_are_rw_slots.
         test_double_return_from_block.

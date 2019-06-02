@@ -13,7 +13,7 @@ from tinySelf.vm.primitives import PrimitiveFloatObject
 from tinySelf.vm.primitives import AssignmentPrimitive
 from tinySelf.vm.primitives import gen_interpreter_primitives
 from tinySelf.vm.primitives.interpreter_primitives import ErrorObject
-from tinySelf.vm.primitives.interpreter_primitives import _raise_error
+from tinySelf.vm.primitives.interpreter_primitives import primitive_fn_raise_error
 
 from tinySelf.vm.code_context import IntBox
 from tinySelf.vm.code_context import StrBox
@@ -169,7 +169,7 @@ class Interpreter(ProcessCycler):
             bool: True if the nonlocal return was triggered.
         """
         method_obj = self.process.frame.tmp_method_obj_reference
-        if method_obj and method_obj.is_block:
+        if method_obj is not None and method_obj.is_block:
             block_scope_parent = method_obj.meta_get_parent("*")
 
             while block_scope_parent != method_obj:
@@ -194,6 +194,7 @@ class Interpreter(ProcessCycler):
     @jit.unroll_safe
     def _create_intermediate_params_obj(self, scope_parent, method_obj,
                                         parameters, prev_scope_parent=None):
+
         # do not create empty intermediate objects
         if not method_obj.parameters:
             # this is used to remember in what context is the block executed,
@@ -249,8 +250,11 @@ class Interpreter(ProcessCycler):
         return intermediate_obj
 
     def _tco_applied(self, next_bytecode):
-        if next_bytecode == BYTECODE_RETURN_TOP or next_bytecode == BYTECODE_RETURN_IMPLICIT:
-            self.process.pop_frame()
+        if next_bytecode == BYTECODE_RETURN_TOP:
+            return self.process.pop_frame()
+
+        if next_bytecode == BYTECODE_RETURN_IMPLICIT and not self.process.frame.self.is_block:
+            return self.process.pop_frame()
 
     def _push_code_obj_for_interpretation(self, next_bytecode, scope_parent,
                                           method_obj, parameters):
@@ -282,7 +286,9 @@ class Interpreter(ProcessCycler):
                 "Can't do resend; parent `%s` not found!" % parent_name
             )
 
-        return resend_parent.slot_lookup(message_name)
+        _, result = resend_parent.slot_lookup(message_name)
+
+        return result
 
     def _handle_missing_slot(self, obj, code, message_name, bc_index):
         debug_msg = ""
@@ -302,7 +308,7 @@ class Interpreter(ProcessCycler):
             process_stack_to_plantuml(self.process)
             obj_map_to_plantuml(obj, prefix="obj_parent_map")
 
-        _raise_error(self, None, [PrimitiveStrObject(debug_msg)])
+        primitive_fn_raise_error(self, None, [PrimitiveStrObject(debug_msg)])
         return THREE_BYTECODES_LONG
 
     @jit.unroll_safe
@@ -338,11 +344,12 @@ class Interpreter(ProcessCycler):
         if boxed_resend_parent_name is not None:
             parent_name = boxed_resend_parent_name.value
             slot = self._resend_to_parent(obj, parent_name, message_name)
+            slot_found_directly_in_obj = False
         else:
-            slot = obj.slot_lookup(message_name)
+            slot_found_directly_in_obj, slot = obj.slot_lookup(message_name)
 
         if slot is None:
-            do_not_understand = obj.slot_lookup("doNotUnderstand:Parameters:")
+            _, do_not_understand = obj.slot_lookup("doNotUnderstand:Parameters:")
             if do_not_understand is None:
                 return self._handle_missing_slot(obj, code, message_name, bc_index)
 
@@ -356,20 +363,26 @@ class Interpreter(ProcessCycler):
 
         if slot.has_code:
             self._push_code_obj_for_interpretation(
-                next_bytecode=ord(code.bytecodes[bc_index + 4]),
+                next_bytecode=ord(code.bytecodes[bc_index + THREE_BYTECODES_LONG]),
                 scope_parent=obj,
                 method_obj=slot,
                 parameters=parameters,
             )
 
         elif slot.has_primitive_code:
+            # primitives need "self" to be actually the object they are expecting,
+            # for example for dicts it have to be dict, not some descendant
+            # in the parent chain
+            if not slot_found_directly_in_obj:
+                obj = slot.scope_parent
+
             return_value = slot.primitive_code(
                 self,
                 obj,
                 parameters
             )
 
-            if return_value is not None:
+            if return_value is not None and self.process is not None:
                 self.process.frame.push(return_value)
 
         elif slot.is_assignment_primitive:

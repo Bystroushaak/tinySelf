@@ -11,14 +11,14 @@ def test_PrimitiveTrueObject():
 def test_PrimitiveTrueObject_is():
     o = PrimitiveTrueObject()
 
-    is_slot = o.slot_lookup("is:")
+    _, is_slot = o.slot_lookup("is:")
     result = is_slot.map.primitive_code(None, o, [PrimitiveTrueObject()])
     assert result == PrimitiveTrueObject()
 
-    is_slot = o.slot_lookup("is:")
+    _, is_slot = o.slot_lookup("is:")
     result = is_slot.map.primitive_code(None, o, [PrimitiveIntObject(3)])
     assert result == PrimitiveFalseObject()
 
-    is_slot = o.slot_lookup("is:")
+    _, is_slot = o.slot_lookup("is:")
     result = is_slot.map.primitive_code(None, o, [PrimitiveFalseObject()])
     assert result == PrimitiveFalseObject()

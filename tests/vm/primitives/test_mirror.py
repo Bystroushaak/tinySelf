@@ -10,9 +10,9 @@ def test_mirror():
     o = Object()
     m = Mirror(o)
 
-    assert not o.slot_lookup("v")
+    assert not o.slot_lookup("v")[1]
 
-    add_primitive = m.slot_lookup("toSlot:Add:")
+    _, add_primitive = m.slot_lookup("toSlot:Add:")
     assert add_primitive.map.primitive_code
     result = add_primitive.map.primitive_code(
         None,
@@ -21,4 +21,4 @@ def test_mirror():
     )
     assert result == o
 
-    assert o.slot_lookup("v") == PrimitiveIntObject(1)
+    assert o.slot_lookup("v")[1] == PrimitiveIntObject(1)

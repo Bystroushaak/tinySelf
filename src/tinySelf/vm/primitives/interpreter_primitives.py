@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from rpython.rlib.objectmodel import we_are_translated
+
 from tinySelf.vm.primitives import PrimitiveStrObject
 from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveNilObject
@@ -35,15 +37,15 @@ class ErrorObject(Object):
         return "ErrorObject(%s)" % self.message
 
 
-def _get_number_of_processes(interpreter, self, parameters):
+def primitive_fn_get_number_of_processes(interpreter, self, parameters):
     return PrimitiveIntObject(len(interpreter.processes))
 
 
-def _get_number_of_stack_frames(interpreter, self, parameters):
+def primitive_fn_get_number_of_stack_frames(interpreter, self, parameters):
     return PrimitiveIntObject(interpreter.process.length)
 
 
-def _set_error_handler(interpreter, self, parameters):
+def primitive_fn_set_error_handler(interpreter, self, parameters):
     blck = parameters[0]
     assert isinstance(blck, Object)
 
@@ -52,7 +54,7 @@ def _set_error_handler(interpreter, self, parameters):
     return NIL
 
 
-def _get_frame_with_error_handler(frame_linked_list):
+def primitive_fn_get_frame_with_error_handler(frame_linked_list):
     if frame_linked_list is None:
         return None
 
@@ -65,7 +67,7 @@ def _get_frame_with_error_handler(frame_linked_list):
     return None
 
 
-def _halt(interpreter, self, parameters):
+def primitive_fn_halt(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(obj, Object)
 
@@ -81,7 +83,7 @@ def _halt(interpreter, self, parameters):
     return obj
 
 
-def _restore_process_with(interpreter, self, parameters):
+def primitive_fn_restore_process_with(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(obj, Object)
     with_obj = parameters[1]
@@ -96,7 +98,7 @@ def _restore_process_with(interpreter, self, parameters):
     return None
 
 
-def _restore_process(interpreter, self, parameters):
+def primitive_fn_restore_process(interpreter, self, parameters):
     obj = parameters[0]
     assert isinstance(obj, Object)
 
@@ -109,11 +111,11 @@ def _restore_process(interpreter, self, parameters):
     return None
 
 
-def _raise_error(interpreter, self, parameters):
+def primitive_fn_raise_error(interpreter, self, parameters):
     msg = parameters[0]
     assert isinstance(msg, Object)
 
-    frame_with_handler = _get_frame_with_error_handler(interpreter.process.frame)
+    frame_with_handler = primitive_fn_get_frame_with_error_handler(interpreter.process.frame)
     process = interpreter.remove_active_process()
 
     if frame_with_handler is None:
@@ -139,12 +141,12 @@ def _raise_error(interpreter, self, parameters):
     return None
 
 
-def _run_script(interpreter, scope_parent, parameters):
+def primitive_fn_run_script(interpreter, scope_parent, parameters):
     path = parameters[0]
     assert isinstance(path, Object)
 
     if not isinstance(path, PrimitiveStrObject):
-        return _raise_error(
+        return primitive_fn_raise_error(
             interpreter,
             scope_parent,
             [PrimitiveStrObject("runScript: str parameter expected")]
@@ -154,7 +156,7 @@ def _run_script(interpreter, scope_parent, parameters):
         with open(path.value) as f:
             source = f.read()
     except Exception as e:
-        return _raise_error(
+        return primitive_fn_raise_error(
             interpreter,
             scope_parent,
             [PrimitiveStrObject("runScript: %s" % str(e))]
@@ -182,6 +184,21 @@ def _run_script(interpreter, scope_parent, parameters):
 
 
 def call_tinyself_code_from_primitive(interpreter, code_str, code_parameters_values):
+    """
+    Call `code_str` when the primitive you are currently running finishes.
+
+    Use with caution, as this will be return value from your primitive.
+
+    Warning: Code is pushed on stack and runs AFTER your primitive ends. Your
+    primitive have to return None.
+
+    Args:
+        interpreter (obj): Instance of the interpreter in which context the
+            primitive which called this function is running.
+        code_str (str): String to be interpreted. It should be object.
+        code_parameters_values (list): List of tinySelf's objects which will be
+            passed as parameters.
+    """
     assert isinstance(code_str, str)
 
     wrapping_obj = lex_and_parse(code_str)[0]
@@ -209,14 +226,80 @@ def call_tinyself_code_from_primitive(interpreter, code_str, code_parameters_val
     )
 
 
-def _eval_method_obj(interpreter, scope_parent, parameters):
+class EvalException(Exception):
+    def __init__(self, msg, process):
+        if not we_are_translated():
+            super(EvalException, self).__init__(msg)
+
+        self.message = msg
+        self.process = process
+
+
+def eval_immediately(interpreter, scope_parent, self_obj, method,
+                     method_parameters, raise_exception=False):
+    """
+    Run `method` in the `interpreter` immediately - that is stop everything
+    else, disable parallelism, and run the code until it ends.
+
+    Warning:
+        This should be used only when the result is really immediately needed
+        in the primitive. If you need standard eval, use
+        :fn:`call_tinyself_code_from_primitive`.
+
+    Args:
+        interpreter (Interpreter): Instance of the interpreter.
+        scope_parent (Object): This will be used as scope parent for method.
+        self_obj (Object): Context in which `method` is defined.
+        method (Object): Code object to run.
+        method_parameters (list): List of parameters for `method`.
+        raise_exception (bool): Raise exception or raise internal tinySelf
+            error? Default `False`.
+
+    Raises:
+        EvalException: If the `method` finished with error and `raise_exception`
+            is set to `True`.
+
+    Returns:
+        Object: Result of the running process.
+    """
+    interpreter.stash_push()
+
+    process = interpreter.add_process(method.code_context)
+
+    # scope_parent in `self_obj` because PUSH_SELF bytecode is one of the first
+    # instructions executed and practically everything happens in the context
+    # of "self", not in the context of the code method
+    self_obj.scope_parent = interpreter._create_intermediate_params_obj(
+        scope_parent=scope_parent,
+        method_obj=method,
+        parameters=method_parameters,
+        prev_scope_parent=method.scope_parent,
+    )
+    interpreter.process.frame.self = self_obj
+    interpreter.process.frame.tmp_method_obj_reference = method
+
+    interpreter.interpret()
+
+    interpreter.stash_pop()
+
+    if process.finished_with_error:
+        if raise_exception:
+            raise EvalException("Process finished with error %s" % process.result,
+                                process)
+        else:
+            return primitive_fn_raise_error(interpreter, method, [process.result])
+
+    return process.result
+
+
+def primitive_fn_eval_method_obj(interpreter, scope_parent, parameters):
     code = parameters[0]
     assert isinstance(code, PrimitiveStrObject)
 
     call_tinyself_code_from_primitive(interpreter, code.value, [])
 
 
-def _get_script_path(interpreter, scope_parent, parameters):
+def primitive_fn_get_script_path(interpreter, scope_parent, parameters):
     paths = [frame.source_path
              for frame in interpreter.process
              if frame.source_path]
@@ -231,21 +314,21 @@ def gen_interpreter_primitives(interpreter):
     interpreter_namespace = Object()
 
     add_primitive_fn(interpreter_namespace, "numberOfProcesses",
-                     _get_number_of_processes, [])
+                     primitive_fn_get_number_of_processes, [])
     add_primitive_fn(interpreter_namespace, "numberOfFrames",
-                     _get_number_of_stack_frames, [])
-    add_primitive_fn(interpreter_namespace, "setErrorHandler:", _set_error_handler,
+                     primitive_fn_get_number_of_stack_frames, [])
+    add_primitive_fn(interpreter_namespace, "setErrorHandler:", primitive_fn_set_error_handler,
                      ["blck"])
-    add_primitive_fn(interpreter_namespace, "error:", _raise_error, ["obj"])
-    add_primitive_fn(interpreter_namespace, "halt:", _halt, ["obj"])
-    add_primitive_fn(interpreter_namespace, "restoreProcess:", _restore_process,
+    add_primitive_fn(interpreter_namespace, "error:", primitive_fn_raise_error, ["obj"])
+    add_primitive_fn(interpreter_namespace, "halt:", primitive_fn_halt, ["obj"])
+    add_primitive_fn(interpreter_namespace, "restoreProcess:", primitive_fn_restore_process,
                      ["err_obj"])
     add_primitive_fn(interpreter_namespace, "restoreProcess:With:",
-                     _restore_process_with, ["msg", "err_obj"])
-    add_primitive_fn(interpreter_namespace, "runScript:", _run_script, ["path"])
+                     primitive_fn_restore_process_with, ["msg", "err_obj"])
+    add_primitive_fn(interpreter_namespace, "runScript:", primitive_fn_run_script, ["path"])
     add_primitive_fn(interpreter_namespace, "evalMethodObj:",
-                     _eval_method_obj, ["code"])
+                     primitive_fn_eval_method_obj, ["code"])
     add_primitive_fn(interpreter_namespace, "scriptPath",
-                     _get_script_path, [])
+                     primitive_fn_get_script_path, [])
 
     return interpreter_namespace
