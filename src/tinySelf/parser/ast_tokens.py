@@ -128,6 +128,12 @@ class Nil(Self):
     def __str__(self):
         return "Nil()"
 
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__)
+
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
 
 class Object(BaseBox):
     def __init__(self, slots=None, params=None, code=None, parents=None,
