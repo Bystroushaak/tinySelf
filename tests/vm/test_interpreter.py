@@ -269,45 +269,23 @@ def test_double_return_from_block():
         false_mirror toSlot: 'ifFalse:' Add: (| :blck | blck value.).
     ).
 
-    test_standard_double_return: blck = (| did_run <- false. |
+    test_double_return: blck = (| did_run <- false. |
         [ did_run: true. ^ blck value ] value.
 
         did_run ifFalse: [
-            primitives interpreter error: 'tsdr block did not run.'.
+            primitives interpreter error: 'Block did not run.'.
         ].
 
-        primitives interpreter error: 'tsdr block did not returned.'.
+        primitives interpreter error: 'Block did not returned.'.
 
         ^ 0.
-    ).
-
-    test_double_return = (| dict_mirror |
-        dict_mirror: primitives mirrorOn: true.
-
-        dict_mirror toSlot: 'run_blck:' Add: (| :blck. block_run <- false. |
-            [ block_run: true. ^ blck value. ] value.
-
-            block_run ifFalse: [
-                primitives interpreter error: 'Fail block did not run.'.
-            ].
-
-            primitives interpreter error: 'Fail block did not returned.'.
-
-            ^0.
-        ).
     ).
 
     run = (| d |
         init_true.
         init_false.
 
-        ((test_standard_double_return: [ 1 ]) == 1) ifFalse: [
-            primitives interpreter error: 'Bad value returned from test_standard_double_return.'.
-        ].
-
-        test_double_return.
-
-        ((true run_blck: [ 1 ]) == 1) ifFalse: [
+        ((test_double_return: [ 1 ]) == 1) ifFalse: [
             primitives interpreter error: 'Bad value returned from test_double_return.'.
         ].
     ).
