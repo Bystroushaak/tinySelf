@@ -26,7 +26,7 @@ def run_stdlib(interpreter, stdlib_source, stdlib_path):
     return True
 
 
-def virtual_machine(source, source_path, stdlib_source, stdlib_path):
+def virtual_machine(source, source_path, stdlib_source="", stdlib_path=""):
     universe = Object()
     universe.meta_add_slot("primitives", get_primitives())
 
