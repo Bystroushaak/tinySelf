@@ -169,7 +169,7 @@ class Interpreter(ProcessCycler):
             bool: True if the nonlocal return was triggered.
         """
         method_obj = self.process.frame.tmp_method_obj_reference
-        if method_obj and method_obj.is_block:
+        if method_obj is not None and method_obj.is_block:
             block_scope_parent = method_obj.meta_get_parent("*")
 
             while block_scope_parent != method_obj:
@@ -250,8 +250,11 @@ class Interpreter(ProcessCycler):
         return intermediate_obj
 
     def _tco_applied(self, next_bytecode):
-        if next_bytecode == BYTECODE_RETURN_TOP or next_bytecode == BYTECODE_RETURN_IMPLICIT:
-            self.process.pop_frame()
+        if next_bytecode == BYTECODE_RETURN_TOP:
+            return self.process.pop_frame()
+
+        if next_bytecode == BYTECODE_RETURN_IMPLICIT and not self.process.frame.self.is_block:
+            return self.process.pop_frame()
 
     def _push_code_obj_for_interpretation(self, next_bytecode, scope_parent,
                                           method_obj, parameters):
@@ -360,7 +363,7 @@ class Interpreter(ProcessCycler):
 
         if slot.has_code:
             self._push_code_obj_for_interpretation(
-                next_bytecode=ord(code.bytecodes[bc_index + 4]),
+                next_bytecode=ord(code.bytecodes[bc_index + THREE_BYTECODES_LONG]),
                 scope_parent=obj,
                 method_obj=slot,
                 parameters=parameters,
