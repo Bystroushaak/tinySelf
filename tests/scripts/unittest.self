@@ -250,7 +250,7 @@
         ret_fail: false.
         d at: 9999 Fail: [ ret_fail: true ].
         assert: [ ret_fail is: true ].
-        assert: [ (d at: 9999 Fail: [ 1 ]) == 1 ].
+        assert: [ (d at: 2222 Fail: [ 1 ]) == 1 ].
 
         # test custom hash
         d: primitives dict clone.

@@ -83,8 +83,7 @@
 
         dict_mirror toSlot: 'at:Fail:' Add: (| :key. :fail_blck. result |
             result: (self at: key).
-            (result is: nil) ifTrue: [ "double" printLine. ^ fail_blck value. ].
-            "this still runs" printLine.
+            (result is: nil) ifTrue: [ ^ fail_blck value ].
             ^result.
         ).
     ).
