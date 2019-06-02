@@ -791,8 +791,106 @@ def test_return_in_block():
     )]
 
 
+def test_double_return():
+    result = lex_and_parse('''
+    (| dict_mirror |
+        dict_mirror: primitives mirrorOn: dict.
+
+        dict_mirror toSlot: 'at:Fail:' Add: (
+            | :key. :fail_blck. block_run <- false. |
+
+            (result is: nil) ifTrue: [ block_run: true. ^ fail_blck value].
+        ).
+    ).
+''')
+
+    assert result == [
+        Object(
+            slots=OrderedDict([
+                ["dict_mirror", Nil()],
+                ["dict_mirror:", AssignmentPrimitive()]
+            ]),
+            code=[
+                Send(
+                    obj=Self(),
+                    msg=KeywordMessage(
+                        name="dict_mirror:",
+                        parameters=[
+                            Send(
+                                obj=Send(obj=Self(), msg=Message("primitives")),
+                                msg=KeywordMessage(
+                                    name="mirrorOn:",
+                                    parameters=[
+                                        Send(obj=Self(), msg=Message("dict"))
+                                    ]
+                                )
+                            )
+                        ]
+                    )
+                ),
+                Send(
+                    obj=Send(obj=Self(), msg=Message("dict_mirror")),
+                    msg=KeywordMessage(
+                        name="toSlot:Add:",
+                        parameters=[
+                            String('at:Fail:'),
+                            Object(
+                                slots=OrderedDict([
+                                    ["block_run", Send(obj=Self(), msg=Message("false"))],
+                                    ["block_run:", AssignmentPrimitive()]
+                                ]),
+                                params=["key", "fail_blck"],
+                                code=[
+                                    Send(
+                                        obj=Send(
+                                            obj=Send(
+                                                obj=Self(),
+                                                msg=Message("result")
+                                            ),
+                                            msg=KeywordMessage(
+                                                name="is:",
+                                                parameters=[
+                                                    Send(obj=Self(), msg=Message("nil"))
+                                                ]
+                                            )
+                                        ),
+                                        msg=KeywordMessage(
+                                            name="ifTrue:",
+                                            parameters=[
+                                                Block(
+                                                    code=[
+                                                        Send(
+                                                            obj=Self(),
+                                                            msg=KeywordMessage(
+                                                                name="block_run:",
+                                                                parameters=[
+                                                                    Send(obj=Self(), msg=Message("true"))
+                                                                ]
+                                                            )
+                                                        ),
+                                                        Return(
+                                                            Send(
+                                                                obj=Send(obj=Self(), msg=Message("fail_blck")),
+                                                                msg=Message("value")
+                                                            )
+                                                        )
+                                                    ]
+                                                )
+                                            ]
+                                        )
+                                    )
+                                ]
+                            )
+                        ]
+                    )
+                )
+            ]
+        )
+    ]
+
+
 def test_return_in_object():
-    result = lex_and_parse('(|| a printLine. a print. ^test)')
+    result = lex_and_parse('(|| a printLine. a print. ^test.)')
 
     assert result == [Object(
         code=[
