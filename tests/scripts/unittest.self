@@ -84,6 +84,7 @@
     ).
 
     test_while = (| i <- 0. |
+        # also test tail call optimization
         [ i < 100 ] whileTrue: [
             assert: [ primitives interpreter numberOfFrames < 10 ].
             i: i + 1.

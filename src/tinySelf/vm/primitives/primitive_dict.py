@@ -83,7 +83,7 @@ def hash_fn(obj):
         primitive_fn_raise_error(interpreter, None, [PrimitiveStrObject(msg)])
         return 1
 
-    return result.value
+    return int(result.value)
 
 
 ObjectDict = r_ordereddict(eq_fn, hash_fn)
