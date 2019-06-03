@@ -21,9 +21,15 @@ export RPYTHON_PATH="/pypy/rpython/bin"
 export PYTHON_PATH="src/:/pypy:$PYTHONPATH"
 
 ./compile.py -q $EXTRA_ARGS
+
+# copy output binary file
 mkdir -p /build/usr/bin
 cp tSelf /build/usr/bin
 cp tSelf /release
+
+# copy stdlib
+mkdir -p /build/var/lib/tinySelf/
+cp objects/stdlib.tself /build/var/lib/tinySelf/stdlib.tself
 
 # Get the Install Size
 INSTALL_SIZE=$(du -s /build | awk '{ print $1 }')
