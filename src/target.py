@@ -13,15 +13,16 @@ from tinySelf.r_io import ewriteln
 from tinySelf.r_io import stdin_readline
 
 from tinySelf.config import VERSION
+from tinySelf.config import STDLIB_PATHS
 
 from tinySelf.parser import lex_and_parse
 from tinySelf.parser import lex_and_parse_as_root
 
-from tinySelf.shared.string_repr import unescape_esc_seq
-
 from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.code_context import CodeContext
 from tinySelf.vm.virtual_machine import virtual_machine
+
+from tinySelf.shared.string_repr import unescape_esc_seq
 
 
 NIL = PrimitiveNilObject()
@@ -84,13 +85,12 @@ def _read_stdlib():
     # I would use .get() with alt param, but that results in Argument number
     # mismatch under RPython
     if not tinyself_path_var:
-        tinyself_path_var = "objects/stdlib.tself"
+        tinyself_path_var = STDLIB_PATHS
 
     stdlib_paths = tinyself_path_var.split(":")
 
     for path in stdlib_paths:
         if not os.path.exists(path):
-            ewriteln("`TINYSELF_PATH=`%s` doesn't exist, skipping.." % path)
             continue
 
         with open(path) as f:
