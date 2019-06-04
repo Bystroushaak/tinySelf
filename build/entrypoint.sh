@@ -11,6 +11,7 @@ hg update 96452
 cd /src
 # Re-pull the repository
 git fetch
+git pull
 
 # BUILD_VERSION=$(git describe --tags $(git rev-list --tags --max-count=1)) && \
 # git checkout ${BUILD_VERSION}

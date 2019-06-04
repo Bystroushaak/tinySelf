@@ -2,7 +2,7 @@
 
 all: run
 
-docker_build:
+docker_build: test_docker
 	mkdir -p build
 	mkdir -p release
 	chmod 777 build
@@ -29,6 +29,9 @@ jit: docker_build
 		--network="host" \
 		tinyself_ubuntu
 	chmod -R 777 release
+
+test_docker:
+	docker 1>/dev/null 2>&1 || (echo "\033[0;31mDocker not found.\033[0m"; exit 1)
 
 help:
 	@echo "Parameters:"
