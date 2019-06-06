@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from collections import OrderedDict
-
 from tinySelf.vm.object_layout import Object
 
 from tinySelf.vm.primitives.mirror import Mirror
