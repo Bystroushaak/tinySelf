@@ -9,12 +9,9 @@
     ).
 
     run_benchmark = (| start_time. end_time. |
-        primitives interpreter runScript: 'objects/stdlib.tself'.
-
         start_time: primitives time timestamp.
         benchmark.
         end_time: primitives time timestamp.
-
 
         end_time - start_time asString + '\n' print.
     ).
