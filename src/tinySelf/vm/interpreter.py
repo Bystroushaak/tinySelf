@@ -2,7 +2,23 @@
 from rpython.rlib import jit
 from rpython.rlib.objectmodel import we_are_translated
 
-from tinySelf.vm.bytecodes import *
+from tinySelf.vm.bytecodes import BYTECODE_SEND
+from tinySelf.vm.bytecodes import BYTECODE_PUSH_SELF
+from tinySelf.vm.bytecodes import BYTECODE_PUSH_LITERAL
+from tinySelf.vm.bytecodes import BYTECODE_ADD_SLOT
+from tinySelf.vm.bytecodes import BYTECODE_RETURN_TOP
+from tinySelf.vm.bytecodes import BYTECODE_RETURN_IMPLICIT
+from tinySelf.vm.bytecodes import LITERAL_TYPE_NIL
+from tinySelf.vm.bytecodes import LITERAL_TYPE_INT
+from tinySelf.vm.bytecodes import LITERAL_TYPE_STR
+from tinySelf.vm.bytecodes import LITERAL_TYPE_OBJ
+from tinySelf.vm.bytecodes import LITERAL_TYPE_FLOAT
+from tinySelf.vm.bytecodes import LITERAL_TYPE_BLOCK
+from tinySelf.vm.bytecodes import LITERAL_TYPE_ASSIGNMENT
+from tinySelf.vm.bytecodes import SEND_TYPE_UNARY_RESEND
+from tinySelf.vm.bytecodes import SEND_TYPE_KEYWORD_RESEND
+from tinySelf.vm.bytecodes import SLOT_NORMAL
+from tinySelf.vm.bytecodes import SLOT_PARENT
 
 from tinySelf.vm.primitives import add_block_trait
 from tinySelf.vm.primitives import PrimitiveNilObject

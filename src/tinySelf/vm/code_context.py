@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 from rply.token import BaseBox
 
-from tinySelf.shared.lightweight_dict import LightWeightDictObjects
-from tinySelf.vm.bytecodes import *
+from tinySelf.vm.bytecodes import disassemble
+from tinySelf.vm.bytecodes import LITERAL_TYPE_INT
+from tinySelf.vm.bytecodes import LITERAL_TYPE_STR
+from tinySelf.vm.bytecodes import LITERAL_TYPE_OBJ
+from tinySelf.vm.bytecodes import LITERAL_TYPE_FLOAT
+from tinySelf.vm.bytecodes import BYTECODE_PUSH_LITERAL
+from tinySelf.vm.bytecodes import BYTECODE_RETURN_TOP
+
 from tinySelf.vm.object_layout import Object
 
 
