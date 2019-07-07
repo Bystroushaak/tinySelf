@@ -15,7 +15,9 @@ class PrimitiveFileObject(Object):
     def __init__(self, value, obj_map=None):
         Object.__init__(self, PrimitiveFileObject._OBJ_CACHE.map)
 
-        assert isinstance(value, file)
+        # [translation:ERROR] AttributeError: 'FrozenDesc' object has no attribute
+        # 'getuniqueclassdef'
+        # assert isinstance(value, file)
         self.value = value
 
         if PrimitiveFileObject._OBJ_CACHE.map is not None:
