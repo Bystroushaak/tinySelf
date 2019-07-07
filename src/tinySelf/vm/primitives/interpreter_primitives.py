@@ -141,6 +141,23 @@ def primitive_fn_raise_error(interpreter, self, parameters):
     return None
 
 
+def run_after_primitive_ends(interpreter, scope_parent, method_obj, parameters=None):
+    """
+    Run `method_obj` after the primitive ends. This works similarly like eval,
+    but evaluates `method_object` instead.
+    """
+    real_parameters = []
+    if parameters is not None:
+        real_parameters = parameters
+
+    interpreter._push_code_obj_for_interpretation(
+        next_bytecode=0,  # disable TCO
+        scope_parent=scope_parent,
+        method_obj=method_obj,
+        parameters=real_parameters,
+    )
+
+
 def primitive_fn_run_script(interpreter, scope_parent, parameters):
     path = parameters[0]
     assert isinstance(path, Object)
