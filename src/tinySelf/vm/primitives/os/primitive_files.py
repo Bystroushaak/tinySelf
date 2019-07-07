@@ -7,6 +7,7 @@ from tinySelf.vm.object_layout import Object
 from tinySelf.vm.primitives.cache import ObjCache
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 from tinySelf.vm.primitives.interpreter_primitives import primitive_fn_raise_error
+from tinySelf.vm.primitives.interpreter_primitives import run_after_primitive_ends
 
 
 class PrimitiveFileObject(Object):
@@ -49,7 +50,16 @@ def open_file(interpreter, pseudo_self, parameters):
 
 
 def open_file_err(interpreter, pseudo_self, parameters):
-    pass
+    path = parameters[0]
+    assert isinstance(path, PrimitiveStrObject)
+    err_blck = parameters[1]
+    assert isinstance(path, Object)
+
+    if os.path.exists(path.value):
+        return PrimitiveFileObject(open(path.value))
+
+    scope_parent = interpreter.process.frame.self
+    run_after_primitive_ends(interpreter, scope_parent, err_blck.get_slot("value"))
 
 
 def get_primitive_files():
