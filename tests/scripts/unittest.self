@@ -267,6 +267,10 @@
         assert: [ did_run is: true ].
     ).
 
+    test_primitive_file = (| read_only_file |
+        read_only_file: primitives os files open: "/dev/null".
+    ).
+
     run_tests = (||
         true_comparision.
         false_comparision.
@@ -277,6 +281,7 @@
         test_primitive_str.
         test_primitive_list.
         test_primitive_dict.
+        test_primitive_file.
 
         test_that_parameters_are_rw_slots.
         test_double_return_from_block.

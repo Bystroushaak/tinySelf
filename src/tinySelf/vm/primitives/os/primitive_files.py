@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
+import os.path
+
+from tinySelf.vm.primitives import PrimitiveStrObject
 from tinySelf.vm.object_layout import Object
-from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 from tinySelf.vm.primitives.cache import ObjCache
+from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
+from tinySelf.vm.primitives.interpreter_primitives import primitive_fn_raise_error
 
 
 class PrimitiveFileObject(Object):
@@ -11,7 +15,7 @@ class PrimitiveFileObject(Object):
     def __init__(self, value, obj_map=None):
         Object.__init__(self, PrimitiveFileObject._OBJ_CACHE.map)
 
-        assert isinstance(value, str)
+        assert isinstance(value, file)
         self.value = value
 
         if PrimitiveFileObject._OBJ_CACHE.map is not None:
@@ -32,7 +36,14 @@ class PrimitiveFileObject(Object):
 
 
 def open_file(interpreter, pseudo_self, parameters):
-    pass
+    path = parameters[0]
+    assert isinstance(path, PrimitiveStrObject)
+
+    if os.path.exists(path.value):
+        return PrimitiveFileObject(open(path.value))
+
+    primitive_fn_raise_error(interpreter, None,
+                             [PrimitiveStrObject("File `%s` not found." % path.value)])
 
 
 def open_file_err(interpreter, pseudo_self, parameters):

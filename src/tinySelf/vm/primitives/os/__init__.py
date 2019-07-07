@@ -7,6 +7,6 @@ from tinySelf.vm.primitives.os.primitive_files import get_primitive_files
 
 def get_primitive_os():
     os_obj = Object()
-    add_primitive_fn(os_obj, "files", get_primitive_files(), [])
+    os_obj.meta_add_slot("files", get_primitive_files())
 
     return os_obj

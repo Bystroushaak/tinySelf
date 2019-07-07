@@ -19,6 +19,8 @@ from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 from tinySelf.vm.primitives.interpreter_primitives import ErrorObject
 from tinySelf.vm.primitives.interpreter_primitives import gen_interpreter_primitives
 
+from tinySelf.vm.primitives.os import get_primitive_os
+
 from tinySelf.vm.primitives.primitive_time import get_primitive_time_object
 
 
@@ -120,6 +122,7 @@ def get_primitives():
     # TODO: move to `traits block`
     primitives.meta_add_slot("block_traits", _USER_EDITABLE_BLOCK_TRAIT)
 
+    primitives.meta_add_slot("os", get_primitive_os())
     primitives.meta_add_slot("time", get_primitive_time_object())
 
     add_primitive_fn(primitives, "mirrorOn:", _create_mirror, ["obj"])
