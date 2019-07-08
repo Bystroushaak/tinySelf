@@ -272,6 +272,10 @@
 
         primitives os files open: "/-1blehhhhhh" Fails: [err_run: true].
         assert: [ err_run is: true ].
+        err_run: false.
+
+        primitives os files open: "/tmp/asdhahsd" Mode: "w" Fails: [err_run: true].
+        assert: [ err_run is: false ].
     ).
 
     run_tests = (||
