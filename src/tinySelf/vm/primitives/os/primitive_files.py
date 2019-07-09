@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 import os.path
 
+from rpython.rlib.rfile import RFile
+from rpython.rlib.rfile import create_file
+
+from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveStrObject
 from tinySelf.vm.object_layout import Object
 
@@ -8,6 +12,26 @@ from tinySelf.vm.primitives.cache import ObjCache
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 from tinySelf.vm.primitives.interpreter_primitives import primitive_fn_raise_error
 from tinySelf.vm.primitives.interpreter_primitives import run_after_primitive_ends
+
+
+def close_file(interpreter, pseudo_self, parameters):
+    assert isinstance(pseudo_self, PrimitiveFileObject)
+
+    pseudo_self.value.close()
+    return pseudo_self
+
+
+def flush_file(interpreter, pseudo_self, parameters):
+    assert isinstance(pseudo_self, PrimitiveFileObject)
+
+    pseudo_self.value.flush()
+    return pseudo_self
+
+
+def tell_file(interpreter, pseudo_self, parameters):
+    assert isinstance(pseudo_self, PrimitiveFileObject)
+
+    return PrimitiveIntObject(pseudo_self.value.tell())
 
 
 class PrimitiveFileObject(Object):
@@ -18,7 +42,7 @@ class PrimitiveFileObject(Object):
 
         # [translation:ERROR] AttributeError: 'FrozenDesc' object has no attribute
         # 'getuniqueclassdef'
-        # assert isinstance(value, file)
+        assert isinstance(value, RFile)
         self.value = value
         self.path = path
 
@@ -26,11 +50,22 @@ class PrimitiveFileObject(Object):
             self._slot_values = PrimitiveFileObject._OBJ_CACHE.slots
             return
 
+        add_primitive_fn(self, "close", close_file, [])
+        add_primitive_fn(self, "flush", flush_file, [])
+        add_primitive_fn(self, "tell", tell_file, [])
+
         if PrimitiveFileObject._OBJ_CACHE.map is None:
             PrimitiveFileObject._OBJ_CACHE.store(self)
 
     def __str__(self):
-        return "FileObject(%s)" % self.path
+        try:
+            self.value._check_closed()
+            status = ""
+        except ValueError:
+            status = ", closed"
+
+        # status = ", closed" if self.value.closed else ""
+        return "FileObject(%s%s)" % (self.path, status)
 
     def __eq__(self, obj):
         if not isinstance(obj, PrimitiveFileObject):
@@ -45,7 +80,7 @@ def open_file(interpreter, pseudo_self, parameters):
     path = path_obj.value
 
     if os.path.exists(path):
-        return PrimitiveFileObject(open(path), path=path)
+        return PrimitiveFileObject(create_file(path), path=path)
 
     primitive_fn_raise_error(interpreter, None,
                              [PrimitiveStrObject("File `%s` not found." % path)])
@@ -59,7 +94,7 @@ def open_file_err(interpreter, pseudo_self, parameters):
     assert isinstance(path_obj, Object)
 
     if os.path.exists(path):
-        return PrimitiveFileObject(open(path), path=path)
+        return PrimitiveFileObject(create_file(path), path=path)
 
     scope_parent = interpreter.process.frame.self
     run_after_primitive_ends(interpreter, scope_parent, err_blck.get_slot("value"))
@@ -86,11 +121,7 @@ def open_file_mode_fails(interpreter, pseudo_self, parameters):
                                  [PrimitiveStrObject("File `%s` doesn't exists!" % path)])
         return
 
-    return PrimitiveFileObject(open(path, mode.value), path=path)
-
-
-def close_file(interpreter, pseudo_self, parameters):
-    pass
+    return PrimitiveFileObject(create_file(path, mode.value), path=path)
 
 
 def read_file(interpreter, pseudo_self, parameters):
@@ -105,15 +136,7 @@ def write_file(interpreter, pseudo_self, parameters):
     pass
 
 
-def seek(interpreter, pseudo_self, parameters):
-    pass
-
-
 def seek_to(interpreter, pseudo_self, parameters):
-    pass
-
-
-def flush(interpreter, pseudo_self, parameters):
     pass
 
 

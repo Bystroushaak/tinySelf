@@ -267,15 +267,19 @@
         assert: [ did_run is: true ].
     ).
 
-    test_primitive_file = (| read_only_file. err_run <- false. |
+    test_primitive_file = (| read_only_file. tmp_file. err_run <- false. |
         read_only_file: primitives os files open: "/dev/null".
 
         primitives os files open: "/-1blehhhhhh" Fails: [err_run: true].
         assert: [ err_run is: true ].
         err_run: false.
 
-        primitives os files open: "/tmp/asdhahsd" Mode: "w" Fails: [err_run: true].
+        tmp_file: primitives os files open: "/tmp/asdhahsd" Mode: "w" Fails: [
+            err_run: true
+        ].
         assert: [ err_run is: false ].
+
+        tmp_file close.
     ).
 
     run_tests = (||
