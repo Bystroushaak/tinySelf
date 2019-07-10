@@ -88,6 +88,21 @@
         ).
     ).
 
+    init_files = (| file_mirror |
+        file_mirror: primitives mirrorOn: primitives os files.
+
+        file_mirror toSlot: 'openForAppend:' Add: (| :fn |
+            primitives os files open: fn Mode: "a" Fails: [| :err |
+                raise: err.
+            ].
+        ).
+        file_mirror toSlot: 'openForWrite:' Add: (| :fn |
+            primitives os files open: fn Mode: "w" Fails: [| :err |
+                raise: err.
+            ].
+        ).
+    ).
+
     init = (||
         init_true.
         init_false.
@@ -96,5 +111,6 @@
         init_asserts.
         init_blocks.
         init_dicts.
+        init_files.
     ).
 |) init.
