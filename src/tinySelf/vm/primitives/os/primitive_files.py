@@ -6,6 +6,8 @@ from rpython.rlib.rfile import create_file
 
 from tinySelf.vm.primitives import PrimitiveIntObject
 from tinySelf.vm.primitives import PrimitiveStrObject
+from tinySelf.vm.primitives import PrimitiveTrueObject
+from tinySelf.vm.primitives import PrimitiveFalseObject
 from tinySelf.vm.object_layout import Object
 
 from tinySelf.vm.primitives.cache import ObjCache
@@ -34,6 +36,55 @@ def tell_file(interpreter, pseudo_self, parameters):
     return PrimitiveIntObject(pseudo_self.value.tell())
 
 
+def read_file(interpreter, pseudo_self, parameters):
+    assert isinstance(pseudo_self, PrimitiveFileObject)
+
+    return PrimitiveStrObject(pseudo_self.value.read())
+
+
+def read_file_ammount(interpreter, pseudo_self, parameters):
+    read_ammount_obj = parameters[0]
+    assert isinstance(read_ammount_obj, PrimitiveIntObject)
+    assert isinstance(pseudo_self, PrimitiveFileObject)
+
+    read_ammount = int(read_ammount_obj.value)
+    assert isinstance(read_ammount, int)
+
+    return PrimitiveStrObject(pseudo_self.value.read(read_ammount))
+
+
+def write_to_file(interpreter, pseudo_self, parameters):
+    data_obj = parameters[0]
+    assert isinstance(data_obj, PrimitiveStrObject)
+    assert isinstance(pseudo_self, PrimitiveFileObject)
+
+    pseudo_self.value.write(data_obj.value)
+
+    return pseudo_self
+
+
+def seek_to(interpreter, pseudo_self, parameters):
+    seek_to_obj = parameters[0]
+    assert isinstance(seek_to_obj, PrimitiveIntObject)
+    assert isinstance(pseudo_self, PrimitiveFileObject)
+
+    seek_to = int(seek_to_obj.value)
+    assert isinstance(seek_to, int)
+
+    pseudo_self.value.seek(seek_to)
+
+    return pseudo_self
+
+
+def is_closed(interpreter, pseudo_self, parameters):
+    assert isinstance(pseudo_self, PrimitiveFileObject)
+
+    if pseudo_self.is_closed():
+        return PrimitiveTrueObject()
+
+    return PrimitiveFalseObject()
+
+
 class PrimitiveFileObject(Object):
     _OBJ_CACHE = ObjCache()
     _immutable_fields_ = ["value"]
@@ -53,18 +104,28 @@ class PrimitiveFileObject(Object):
         add_primitive_fn(self, "close", close_file, [])
         add_primitive_fn(self, "flush", flush_file, [])
         add_primitive_fn(self, "tell", tell_file, [])
+        add_primitive_fn(self, "read", read_file, [])
+        add_primitive_fn(self, "read:", read_file_ammount, ["ammount"])
+        add_primitive_fn(self, "write:", write_to_file, ["data"])
+        add_primitive_fn(self, "seek:", seek_to, ["pos"])
+        add_primitive_fn(self, "closed?", is_closed, [])
 
         if PrimitiveFileObject._OBJ_CACHE.map is None:
             PrimitiveFileObject._OBJ_CACHE.store(self)
 
-    def __str__(self):
+    def is_closed(self):
         try:
             self.value._check_closed()
-            status = ""
+            return False
         except ValueError:
-            status = ", closed"
+            return True
 
+        # TODO: switch when the https://bitbucket.org/pypy/pypy/pull-requests/649/
+        # is merged..
         # status = ", closed" if self.value.closed else ""
+
+    def __str__(self):
+        status = ", closed" if self.is_closed() else ""
         return "FileObject(%s%s)" % (self.path, status)
 
     def __eq__(self, obj):
@@ -122,22 +183,6 @@ def open_file_mode_fails(interpreter, pseudo_self, parameters):
         return
 
     return PrimitiveFileObject(create_file(path, mode.value), path=path)
-
-
-def read_file(interpreter, pseudo_self, parameters):
-    pass
-
-
-def read_file_ammount(interpreter, pseudo_self, parameters):
-    pass
-
-
-def write_file(interpreter, pseudo_self, parameters):
-    pass
-
-
-def seek_to(interpreter, pseudo_self, parameters):
-    pass
 
 
 def get_primitive_files():

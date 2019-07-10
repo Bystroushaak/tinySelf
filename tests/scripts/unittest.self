@@ -278,8 +278,16 @@
             err_run: true
         ].
         assert: [ err_run is: false ].
-
+        tmp_file write: "azgabash".
         tmp_file close.
+
+        tmp_file: primitives os files open: "/tmp/asdhahsd".
+        assert: [ (tmp_file read) == "azgabash" ].
+        tmp_file seek: 0.
+        assert: [ (tmp_file read: 2) == "az" ].
+        assert: [ tmp_file closed? is: false ].
+        tmp_file close.
+        assert: [ tmp_file closed? is: true ].
     ).
 
     run_tests = (||
