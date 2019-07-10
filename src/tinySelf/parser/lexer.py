@@ -30,7 +30,7 @@ lg.add('END_OF_EXPR', r'\.')
 lg.add('SEPARATOR', r'\|')
 lg.add('CASCADE', r'\;')
 
-lg.add('IDENTIFIER', r'([a-zA-Z_][a-zA-Z0-9_]*\.)*[a-zA-Z_]*[a-zA-Z0-9_\*]+')
+lg.add('IDENTIFIER', r'([a-zA-Z_][a-zA-Z0-9_]*\.)*[a-zA-Z_]*[a-zA-Z0-9_\*\?]+')
 
 lg.add('ASSIGNMENT', r'=')
 
