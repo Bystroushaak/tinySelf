@@ -14,7 +14,7 @@ Articles
 ++++++++
 
 * `Github Wiki <https://github.com/Bystroushaak/tinySelf/wiki>`_
-* `Articles about tinySelf <https://www.notion.so/tinySelf-57c3b418d3bc4c879fad5c5397310d86>`_
+* `Articles about tinySelf <http://blog.rfox.eu/Bystroushaak%20s%20blog/English%20section/tinySelf.html>`_
 
 Planning
 ++++++++
