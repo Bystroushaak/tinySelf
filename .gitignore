@@ -117,3 +117,4 @@ parent_map*.png
 callgrind*
 
 .idea
+docs/message_send.plantuml
