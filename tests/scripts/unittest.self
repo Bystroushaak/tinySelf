@@ -290,6 +290,14 @@
         assert: [ tmp_file closed? is: true ].
     ).
 
+    test_primitive_socket = (| socket |
+        socket: primitives os socket open: "google.com" Port: 80.
+        socket sendAll: "GET / HTTP/1.1\n".
+        socket sendAll: "Host: google.com\n".
+        socket sendAll: "\n".
+        assert: [(socket recv: 4) == "HTTP" ].
+    ).
+
     run_tests = (||
         true_comparision.
         false_comparision.
@@ -301,6 +309,7 @@
         test_primitive_list.
         test_primitive_dict.
         test_primitive_file.
+        test_primitive_socket.
 
         test_that_parameters_are_rw_slots.
         test_double_return_from_block.
