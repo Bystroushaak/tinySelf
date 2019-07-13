@@ -34,6 +34,13 @@ def socket_sendall(interpreter, pseudo_self, parameters):
     return pseudo_self
 
 
+def socket_close(interpreter, pseudo_self, parameters):
+    assert isinstance(pseudo_self, PrimitiveSocketObject)
+
+    pseudo_self.value.close()
+    return pseudo_self
+
+
 class PrimitiveSocketObject(Object):
     _OBJ_CACHE = ObjCache()
     _immutable_fields_ = ["value"]
@@ -49,6 +56,7 @@ class PrimitiveSocketObject(Object):
 
         add_primitive_fn(self, "recv:", socket_recv, ["size"])
         add_primitive_fn(self, "sendAll:", socket_sendall, ["data"])
+        add_primitive_fn(self, "close", socket_close, [])
 
         if PrimitiveSocketObject._OBJ_CACHE.map is None:
             PrimitiveSocketObject._OBJ_CACHE.store(self)
