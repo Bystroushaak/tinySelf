@@ -4,17 +4,26 @@ from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
 from tinySelf.vm.primitives.add_primitive_fn import add_primitive_fn
 
 
-def primitive_add_slot(interpreter, mirror, parameters):
-    assert isinstance(mirror, Mirror)
+def primitive_add_slot(interpreter, pseudo_self, parameters):
+    assert isinstance(pseudo_self, Mirror)
     name = parameters[0]
     assert isinstance(name, PrimitiveStrObject)
     val = parameters[1]
     assert isinstance(val, Object)
 
-    mirror.obj_to_mirror.meta_add_slot(name.value, val)
+    pseudo_self.obj_to_mirror.meta_add_slot(name.value, val)
     val.scope_parent = None  # old scope_parent is no longer valid
 
-    return mirror.obj_to_mirror
+    return pseudo_self.obj_to_mirror
+
+
+def primitive_list_slots(interpreter, pseudo_self, parameters):
+    from tinySelf.vm.primitives.primitive_list import PrimitiveListObject
+    assert isinstance(pseudo_self, Mirror)
+
+    return PrimitiveListObject(
+        [PrimitiveStrObject(x) for x in pseudo_self.obj_to_mirror.slot_keys]
+    )
 
 
 class Mirror(Object):
@@ -25,6 +34,7 @@ class Mirror(Object):
         self.obj_to_mirror = obj_to_mirror
 
         add_primitive_fn(self, "toSlot:Add:", primitive_add_slot, ["name", "obj"])
+        add_primitive_fn(self, "listSlots", primitive_list_slots, [])
 
     def __eq__(self, obj):
         if not isinstance(obj, Mirror):

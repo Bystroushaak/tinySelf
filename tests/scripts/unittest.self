@@ -298,6 +298,16 @@
         assert: [(socket recv: 4) == "HTTP" ].
     ).
 
+    test_primitive_mirror = (| obj. mirror. |
+        obj: (| first. second. |).
+        mirror: primitives mirrorOn: obj.
+
+        assert: [(mirror listSlots at: 0) == "first"].
+        assert: [(mirror listSlots at: 1) == "first:"].
+        assert: [(mirror listSlots at: 2) == "second"].
+        assert: [(mirror listSlots at: 3) == "second:"].
+    ).
+
     run_tests = (||
         true_comparision.
         false_comparision.
@@ -310,6 +320,7 @@
         test_primitive_dict.
         test_primitive_file.
         test_primitive_socket.
+        test_primitive_mirror.
 
         test_that_parameters_are_rw_slots.
         test_double_return_from_block.
