@@ -311,6 +311,8 @@
         mirror toParent: "p" Add: parent.
 
         assert: [ obj third == 1 ].
+
+        assert: [(mirror listParents at: 0) == "p"].
     ).
 
     run_tests = (||

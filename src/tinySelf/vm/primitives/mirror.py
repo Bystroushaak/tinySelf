@@ -38,6 +38,16 @@ def primitive_add_parent(interpreter, pseudo_self, parameters):
     return pseudo_self.obj_to_mirror
 
 
+def primitive_list_parents(interpreter, pseudo_self, parameters):
+    from tinySelf.vm.primitives.primitive_list import PrimitiveListObject
+    assert isinstance(pseudo_self, Mirror)
+
+    return PrimitiveListObject([
+        PrimitiveStrObject(x)
+        for x in pseudo_self.obj_to_mirror.parent_slot_keys
+    ])
+
+
 class Mirror(Object):
     def __init__(self, obj_to_mirror, obj_map=None):
         Object.__init__(self, obj_map)
@@ -48,6 +58,7 @@ class Mirror(Object):
         add_primitive_fn(self, "toSlot:Add:", primitive_add_slot, ["name", "obj"])
         add_primitive_fn(self, "toParent:Add:", primitive_add_parent, ["name", "obj"])
         add_primitive_fn(self, "listSlots", primitive_list_slots, [])
+        add_primitive_fn(self, "listParents", primitive_list_parents, [])
 
     def __eq__(self, obj):
         if not isinstance(obj, Mirror):
