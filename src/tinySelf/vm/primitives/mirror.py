@@ -26,6 +26,18 @@ def primitive_list_slots(interpreter, pseudo_self, parameters):
     )
 
 
+def primitive_add_parent(interpreter, pseudo_self, parameters):
+    assert isinstance(pseudo_self, Mirror)
+    name = parameters[0]
+    assert isinstance(name, PrimitiveStrObject)
+    val = parameters[1]
+    assert isinstance(val, Object)
+
+    pseudo_self.obj_to_mirror.meta_add_parent(name.value, val)
+
+    return pseudo_self.obj_to_mirror
+
+
 class Mirror(Object):
     def __init__(self, obj_to_mirror, obj_map=None):
         Object.__init__(self, obj_map)
@@ -34,6 +46,7 @@ class Mirror(Object):
         self.obj_to_mirror = obj_to_mirror
 
         add_primitive_fn(self, "toSlot:Add:", primitive_add_slot, ["name", "obj"])
+        add_primitive_fn(self, "toParent:Add:", primitive_add_parent, ["name", "obj"])
         add_primitive_fn(self, "listSlots", primitive_list_slots, [])
 
     def __eq__(self, obj):

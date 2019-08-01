@@ -298,7 +298,7 @@
         assert: [(socket recv: 4) == "HTTP" ].
     ).
 
-    test_primitive_mirror = (| obj. mirror. |
+    test_primitive_mirror = (| obj. mirror. parent. |
         obj: (| first. second. |).
         mirror: primitives mirrorOn: obj.
 
@@ -306,6 +306,11 @@
         assert: [(mirror listSlots at: 1) == "first:"].
         assert: [(mirror listSlots at: 2) == "second"].
         assert: [(mirror listSlots at: 3) == "second:"].
+
+        parent: (| third = 1. |).
+        mirror toParent: "p" Add: parent.
+
+        assert: [ obj third == 1 ].
     ).
 
     run_tests = (||
