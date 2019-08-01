@@ -84,16 +84,18 @@ def primitive_fn_halt(interpreter, self, parameters):
 
 
 def primitive_fn_restore_process_with(interpreter, self, parameters):
-    obj = parameters[0]
-    assert isinstance(obj, Object)
+    error_obj = parameters[0]
+    assert isinstance(error_obj, Object)
     with_obj = parameters[1]
     assert isinstance(with_obj, Object)
 
-    if not isinstance(obj, ErrorObject):
+
+    if not isinstance(error_obj, ErrorObject):
         raise ValueError("This is not instance of error object!")
 
-    obj.process_stack.frame.push(with_obj)
-    interpreter.restore_process(obj.process_stack)
+    process = error_obj.process_stack
+    process.frame.push(with_obj)
+    interpreter.restore_process(process)
 
     return None
 
@@ -341,7 +343,7 @@ def gen_interpreter_primitives(interpreter):
     add_primitive_fn(interpreter_namespace, "restoreProcess:", primitive_fn_restore_process,
                      ["err_obj"])
     add_primitive_fn(interpreter_namespace, "restoreProcess:With:",
-                     primitive_fn_restore_process_with, ["msg", "err_obj"])
+                     primitive_fn_restore_process_with, ["err_obj", "with"])
     add_primitive_fn(interpreter_namespace, "runScript:", primitive_fn_run_script, ["path"])
     add_primitive_fn(interpreter_namespace, "evalMethodObj:",
                      primitive_fn_eval_method_obj, ["code"])
