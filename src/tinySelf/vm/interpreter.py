@@ -434,28 +434,37 @@ class Interpreter(ProcessCycler):
 
         if literal_type == LITERAL_TYPE_NIL:
             obj = NIL
+
         elif literal_type == LITERAL_TYPE_ASSIGNMENT:
             obj = AssignmentPrimitive()
+
         elif literal_type == LITERAL_TYPE_INT:
             assert isinstance(boxed_literal, IntBox)
             obj = PrimitiveIntObject(boxed_literal.value)
+
         elif literal_type == LITERAL_TYPE_FLOAT:
             assert isinstance(boxed_literal, FloatBox)
             obj = PrimitiveFloatObject(boxed_literal.value)
+
         elif literal_type == LITERAL_TYPE_STR:
             assert isinstance(boxed_literal, StrBox)
             obj = PrimitiveStrObject(boxed_literal.value)
+
         elif literal_type == LITERAL_TYPE_OBJ:
             assert isinstance(boxed_literal, ObjBox)
+
             obj = boxed_literal.value.clone()
             if self.process.frame.self is None:
                 self.process.frame.self = obj
+
         elif literal_type == LITERAL_TYPE_BLOCK:
             assert isinstance(boxed_literal, ObjBox)
+
             block = boxed_literal.value.clone()
             obj = add_block_trait(block)
             block.is_block = True
             block.scope_parent = self.process.frame.pop()
+
         else:
             raise ValueError("Unknown literal type; %s" % literal_type)
 
