@@ -225,15 +225,33 @@ class _BareObject(object):
     def clone(self):
         obj = Object(obj_map=self.map)
 
-        if self._slot_values is not None:
-            obj._slot_values = self._slot_values[:]
-        if self._parent_slot_values is not None:
-            obj._parent_slot_values = self._parent_slot_values[:]
+        self._copy_internals_to_clone(obj)
 
         obj.scope_parent = self.scope_parent
         self.map._used_in_multiple_objects = True
 
         return obj
+
+    def _copy_internals_to_clone(self, clone):
+        """
+        Used in the Primitive* classes reimplementation of `clone` message.
+        """
+        if self._slot_values is not None:
+            clone._slot_values = self._slot_values[:]
+        if self._parent_slot_values is not None:
+            clone._parent_slot_values = self._parent_slot_values[:]
+
+        return clone
+
+    def _copy_with_primitives(self, clone):
+        self._copy_internals_to_clone(clone)
+
+        for cnt, obj in enumerate(self._slot_values):
+            if obj.has_primitive_code:
+                clone._slot_values[cnt] = obj.clone()
+                clone._slot_values[cnt].scope_parent = clone
+
+        return clone
 
     def __str__(self):
         if self.map.is_block:

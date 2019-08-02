@@ -92,7 +92,7 @@ ObjectDict = r_ordereddict(eq_fn, hash_fn)
 def dict_clone(interpreter, self, parameters):
     assert isinstance(self, PrimitiveDictObject)
 
-    return PrimitiveDictObject(ObjectDict.copy())
+    return self._copy_with_primitives(PrimitiveDictObject(ObjectDict.copy()))
 
 
 def dict_at(interpreter, self, parameters):
