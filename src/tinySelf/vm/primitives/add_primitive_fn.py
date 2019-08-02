@@ -6,7 +6,7 @@ from tinySelf.vm.object_layout import Object
 def build_primitive_code_obj(primitive_fn, arguments):
     code_obj = Object()
 
-    code_obj.map.arguments = arguments
+    code_obj.map.parameters = arguments
     code_obj.map.primitive_code = primitive_fn
 
     return code_obj
