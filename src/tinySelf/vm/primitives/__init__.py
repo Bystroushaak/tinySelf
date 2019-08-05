@@ -54,7 +54,11 @@ _USER_EDITABLE_BLOCK_TRAIT = BlockTrait()
 
 def _print_block_source(interpreter, block_obj, parameters):
     ast = block_obj.get_slot("value").ast
-    return PrimitiveStrObject(ast.source_pos.source_snippet)
+
+    if ast is not None:
+        return PrimitiveStrObject(ast.source_pos.source_snippet)
+
+    return PrimitiveStrObject(block_obj.__str__())
 
 
 def _get_lineno(interpreter, block_obj, parameters):
