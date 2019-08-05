@@ -89,6 +89,12 @@ def compare_strings(interpreter, self, parameters):
     raise ValueError("Can't yet compare other sequences with strings.")
 
 
+def as_string(interpreter, self, parameters):
+    assert isinstance(self, PrimitiveStrObject)
+
+    return self
+
+
 class PrimitiveStrObject(Object):
     _OBJ_CACHE = ObjCache()
     _immutable_fields_ = ["value"]
@@ -108,6 +114,7 @@ class PrimitiveStrObject(Object):
         add_primitive_fn(self, "startsWith:", string_startswith, ["str"])
         add_primitive_fn(self, "endsWith:", string_endswith, ["str"])
         add_primitive_fn(self, "contains:", string_contains, ["str"])
+        add_primitive_fn(self, "asString", as_string, [])
         add_primitive_fn(self, "==", compare_strings, ["obj"])
 
         if PrimitiveStrObject._OBJ_CACHE.map is None:
