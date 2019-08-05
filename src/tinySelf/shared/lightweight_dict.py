@@ -189,7 +189,7 @@ class LightWeightDict(object):
             lwd._third_key = self._third_key
             lwd._third_value = self._third_value
         else:
-            lwd._dict = self._dict
+            lwd._dict = self._dict.copy()
 
         lwd._use_properties = self._use_properties
         lwd._use_dict = self._use_dict
