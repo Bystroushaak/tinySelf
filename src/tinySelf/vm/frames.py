@@ -175,7 +175,10 @@ class ProcessStack(object):
 
         self.frame.push(result)
 
-    def pop_down_and_cleanup_frame(self):
+    def pop_down_and_cleanup_frame(self, raise_err=False):
+        if raise_err and self.length == 1:
+            raise ValueError("Nothing to pop")
+
         self._cleanup_frame()
         self.pop_frame_down()
 
