@@ -1,4 +1,10 @@
 (|
+    init_traits = (| universe_mirror. |
+        universe_mirror: primitives mirrorOn: universe.
+
+        universe_mirror toSlot: 'traits' Add: (| |).
+    ).
+
     init_true = (| true_mirror |
         true_mirror: primitives mirrorOn: true.
 
@@ -88,6 +94,38 @@
         ).
     ).
 
+    init_lists = (| list_mirror. traits_mirror. |
+        traits_mirror: primitives mirrorOn: traits.
+        traits_mirror toSlot: 'list' Add: (|
+            do: blk = (| size. cnt. |
+                cnt: 0.
+                size: self length.
+
+                [cnt < size] whileTrue: [
+                    blk with: (self at: cnt) With: cnt.
+                    cnt: cnt + 1.
+                ].
+            ).
+
+            == other = (| |
+                #primitives interpreter setErrorHandler: [:msg. :error_process |
+                #    (primitives interpreter) restoreProcess: error_process With: false.
+                #].
+
+                ((self length) == (other length)) ifFalse: [ ^false ].
+
+                self do: [| :item. :index. |
+                    ((other at: index) == item) ifFalse: [ ^false ].
+                ].
+
+                ^ true.
+            ).
+        |).
+
+        list_mirror: primitives mirrorOn: list.
+        list_mirror toParent: 'traits' Add: traits list.
+    ).
+
     init_files = (| file_mirror |
         file_mirror: primitives mirrorOn: primitives os files.
 
@@ -104,6 +142,7 @@
     ).
 
     init = (||
+        init_traits.
         init_true.
         init_false.
         init_nil.
@@ -111,6 +150,7 @@
         init_asserts.
         init_blocks.
         init_dicts.
+        init_lists.
         init_files.
     ).
 |) init.
