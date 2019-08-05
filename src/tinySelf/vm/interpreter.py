@@ -187,9 +187,12 @@ class Interpreter(ProcessCycler):
         method_obj = self.process.frame.tmp_method_obj_reference
         if method_obj is not None and method_obj.is_block:
             block_scope_parent = method_obj.meta_get_parent("*")
+            original_block_scope_parent = block_scope_parent
+
+            # the problem is somewhere here
 
             while block_scope_parent != method_obj:
-                self.process.pop_down_and_cleanup_frame()
+                self.process.pop_down_and_cleanup_frame(raise_err=True)
                 method_obj = self.process.frame.tmp_method_obj_reference
 
     def _put_together_parameters(self, parameter_names, parameters):
