@@ -193,8 +193,10 @@ class Interpreter(ProcessCycler):
                 method_obj = self.process.frame.tmp_method_obj_reference
 
     def _put_together_parameters(self, parameter_names, parameters):
-        if len(parameter_names) < len(parameters):
-            raise ValueError("Too many parameters!")  # TODO: rewrite to internal error
+        # this is actually probably not needed as it allows calling messages
+        # with parameters they don't have to react to
+        # if len(parameter_names) < len(parameters):
+        #     raise ValueError("Too many parameters!")
 
         # add padding of unspecified parameter values with `nil`
         if len(parameter_names) > len(parameters):
