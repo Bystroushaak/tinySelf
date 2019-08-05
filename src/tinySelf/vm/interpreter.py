@@ -246,7 +246,7 @@ class Interpreter(ProcessCycler):
 
         if prev_scope_parent is not None:
             prev_scope_parents_parent = prev_scope_parent.meta_get_parent("*", None)
-            if prev_scope_parents_parent and \
+            if prev_scope_parents_parent is not None and \
                prev_scope_parent.scope_parent == prev_scope_parents_parent.scope_parent:
                 parent = prev_scope_parents_parent
             else:
