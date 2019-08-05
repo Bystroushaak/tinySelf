@@ -357,16 +357,16 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
         if self._slot_values is None:
             self._slot_values = []
 
-        if not check_duplicates:
-            self.map.add_slot(slot_name, len(self._slot_values))
-            self._slot_values.append(value)
-            return
+        # if not check_duplicates:
+        self.map.add_slot(slot_name, len(self._slot_values))
+        self._slot_values.append(value)
 
-        if value in self._slot_values:
-            self.map.add_slot(slot_name, self._slot_values.index(value))
-        else:
-            self.map.add_slot(slot_name, len(self._slot_values))
-            self._slot_values.append(value)
+        # this doesn't work at all with other meta methods, wtf was I thinking?
+        #if value in self._slot_values:
+        #    self.map.add_slot(slot_name, self._slot_values.index(value))
+        #else:
+        #    self.map.add_slot(slot_name, len(self._slot_values))
+        #    self._slot_values.append(value)
 
     def meta_remove_slot(self, slot_name):
         if not self.map._slots.has_key(slot_name):

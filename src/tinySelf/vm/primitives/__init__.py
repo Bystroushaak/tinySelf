@@ -71,12 +71,12 @@ def _create_block_trait_prototype():
 
     placer = PrimitiveNilObject()
 
-    obj.meta_add_slot("value", placer, check_duplicates=True)
-    obj.meta_add_slot("with:", placer, check_duplicates=True)
-    obj.meta_add_slot("with:With:", placer, check_duplicates=True)
-    obj.meta_add_slot("with:With:With:", placer, check_duplicates=True)
-    obj.meta_add_slot("with:With:With:With:", placer, check_duplicates=True)
-    obj.meta_add_slot("withAll:", placer, check_duplicates=True)
+    obj.meta_add_slot("value", placer)#, check_duplicates=True)
+    obj.meta_add_slot("with:", placer)#, check_duplicates=True)
+    obj.meta_add_slot("with:With:", placer)#, check_duplicates=True)
+    obj.meta_add_slot("with:With:With:", placer)#, check_duplicates=True)
+    obj.meta_add_slot("with:With:With:With:", placer)#, check_duplicates=True)
+    obj.meta_add_slot("withAll:", placer)#, check_duplicates=True)
 
     add_primitive_fn(obj, "asString", _print_block_source, [])
     add_primitive_fn(obj, "getLineNumber", _get_lineno, [])
