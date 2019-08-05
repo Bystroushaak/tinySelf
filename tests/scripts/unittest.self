@@ -194,11 +194,15 @@
     ).
 
     test_primitive_list = (| l. other. reversed. |
-        l: primitives list clone.
+        l: list clone.
+        other: list clone.
+
+        # test `at:` and `length`
         l append: 1.
         assert: [ (l at: 0) == 1 ].
         assert: [ (l length) == 1 ].
 
+        # test `at:` and `at:Put:`
         l append: 2.
         assert: [ (l at: 1) == 2 ].
         l at: 0 Put: 0.
@@ -208,15 +212,49 @@
         other append: 'a'.
         other append: 'b'.
 
+        # test `extend:`
         l extend: other.
         assert: [ (l at: 0) == 0 ].
         assert: [ (l at: 1) == 2 ].
         assert: [ (l at: 2) == 'a' ].
         assert: [ (l at: 3) == 'b' ].
 
+        # test `reversed`
         reversed: other reversed.
         assert: [ (reversed at: 0) == 'b' ].
         assert: [ (reversed at: 1) == 'a' ].
+
+        # test `clear`
+        l clear.
+        other clear.
+
+        # test `do:`
+        other: 0.
+        l clear;
+            append: 1;
+            append: 2.
+
+        l do: [| :item |
+            other: other + item.
+        ].
+        assert: [ other == 3 ].
+
+        # test `==`
+        l clear.
+        other: list clone.
+
+        l append: 1.
+        l append: "s".
+
+        other append: 1.
+        other append: "s".
+
+        #assert: [ l == other ].
+
+        # test also negation
+        other at: 1 Put: "x".
+
+        assertNot: [ l == other ].
     ).
 
     test_primitive_dict = (| d. custom_obj. another_obj. did_run. ret_fail. |
