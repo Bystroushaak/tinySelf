@@ -108,9 +108,9 @@
             ).
 
             == other = (| |
-                #primitives interpreter setErrorHandler: [:msg. :error_process |
-                #    (primitives interpreter) restoreProcess: error_process With: false.
-                #].
+                primitives interpreter setErrorHandler: [:msg. :error_process |
+                    (primitives interpreter) restoreProcess: error_process With: false.
+                ].
 
                 ((self length) == (other length)) ifFalse: [ ^false ].
 
