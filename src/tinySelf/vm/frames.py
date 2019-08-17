@@ -172,15 +172,13 @@ class ProcessStack(object):
         self._cleanup_frame()
         self.pop_frame_down()
 
-    def first_nonblock_self(self):  # TODO: rewrite to block's scope parent?
-        frame = self.frame
-        while frame is not None:
-            if not frame.self.is_block:
-                return frame.self
+    def first_nonblock_self(self):
+        self_obj = self.frame.self
 
-            frame = frame.prev_stack
-
-        return None
+        if self_obj.is_block:
+            return self_obj.surrounding_object
+        else:
+            return self_obj
 
     def __iter__(self):
         out = []
