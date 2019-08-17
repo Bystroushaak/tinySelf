@@ -38,6 +38,7 @@ from tinySelf.vm.code_context import FloatBox
 
 from tinySelf.vm.frames import ProcessCycler
 from tinySelf.vm.object_layout import Object
+from tinySelf.vm.object_layout import Block
 
 if not we_are_translated():
     from tinySelf.vm.debug.visualisations import obj_map_to_plantuml
@@ -184,16 +185,21 @@ class Interpreter(ProcessCycler):
         Returns:
             bool: True if the nonlocal return was triggered.
         """
-        method_obj = self.process.frame.tmp_method_obj_reference
+        method_obj = self.process.frame.self
         if method_obj is not None and method_obj.is_block:
-            block_scope_parent = method_obj.meta_get_parent("*")
-            original_block_scope_parent = block_scope_parent
+            surrounding_object = method_obj.surrounding_object
 
-            # the problem is somewhere here
+            if surrounding_object is None:
+                raise ValueError("Surrounding object is None!")
 
-            while block_scope_parent != method_obj:
+            while surrounding_object is not method_obj:
                 self.process.pop_down_and_cleanup_frame(raise_err=True)
-                method_obj = self.process.frame.tmp_method_obj_reference
+                method_obj = self.process.frame.self
+
+                if self.process.length <= 1:
+                    raise ValueError("Nothing left on stack!")
+
+            self.process.pop_down_and_cleanup_frame(raise_err=True)
 
     def _put_together_parameters(self, parameter_names, parameters):
         # this is actually probably not needed as it allows calling messages
@@ -466,9 +472,9 @@ class Interpreter(ProcessCycler):
             assert isinstance(boxed_literal, ObjBox)
 
             block = boxed_literal.value.clone()
-            obj = add_block_trait(block)
-            block.is_block = True
+            obj = add_block_trait(block)  # TODO: maybe put into the Block?
             block.scope_parent = self.process.frame.pop()
+            block.surrounding_object = self.process.first_nonblock_self()
 
         else:
             raise ValueError("Unknown literal type; %s" % literal_type)
