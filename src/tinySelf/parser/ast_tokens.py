@@ -26,6 +26,7 @@ from tinySelf.vm.bytecodes import SLOT_PARENT
 
 from tinySelf.vm.code_context import CodeContext
 from tinySelf.vm.object_layout import Object as ObjectRepresentation
+from tinySelf.vm.object_layout import Block as BlockRepresentation
 
 from tinySelf.shared.string_repr import escape
 from tinySelf.shared.string_repr import unescape_esc_seq
@@ -245,7 +246,7 @@ class Block(Object):
         if context is None:
             context = CodeContext()
 
-        block = ObjectRepresentation()
+        block = BlockRepresentation()
         block.meta_set_ast(self)
         block.meta_set_parameters(self.params)
 
