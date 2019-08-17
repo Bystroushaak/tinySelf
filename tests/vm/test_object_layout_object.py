@@ -30,19 +30,19 @@ def test_meta_add_slot_dont_check_duplicates():
     assert len(o._slot_values) == 3
 
 
-def test_meta_add_slot_do_check_duplicates():
-    xx = PrimitiveStrObject("xx")
-    zz = PrimitiveStrObject("zz")
-
-    o = Object()
-    assert not o._slot_values
-
-    o.meta_add_slot("xx", xx)
-    o.meta_add_slot("zz", zz)
-    assert len(o._slot_values) == 2
-
-    o.meta_add_slot("xx2", xx, check_duplicates=True)
-    assert len(o._slot_values) == 2
+# def test_meta_add_slot_do_check_duplicates():
+#     xx = PrimitiveStrObject("xx")
+#     zz = PrimitiveStrObject("zz")
+#
+#     o = Object()
+#     assert not o._slot_values
+#
+#     o.meta_add_slot("xx", xx)
+#     o.meta_add_slot("zz", zz)
+#     assert len(o._slot_values) == 2
+#
+#     o.meta_add_slot("xx2", xx, check_duplicates=True)
+#     assert len(o._slot_values) == 2
 
 
 def test_set_slot():
