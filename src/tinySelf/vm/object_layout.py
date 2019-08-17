@@ -254,9 +254,6 @@ class _BareObject(object):
         return clone
 
     def __str__(self):
-        if self.map.is_block:
-            return "Block(%s)" % ", ".join(self.map._slots.keys())
-
         return "Object(%s)" % ", ".join(self.map._slots.keys())
 
 
@@ -279,11 +276,7 @@ class _ObjectWithMapEncapsulation(_BareObject):
 
     @property
     def is_block(self):
-        return self.map.is_block
-
-    @is_block.setter
-    def is_block(self, is_block):
-        self.map.is_block = is_block
+        return False
 
     @property
     def parameters(self):
@@ -456,6 +449,37 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 class Object(_ObjectWithMetaOperations):
     pass
 
+    @property
+    def id(self):
+        return id(self)
+
+
+class Block(Object):
+    def __init__(self, obj_map=None):
+        Object.__init__(self, obj_map)
+
+        self.surrounding_object = None
+
+    @property
+    def is_block(self):
+        return True
+
+    def __str__(self):
+        return "Block(%s)" % ", ".join(self.map._slots.keys())
+
+    # TODO: refactor to using self.__class__ or something (check rpython
+    # compilation)
+    def clone(self):
+        obj = Block(obj_map=self.map)
+
+        self._copy_internals_to_clone(obj)
+
+        obj.scope_parent = self.scope_parent
+        obj.surrounding_object = self.surrounding_object
+        self.map._used_in_multiple_objects = True
+
+        return obj
+
 
 class ObjectMap(object):
     def __init__(self):
@@ -466,8 +490,6 @@ class ObjectMap(object):
         self._version = 0
         self._parent_cache = None
         self._last_number_of_visited_objects = OBJ_MAP_LAST_NUMBER_OF_VISITED_OBJS
-
-        self.is_block = False
 
         self.ast = None
         self.code_context = None
@@ -482,7 +504,6 @@ class ObjectMap(object):
         new_map._parent_slots = self._parent_slots.copy()
 
         new_map.ast = self.ast
-        new_map.is_block = self.is_block
         new_map.parameters = self.parameters[:]
 
         new_map._version = self._version
