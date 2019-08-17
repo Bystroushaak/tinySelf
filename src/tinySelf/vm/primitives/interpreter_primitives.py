@@ -295,7 +295,6 @@ def eval_immediately(interpreter, scope_parent, self_obj, method,
         prev_scope_parent=method.scope_parent,
     )
     interpreter.process.frame.self = self_obj
-    interpreter.process.frame.tmp_method_obj_reference = method
 
     interpreter.interpret()
 

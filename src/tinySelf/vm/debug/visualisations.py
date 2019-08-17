@@ -121,7 +121,6 @@ def _render_method_stack(cnt, method_stack):
         "code_context = %s" % method_stack.code_context,
         # "code_context.self = %s" % method_stack.code_context.self,
         "error_handler = %s" % method_stack.error_handler,
-        "tmp_method_obj_reference = %s" % method_stack.tmp_method_obj_reference,
     ])
 
     self_obj = _render_object(method_stack.self)
