@@ -249,7 +249,7 @@
         other append: 1.
         other append: "s".
 
-        #assert: [ l == other ].
+        assert: [ l == other ].
 
         # test also negation
         other at: 1 Put: "x".
