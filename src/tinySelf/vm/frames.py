@@ -27,9 +27,6 @@ class MethodStackLinkedList(object):
         self.self = None
         self.source_path = ""
 
-        # used to remove scope parent from the method later
-        self.tmp_method_obj_reference = None
-
     def push(self, obj):
         assert isinstance(obj, Object)
         if self.length == 0:
@@ -86,9 +83,6 @@ class MethodStackPreallocatedArray(object):
         self.self = None
         self.source_path = ""
 
-        # used to remove scope parent from the method later
-        self.tmp_method_obj_reference = None
-
     def push(self, obj):
         self._stack[self.length] = obj
         self.length += 1
@@ -135,7 +129,6 @@ class ProcessStack(object):
     def push_frame(self, code_context, method_obj):
         self.frame = MethodStack(code_context, prev_stack=self.frame)
         self.frame.self = method_obj
-        self.frame.tmp_method_obj_reference = method_obj
 
         self.length += 1
 
@@ -146,12 +139,9 @@ class ProcessStack(object):
         if self.frame.code_context:
             self.frame.code_context.self = None
 
-        if self.frame.tmp_method_obj_reference:
-            # blocks have local namespaces in scope_parents..
-            if not self.frame.tmp_method_obj_reference.is_block:
-                self.frame.tmp_method_obj_reference.scope_parent = None
-
-            self.frame.tmp_method_obj_reference = None
+        # blocks have local namespaces in scope_parents..
+        if self.frame.self and not self.frame.self.is_block:
+            self.frame.self.scope_parent = None
 
     def pop_frame(self):
         if self.length == 1:
@@ -182,8 +172,15 @@ class ProcessStack(object):
         self._cleanup_frame()
         self.pop_frame_down()
 
-    def as_tself_object(self):
-        return Object()
+    def first_nonblock_self(self):  # TODO: rewrite to block's scope parent?
+        frame = self.frame
+        while frame is not None:
+            if not frame.self.is_block:
+                return frame.self
+
+            frame = frame.prev_stack
+
+        return None
 
     def __iter__(self):
         out = []
