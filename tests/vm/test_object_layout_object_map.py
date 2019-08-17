@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from tinySelf.vm.object_layout import Object
+from tinySelf.vm.object_layout import Block
 from tinySelf.vm.object_layout import ObjectMap
 from tinySelf.vm.code_context import CodeContext
 
@@ -77,8 +78,7 @@ def test_clone():
 
 
 def test_clone_is_block():
-    o = Object()
-    o.is_block = True
+    o = Block()
 
     o.meta_add_parent("xe", Object())  # creates new map
 
