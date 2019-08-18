@@ -56,19 +56,35 @@
 |) init.
 
 (|
-    true_comparision = (||
+    test_cascading_operator = (| o. |
+        o: (| state <- 0.
+              addOne = (|| state: state + 1. ). |).
+
+        assert: [ o state == 0 ].
+
+        o addOne.
+
+        assert: [o state == 1 ].
+
+        o addOne;
+          addOne.
+
+        assert: [o state == 3 ].
+    ).
+
+    test_true_comparision = (||
         assert: [true is: true].
         assertNot: [true is: false].
         assertNot: [true is: nil].
     ).
 
-    false_comparision = (||
+    test_false_comparision = (||
         assert: [false is: false].
         assertNot: [false is: true].
         assertNot: [false is: nil].
     ).
 
-    nil_comparision = (||
+    test_nil_comparision = (||
         assert: [nil is: nil].
         assertNot: [nil is: true].
         assertNot: [nil is: false].
@@ -354,9 +370,10 @@
     ).
 
     run_tests = (||
-        true_comparision.
-        false_comparision.
-        nil_comparision.
+        test_cascading_operator.
+        test_true_comparision.
+        test_false_comparision.
+        test_nil_comparision.
         test_eval.
         test_do_not_understand.
         test_primitive_int.
