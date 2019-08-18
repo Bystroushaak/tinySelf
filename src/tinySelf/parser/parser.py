@@ -314,16 +314,16 @@ def parse_cascade_messages(msgs):
 
 @pg.production('cascade : message CASCADE message')
 def cascade(p):
-    f = p[0]
-    s = p[2]
+    first_msg = p[0]
+    second_msg = p[2]
 
-    if isinstance(f, Send):
+    if isinstance(first_msg, Send):
         return Cascade(
-            obj=f.obj,
-            msgs=parse_cascade_messages([f.msg, s])
+            obj=first_msg.obj,
+            msgs=parse_cascade_messages([first_msg.msg, second_msg])
         )
 
-    return Cascade(obj=Self(), msgs=parse_cascade_messages([f, s]))
+    return Cascade(obj=Self(), msgs=parse_cascade_messages([first_msg, second_msg]))
 
 
 @pg.production('cascade : message CASCADE cascade')
