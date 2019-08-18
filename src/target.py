@@ -67,9 +67,12 @@ def run_script(path):
     if process.finished_with_error:
         ewrite("Error: ")
         ewriteln(unescape_esc_seq(process.result.__str__()))
-        ewriteln("\n")
-        ewriteln("CodeContext debug:")
-        ewriteln(process.frame.code_context.debug_repr())
+
+        if not "disassembled" in process.result.__str__():
+            # TODO: can this even happen?
+            ewriteln("\n")
+            ewriteln("CodeContext debug:")
+            ewriteln(process.frame.code_context.debug_repr())
 
         return 1
 
