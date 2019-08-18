@@ -126,7 +126,7 @@ class Self(BaseBox):
         return context
 
     def __eq__(self, obj):
-        return isinstance(obj, self.__class__)
+        return isinstance(obj, Self)
 
     def __ne__(self, obj):
         return not self.__eq__(obj)

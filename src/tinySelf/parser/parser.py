@@ -300,11 +300,11 @@ def parse_cascade_messages(msgs):
     out = []
     for msg in msgs:
         if (isinstance(msg, Cascade) or isinstance(msg, Send)):
-            if isinstance(msg, Cascade) and msg.obj == Self():
+            if isinstance(msg, Cascade) and isinstance(msg.obj, Self):
                 out.extend(msg.msgs)
                 continue
 
-            if isinstance(msg, Send) and msg.obj == Self():
+            if isinstance(msg, Send) and isinstance(msg.obj, Self):
                 msg = msg.msg
 
         out.append(msg)
