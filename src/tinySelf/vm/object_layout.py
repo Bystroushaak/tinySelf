@@ -447,8 +447,6 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 
 
 class Object(_ObjectWithMetaOperations):
-    pass
-
     @property
     def id(self):
         return id(self)
