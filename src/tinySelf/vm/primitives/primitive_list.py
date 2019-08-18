@@ -70,7 +70,7 @@ def list_reversed(interpreter, self, parameters):
 def list_clear(interpreter, pseudo_self, parameters):
     assert isinstance(pseudo_self, PrimitiveListObject)
 
-    pseudo_self.value[:] = []
+    pseudo_self.value = []
 
     return pseudo_self
 

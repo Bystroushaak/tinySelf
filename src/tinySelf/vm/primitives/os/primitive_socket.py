@@ -22,7 +22,7 @@ def socket_recv(interpreter, pseudo_self, parameters):
     assert isinstance(size_obj, PrimitiveIntObject)
     assert isinstance(pseudo_self, PrimitiveSocketObject)
 
-    return PrimitiveStrObject(pseudo_self.value.recv(size_obj.value))
+    return PrimitiveStrObject(pseudo_self.value.recv(int(size_obj.value)))
 
 
 def socket_sendall(interpreter, pseudo_self, parameters):
@@ -78,7 +78,7 @@ def open_socket(interpreter, pseudo_self, parameters):
     assert isinstance(port_obj, PrimitiveIntObject)
 
     # TODO: also add for IPv6 and unix
-    addr = INETAddress(host_obj.value, port_obj.value)
+    addr = INETAddress(host_obj.value, int(port_obj.value))
     socket = RSocket(AF_INET, SOCK_STREAM)
     socket.connect(addr)
 
