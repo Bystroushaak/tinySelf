@@ -23,3 +23,7 @@ See
 
 * https://github.com/Bystroushaak/tinySelf/projects/1
 * https://github.com/Bystroushaak/tinySelf/projects/2
+
+Progress towards the first beta version:
+
+.. image:: http://kitakitsune.org/sync/visualisations/tinySelf/tinySelf_todo.jpg
