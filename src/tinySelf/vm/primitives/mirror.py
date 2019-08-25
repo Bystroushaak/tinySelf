@@ -12,7 +12,7 @@ def primitive_add_slot(interpreter, pseudo_self, parameters):
     assert isinstance(val, Object)
 
     pseudo_self.obj_to_mirror.meta_add_slot(name.value, val)
-    val.scope_parent = None  # old scope_parent is no longer valid
+    val.scope_parent = pseudo_self.obj_to_mirror
 
     return pseudo_self.obj_to_mirror
 

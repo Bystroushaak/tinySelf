@@ -84,14 +84,18 @@
         ).
     ).
 
-    init_dicts = (| dict_mirror |
-        dict_mirror: primitives mirrorOn: dict.
+    init_dicts = (| traits_mirror. dict_mirror. |
+        traits_mirror: primitives mirrorOn: traits.
+        traits_mirror toSlot: 'dict' Add: (|
+            at: key Fail: fail_blck = (| result |
+                result: (self at: key).
+                (result is: nil) ifTrue: [ ^ fail_blck value ].
+                ^result.
+            ).
+        |).
 
-        dict_mirror toSlot: 'at:Fail:' Add: (| :key. :fail_blck. result |
-            result: (self at: key).
-            (result is: nil) ifTrue: [ ^ fail_blck value ].
-            ^result.
-        ).
+        dict_mirror: primitives mirrorOn: dict.
+        dict_mirror toParent: 'traits' Add: traits dict.
     ).
 
     init_lists = (| list_mirror. traits_mirror. |

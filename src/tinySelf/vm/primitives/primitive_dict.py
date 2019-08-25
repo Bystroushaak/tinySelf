@@ -111,23 +111,6 @@ def dict_at(interpreter, self, parameters):
     return result
 
 
-def dict_at_fail(interpreter, self, parameters):
-    key = parameters[0]
-    fail = parameters[1]
-    assert isinstance(key, Object)
-    assert isinstance(self, PrimitiveDictObject)
-
-    GLOBAL_CONTEXT.interpreter = interpreter
-    GLOBAL_CONTEXT.scope_parent = interpreter.process.frame.self
-
-    result = self.value.get(key, None)
-
-    if result is None:
-        return fail.get_slot("value")
-
-    return result
-
-
 def dict_length(interpreter, self, parameters):
     assert isinstance(self, PrimitiveDictObject)
 
