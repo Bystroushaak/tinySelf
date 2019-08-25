@@ -27,3 +27,4 @@ See
 Progress towards the first beta version:
 
 .. image:: http://kitakitsune.org/sync/visualisations/tinySelf/tinySelf_todo.jpg
+   :target: http://kitakitsune.org/sync/visualisations/tinySelf/tinySelf_todo.jpg
