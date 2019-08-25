@@ -1,61 +1,4 @@
 (|
-    init_true = (| true_mirror |
-        true_mirror: primitives mirrorOn: true.
-
-        true_mirror toSlot: 'ifTrue:' Add: (| :blck | blck value).
-        true_mirror toSlot: 'ifFalse:' Add: (| :blck | nil.).
-        true_mirror toSlot: 'ifTrue:False:' Add: (| :true_blck. :false_blck |
-            true_blck value
-        ).
-        true_mirror toSlot: 'ifFalse:True:' Add: (| :false_blck. :true_blck |
-            true_blck value.
-        ).
-    ).
-    init_false = (| false_mirror |
-        false_mirror: primitives mirrorOn: false.
-
-        false_mirror toSlot: 'ifTrue:' Add: (| :blck | nil).
-        false_mirror toSlot: 'ifFalse:' Add: (| :blck | blck value.).
-        false_mirror toSlot: 'ifTrue:False:' Add: (| :true_blck. :false_blck |
-            false_blck value
-        ).
-        false_mirror toSlot: 'ifFalse:True:' Add: (| :false_blck. :true_blck |
-            false_blck value.
-        ).
-    ).
-
-    init = (| universe_mirror. block_traits_mirror |
-        init_true.
-        init_false.
-
-        universe_mirror: primitives mirrorOn: universe.
-        universe_mirror toSlot: 'assert:' Add: (| :what |
-            what value ifFalse: [
-                primitives interpreter error: (
-                    '`assert:` failed (line ' + (what getLineNumber asString) + '):\n\n\t' + (what asString)
-                )
-            ].
-            true.
-        ).
-        universe_mirror toSlot: 'assertNot:' Add: (| :what |
-            what value ifTrue: [
-                primitives interpreter error: (
-                    '`assertNot:` failed (line ' + (what getLineNumber asString) + '):\n\n\t' + (what asString)
-                )
-            ].
-            true.
-        ).
-
-        block_traits_mirror: primitives mirrorOn: block_traits.
-        block_traits_mirror toSlot: 'whileTrue:' Add: (| :blck |
-            self value ifFalse: [ ^nil ].
-            blck value.
-            ^self whileTrue: blck.
-        ).
-    ).
-|) init.
-
-(|
     test_cascading_operator = (| o. |
         o: (| state <- 0.
               addOne = (|| state: state + 1. ). |).
@@ -72,19 +15,19 @@
         assert: [o state == 3 ].
     ).
 
-    test_true_comparision = (||
+    test_primitive_true = (||
         assert: [true is: true].
         assertNot: [true is: false].
         assertNot: [true is: nil].
     ).
 
-    test_false_comparision = (||
+    test_primitive_false = (||
         assert: [false is: false].
         assertNot: [false is: true].
         assertNot: [false is: nil].
     ).
 
-    test_nil_comparision = (||
+    test_primitive_nil = (||
         assert: [nil is: nil].
         assertNot: [nil is: true].
         assertNot: [nil is: false].
@@ -371,9 +314,9 @@
 
     run_tests = (||
         test_cascading_operator.
-        test_true_comparision.
-        test_false_comparision.
-        test_nil_comparision.
+        test_primitive_true.
+        test_primitive_false.
+        test_primitive_nil.
         test_eval.
         test_do_not_understand.
         test_primitive_int.
