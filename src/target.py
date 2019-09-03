@@ -4,8 +4,9 @@ import os
 import os.path
 
 from rply import ParsingError
-from rpython.jit.codewriter.policy import JitPolicy
+from rpython.rlib.objectmodel import we_are_translated
 from rpython.rlib.compilerinfo import get_compiler_info
+from rpython.jit.codewriter.policy import JitPolicy
 
 from tinySelf.r_io import ewrite
 from tinySelf.r_io import writeln
@@ -105,14 +106,23 @@ def _read_stdlib():
 
 def show_ast(path):
     with open(path) as f:
-        try:
-            for expr in lex_and_parse(f.read()):
+        expressions = lex_and_parse(f.read())
+
+    if not we_are_translated():
+        from tinySelf.vm.debug.pretty_print_ast import pretty_print_ast
+
+    try:
+        for expr in expressions:
+            if we_are_translated():
                 writeln(expr.__str__())
-        except ParsingError as e:
-            ewriteln("Parse error.")
-            if e.message:
-                ewriteln(e.message)
-            return 1
+            else:
+                writeln(pretty_print_ast(expr.__str__()))
+
+    except ParsingError as e:
+        ewriteln("Parse error.")
+        if e.message:
+            ewriteln(e.message)
+        return 1
 
     return 0
 
