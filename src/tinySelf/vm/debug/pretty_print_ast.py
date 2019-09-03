@@ -62,6 +62,3 @@ def _contains_substructures(str):
             return True
 
     return False
-
-
-if __name__ == '__main__':
