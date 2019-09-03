@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 def pretty_print_ast(source):
+    """
+    I am really sorry for bringing yet another hacked-together state machine
+    parser on the world, but I really needed it and oh god, sorry.
+
+    If this wasn't written in the rpython, I could have tried to use something
+    else.
+    """
     output = ""
     indentation = 0
 
@@ -28,6 +35,7 @@ def pretty_print_ast(source):
             output += "\n"
             output += "  " * indentation
             output = output[:-1]
+
         elif char == "(" or char == "{" or char == "[":
             closed_at = source[i:].find(closing_char[char])
             structure_str = source[i + 1 : i + closed_at]
@@ -49,8 +57,6 @@ def pretty_print_ast(source):
 def _contains_substructures(str):
     substructure_chars = "({[]}),\n"
 
-    print ">>>%s<<<" % str
-
     for char in substructure_chars:
         if char in str:
             return True
@@ -59,5 +65,3 @@ def _contains_substructures(str):
 
 
 if __name__ == '__main__':
-    source = """Send(obj=Object(slots={test_while_100: Object(slots={i: IntNumber(0), i:: AssignmentPrimitive()}, code=[Send(obj=Block(code=[Send(obj=Send(obj=Self(), msg=Message(i)), msg=BinaryMessage(name=<, parameter=IntNumber(1)))]), msg=KeywordMessage(name=whileTrue:, parameters=[Block(code=[Send(obj=Self(), msg=KeywordMessage(name=i:, parameters=[Send(obj=Send(obj=Self(), msg=Message(i)), msg=BinaryMessage(name=+, parameter=IntNumber(1)))])), Send(obj=Self(), msg=Message(false))])])), Send(obj=Send(obj=Send(obj=Self(), msg=Message(i)), msg=Message(asString)), msg=Message(printLine))]), test_another: Object(slots={x: Nil(), x:: AssignmentPrimitive(), brekeke: Nil(), brekeke:: AssignmentPrimitive()}, code=[Send(obj=Self(), msg=KeywordMessage(name=x:, parameters=[IntNumber(0)])), Send(obj='another', msg=Message(printLine)), Send(obj=Self(), msg=Message(brekeke)), Send(obj=Block(code=[Send(obj=Send(obj=Self(), msg=Message(x)), msg=BinaryMessage(name=<, parameter=IntNumber(2)))]), msg=KeywordMessage(name=whileTrue:, parameters=[Block(code=[Send(obj=Self(), msg=KeywordMessage(name=x:, parameters=[Send(obj=Send(obj=Self(), msg=Message(x)), msg=BinaryMessage(name=+, parameter=IntNumber(1)))])), Send(obj=Self(), msg=Message(nil))])])), Send(obj=Send(obj=Send(obj=Self(), msg=Message(x)), msg=Message(asString)), msg=Message(printLine))]), test_while: Object(code=[Send(obj=Self(), msg=Message(test_while_100)), Send(obj=Self(), msg=Message(test_another))])}), msg=Message(test_while))"""
-    print(pretty_print_ast(source))
