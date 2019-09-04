@@ -17,22 +17,11 @@ def is_nil(interpreter, self, parameters):
         return PrimitiveFalseObject()
 
 
-def print_nil(interpreter, self, parameters):
-    assert isinstance(self, PrimitiveNilObjectSingleton)
-
-    write("nil")
-
-    from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
-    return PrimitiveStrObject("nil")
-
-
 class PrimitiveNilObjectSingleton(Object):
     def __init__(self):
         Object.__init__(self)
 
-        add_primitive_fn(self, "==", is_nil, ["obj"])
         add_primitive_fn(self, "is:", is_nil, ["obj"])
-        add_primitive_fn(self, "print", print_nil, [])
 
     def clone(self):
         return self
