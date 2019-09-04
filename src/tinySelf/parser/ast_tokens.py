@@ -277,7 +277,6 @@ class Block(Object):
 
         return context
 
-
 class IntNumber(BaseBox):
     def __init__(self, value):
         self.value = value
