@@ -23,6 +23,9 @@ from tinySelf.vm.primitives.os import get_primitive_os
 
 from tinySelf.vm.primitives.primitive_time import get_primitive_time_object
 
+from tinySelf.vm.primitives.block_traits import add_block_trait
+from tinySelf.vm.primitives.block_traits import _USER_EDITABLE_BLOCK_TRAIT
+
 
 class AssignmentPrimitive(Object):
     def __init__(self, real_parent=None):
@@ -43,62 +46,6 @@ class AssignmentPrimitive(Object):
 
     def __str__(self):
         return "AssignmentPrimitive()"
-
-
-class BlockTrait(Object):
-    pass
-
-
-_USER_EDITABLE_BLOCK_TRAIT = BlockTrait()
-
-
-def _print_block_source(interpreter, block_obj, parameters):
-    ast = block_obj.get_slot("value").ast
-
-    if ast is not None:
-        return PrimitiveStrObject(ast.source_pos.source_snippet)
-
-    return PrimitiveStrObject(block_obj.__str__())
-
-
-def _get_lineno(interpreter, block_obj, parameters):
-    ast = block_obj.get_slot("value").ast
-    return PrimitiveIntObject(ast.source_pos.start_line)
-
-
-def _create_block_trait_prototype():
-    obj = Object()
-
-    placer = PrimitiveNilObject()
-
-    obj.meta_add_slot("value", placer)#, check_duplicates=True)
-    obj.meta_add_slot("with:", placer)#, check_duplicates=True)
-    obj.meta_add_slot("with:With:", placer)#, check_duplicates=True)
-    obj.meta_add_slot("with:With:With:", placer)#, check_duplicates=True)
-    obj.meta_add_slot("with:With:With:With:", placer)#, check_duplicates=True)
-    obj.meta_add_slot("withAll:", placer)#, check_duplicates=True)
-
-    add_primitive_fn(obj, "asString", _print_block_source, [])
-    add_primitive_fn(obj, "getLineNumber", _get_lineno, [])
-
-    obj.scope_parent = _USER_EDITABLE_BLOCK_TRAIT
-
-    return obj
-
-
-_BLOCK_TRAIT_PROTOTYPE = _create_block_trait_prototype()
-
-
-def add_block_trait(block):
-    obj = _BLOCK_TRAIT_PROTOTYPE.clone()
-    obj.set_slot("value", block)
-    obj.set_slot("with:", block)
-    obj.set_slot("with:With:", block)
-    obj.set_slot("with:With:With:", block)
-    obj.set_slot("with:With:With:With:", block)
-    obj.set_slot("withAll:", block)
-
-    return obj
 
 
 def _create_mirror(interpreter, self, parameters):
@@ -123,8 +70,9 @@ def get_primitives():
     primitives.meta_add_slot("list", PrimitiveListObject([]))
     primitives.meta_add_slot("dict", PrimitiveDictObject(ObjectDict.copy()))
 
-    # TODO: move to `traits block`
-    primitives.meta_add_slot("block_traits", _USER_EDITABLE_BLOCK_TRAIT)
+    traits = Object()
+    primitives.meta_add_slot("traits", traits)
+    traits.meta_add_slot("block", _USER_EDITABLE_BLOCK_TRAIT)
 
     primitives.meta_add_slot("os", get_primitive_os())
     primitives.meta_add_slot("time", get_primitive_time_object())
