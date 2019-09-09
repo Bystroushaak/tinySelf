@@ -25,6 +25,8 @@ class VersionedObject(object):
 
 
 class _BareObject(object):
+    _id_counter = 0
+
     def __init__(self, obj_map=None):
         self.map = ObjectMap() if obj_map is None else obj_map
         self.scope_parent = None
@@ -33,6 +35,10 @@ class _BareObject(object):
 
         self._parent_slot_values = None
         self._slot_values = None
+
+        # debug section
+        self._id = _BareObject._id_counter
+        _BareObject._id_counter += 1
 
     @property
     def has_code(self):
@@ -246,10 +252,11 @@ class _BareObject(object):
     def _copy_with_primitives(self, clone):
         self._copy_internals_to_clone(clone)
 
-        for cnt, obj in enumerate(self._slot_values):
-            if obj.has_primitive_code:
-                clone._slot_values[cnt] = obj.clone()
-                clone._slot_values[cnt].scope_parent = clone
+        if self._slot_values is not None:
+            for cnt, obj in enumerate(self._slot_values):
+                if obj.has_primitive_code:
+                    clone._slot_values[cnt] = obj.clone()
+                    clone._slot_values[cnt].scope_parent = clone
 
         return clone
 
@@ -449,7 +456,8 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 class Object(_ObjectWithMetaOperations):
     @property
     def id(self):
-        return id(self)
+        # return id(self)
+        return self._id
 
 
 class Block(Object):
