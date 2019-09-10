@@ -452,7 +452,6 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
         self.map.code_context = code_context
 
 
-
 class Object(_ObjectWithMetaOperations):
     @property
     def id(self):
@@ -485,6 +484,28 @@ class Block(Object):
         self.map._used_in_multiple_objects = True
 
         return obj
+
+
+class IntermediateParamsObject(Object):
+    def __init__(self, obj_map=None):
+        Object.__init__(self, obj_map)
+
+        self.original_scope_parent = None
+
+    # TODO: refactor to using self.__class__ or something (check rpython
+    # compilation)
+    def clone(self):
+        obj = IntermediateParamsObject(obj_map=self.map)
+
+        self._copy_internals_to_clone(obj)
+
+        obj.scope_parent = self.scope_parent
+        self.map._used_in_multiple_objects = True
+
+        return obj
+
+    def __str__(self):
+        return "IntermediateParamsObject(%s)" % ", ".join(self.map._slots.keys())
 
 
 class ObjectMap(object):
