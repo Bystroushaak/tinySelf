@@ -453,10 +453,61 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 
 
 class Object(_ObjectWithMetaOperations):
+    # TODO: probably move to some base-class
     @property
     def id(self):
-        # return id(self)
         return self._id
+
+    def debug_plantuml_repr(self, show_slots=False, _processed_ids=None):
+        if _processed_ids is None:
+            _processed_ids = set()
+
+        if self.id in _processed_ids:
+            return '', []
+        else:
+            _processed_ids.add(self.id)
+
+        name = self.__class__.__name__
+        relations = []
+        plantuml_repr = 'class %s as "%s (id: %s)" {\n' % (self.id, name, self.id)
+
+        if self.parameters:
+            plantuml_repr += '  -- parameters: --\n'
+            for parameter in self.parameters:
+                plantuml_repr += '  %s\n' % parameter
+
+        objects_to_process = []
+        if self._parent_slot_values is not None:
+            plantuml_repr += '  -- parents: --\n'
+            plantuml_repr += '  scope_parent = id(%s)\n' % self.scope_parent.id
+            for parent_name, parent in zip(self.map._parent_slots.keys(), self._parent_slot_values):
+                plantuml_repr += '  %s* = id(%s)\n' % (parent_name, parent.id)
+                objects_to_process.append([True, parent_name, parent])
+
+        if self._slot_values is not None:
+            plantuml_repr += '  -- slots: --\n'
+            for slot_name, slot in zip(self.map._slots.keys(), self._slot_values):
+                plantuml_repr += '  %s = id(%s)\n' % (slot_name, slot.id)
+
+                if show_slots:
+                    objects_to_process.append([False, slot_name, slot])
+
+        plantuml_repr += '}\n'
+
+        for is_parent, obj_name, obj in objects_to_process:
+            obj_repr, obj_links = obj.debug_plantuml_repr(show_slots, _processed_ids)
+            plantuml_repr += obj_repr
+            obj_type = "parent" if is_parent else "slot"
+            relations.append('%s --> %s: %s %s\n' % (self.id, obj.id, obj_type, obj_name))
+            relations.extend(obj_links)
+
+        if self.scope_parent:
+            relations.append('%s --> %s: scope_parent\n' % (self.id, self.scope_parent.id))
+            scope_parent_repr, links =  self.scope_parent.debug_plantuml_repr(show_slots, _processed_ids)
+            plantuml_repr += scope_parent_repr
+            relations.extend(links)
+
+        return plantuml_repr, relations
 
 
 class Block(Object):
