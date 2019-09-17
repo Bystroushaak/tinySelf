@@ -1,10 +1,4 @@
 (|
-    init_traits = (| universe_mirror. |
-        universe_mirror: primitives mirrorOn: universe.
-
-        universe_mirror toSlot: 'traits' Add: (| |).
-    ).
-
     init_true = (| true_mirror |
         true_mirror: primitives mirrorOn: true.
 
@@ -15,6 +9,21 @@
         ).
         true_mirror toSlot: 'ifFalse:True:' Add: (| :false_blck. :true_blck |
             true_blck value.
+        ).
+        true_mirror toSlot: 'print' Add: (||
+            "true" print.
+        ).
+        true_mirror toSlot: 'printLine' Add: (||
+            "true" printLine.
+        ).
+        true_mirror toSlot: 'asBool' Add: (||
+            ^ self.
+        ).
+        true_mirror toSlot: 'asString' Add: (||
+            "true".
+        ).
+        true_mirror toSlot: '==' Add: (| :other |
+            self is: other asBool.
         ).
     ).
 
@@ -29,10 +38,41 @@
         false_mirror toSlot: 'ifFalse:True:' Add: (| :false_blck. :true_blck |
             false_blck value.
         ).
+        false_mirror toSlot: 'print' Add: (||
+            "false" print.
+        ).
+        false_mirror toSlot: 'printLine' Add: (||
+            "false" printLine.
+        ).
+        false_mirror toSlot: 'asBool' Add: (||
+            self.
+        ).
+        false_mirror toSlot: 'asString' Add: (||
+            "false".
+        ).
+        false_mirror toSlot: '==' Add: (| :other |
+            self is: other asBool.
+        ).
     ).
 
     init_nil = (| nil_mirror |
-        nil.
+        nil_mirror: primitives mirrorOn: nil.
+
+        nil_mirror toSlot: 'asString' Add: (||
+            "nil".
+        ).
+        nil_mirror toSlot: 'print' Add: (||
+            "nil" print.
+        ).
+        nil_mirror toSlot: 'printLine' Add: (||
+            "nil" printLine.
+        ).
+        nil_mirror toSlot: 'asBool' Add: (||
+            false.
+        ).
+        nil_mirror toSlot: '==' Add: (| :other |
+            self is: other.
+        ).
     ).
 
     init_int = (| int_mirror |
@@ -61,7 +101,7 @@
     ).
 
     init_blocks = (| block_traits_mirror |
-        block_traits_mirror: primitives mirrorOn: block_traits.
+        block_traits_mirror: primitives mirrorOn: traits block.
         block_traits_mirror toSlot: 'whileTrue:' Add: (| :blck |
             self value ifFalse: [ ^nil ].
             blck value.
@@ -111,7 +151,7 @@
                 ].
             ).
 
-            == other = (| |
+            == other = (||
                 primitives interpreter setErrorHandler: [:msg. :error_process |
                     (primitives interpreter) restoreProcess: error_process With: false.
                 ].
@@ -122,6 +162,11 @@
                     ((other at: index) == item) ifFalse: [ ^false ].
                 ].
 
+                ^ true.
+            ).
+
+            asBool = (||
+                (self length) == 0 ifTrue: [ ^ false ].
                 ^ true.
             ).
         |).
@@ -146,7 +191,6 @@
     ).
 
     init = (||
-        init_traits.
         init_true.
         init_false.
         init_nil.
