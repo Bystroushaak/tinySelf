@@ -38,7 +38,7 @@ from tinySelf.vm.code_context import FloatBox
 
 from tinySelf.vm.frames import ProcessCycler
 from tinySelf.vm.object_layout import Object
-from tinySelf.vm.object_layout import Block
+from tinySelf.vm.object_layout import IntermediateParamsObject
 
 if not we_are_translated():
     from tinySelf.vm.debug.visualisations import obj_map_to_plantuml
@@ -49,7 +49,6 @@ NIL = PrimitiveNilObject()
 ONE_BYTECODE_LONG = 1
 TWO_BYTECODES_LONG = 2
 THREE_BYTECODES_LONG = 3
-EMPTY = Object()
 
 
 def get_printable_location(bc_index, bytecode, code_obj):
@@ -199,7 +198,6 @@ class Interpreter(ProcessCycler):
                 if self.process.length <= 1:
                     raise ValueError("Nothing left on stack!")
 
-            self.process.pop_down_and_cleanup_frame(raise_err=True)
 
     def _put_together_parameters(self, parameter_names, parameters):
         # this is actually probably not needed as it allows calling messages
@@ -242,8 +240,8 @@ class Interpreter(ProcessCycler):
             return scope_parent
 
         if method_obj.code_context._params_cache is None:
-            intermediate_obj = Object()
-            intermediate_obj.meta_add_slot("ThisIsIntermediateObj", intermediate_obj)
+            intermediate_obj = IntermediateParamsObject()
+            intermediate_obj.original_scope_parent = scope_parent
         else:
             intermediate_obj = method_obj.code_context._params_cache.clone()
 
@@ -299,6 +297,7 @@ class Interpreter(ProcessCycler):
     def _set_scope_parent_if_not_already_set(self, obj, code):
         if obj.scope_parent is None:
             obj.scope_parent = self.universe
+
 
     def _resend_to_parent(self, obj, parent_name, message_name):
         resend_parent = obj.meta_get_parent(parent_name)
