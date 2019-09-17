@@ -4,6 +4,7 @@ from tinySelf.config import USE_LINKED_LIST_METHOD_STACK
 from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.code_context import CodeContext
 from tinySelf.vm.object_layout import Object
+from tinySelf.vm.object_layout import IntermediateParamsObject
 
 
 NIL = PrimitiveNilObject()
@@ -135,12 +136,8 @@ class ProcessStack(object):
     def top_frame(self):
         return self.frame
 
-    def _cleanup_frame(self):  # TODO: remove?
-        if self.frame.code_context:
-            self.frame.code_context.self = None
-
-        # blocks have local namespaces in scope_parents..
-        if self.frame.self and not self.frame.self.is_block:
+    def _cleanup_frame(self):
+        if self.frame.self:
             self.frame.self.scope_parent = None
 
     def pop_frame(self):
