@@ -2,6 +2,7 @@
 from collections import OrderedDict
 
 from rply.token import BaseBox
+from rpython.rlib.objectmodel import we_are_translated
 
 from tinySelf.config import OBJ_MAP_LAST_NUMBER_OF_VISITED_OBJS
 from tinySelf.shared.arrays import TwoPointerArray
@@ -25,11 +26,12 @@ class VersionedObject(object):
 
 
 class _BareObject(object):
-    _id_counter = 0
+    if not we_are_translated():
+        _id_counter = 0
 
     def __init__(self, obj_map=None):
         self.map = ObjectMap() if obj_map is None else obj_map
-        self.scope_parent = None
+        self._scope_parent = None
 
         self.visited = False
 
@@ -37,8 +39,9 @@ class _BareObject(object):
         self._slot_values = None
 
         # debug section
-        self._id = _BareObject._id_counter
-        _BareObject._id_counter += 1
+        if not we_are_translated():
+            self._id = _BareObject._id_counter
+            _BareObject._id_counter += 1
 
     @property
     def scope_parent(self):
@@ -467,7 +470,10 @@ class Object(_ObjectWithMetaOperations):
     # TODO: probably move to some base-class
     @property
     def id(self):
-        return self._id
+        if not we_are_translated():
+            return self._id
+        else:
+            return id(self)
 
 
 class Block(Object):
