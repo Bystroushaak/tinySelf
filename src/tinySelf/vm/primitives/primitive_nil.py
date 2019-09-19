@@ -23,7 +23,7 @@ class PrimitiveNilObjectSingleton(Object):
 
         add_primitive_fn(self, "is:", is_nil, ["obj"])
 
-    def clone(self):
+    def clone(self, copy_obj=None):
         return self
 
     def __str__(self):

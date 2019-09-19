@@ -62,6 +62,19 @@ class _BareObject(object):
     def is_assignment_primitive(self):
         return False
 
+    def clone(self, copy_obj=None):
+        if copy_obj is None:
+            copy_obj = Object(obj_map=self.map)
+
+        assert isinstance(copy_obj, Object)
+
+        self._copy_internals_to_clone(copy_obj)
+
+        copy_obj.scope_parent = self.scope_parent
+        self.map._used_in_multiple_objects = True
+
+        return copy_obj
+
     def set_slot(self, slot_name, value):
         slot_index = self.map._slots.get(slot_name, -1)
 
@@ -240,16 +253,6 @@ class _BareObject(object):
                 return False, obj
 
         return False, self.parent_lookup(slot_name)
-
-    def clone(self):
-        obj = Object(obj_map=self.map)
-
-        self._copy_internals_to_clone(obj)
-
-        obj.scope_parent = self.scope_parent
-        self.map._used_in_multiple_objects = True
-
-        return obj
 
     def _copy_internals_to_clone(self, clone):
         """
@@ -482,16 +485,9 @@ class Block(Object):
     def __str__(self):
         return "Block(%s)" % ", ".join(self.map._slots.keys())
 
-    # TODO: refactor to using self.__class__ or something (check rpython
-    # compilation)
-    def clone(self):
-        obj = Block(obj_map=self.map)
-
-        self._copy_internals_to_clone(obj)
-
-        obj.scope_parent = self.scope_parent
+    def clone(self, copy_obj=None):
+        obj = Object.clone(self, copy_obj=Block(obj_map=self.map))
         obj.surrounding_object = self.surrounding_object
-        self.map._used_in_multiple_objects = True
 
         return obj
 
@@ -502,17 +498,8 @@ class IntermediateParamsObject(Object):
 
         self.original_scope_parent = None
 
-    # TODO: refactor to using self.__class__ or something (check rpython
-    # compilation)
-    def clone(self):
-        obj = IntermediateParamsObject(obj_map=self.map)
-
-        self._copy_internals_to_clone(obj)
-
-        obj.scope_parent = self.scope_parent
-        self.map._used_in_multiple_objects = True
-
-        return obj
+    def clone(self, copy_obj=None):
+        return Object.clone(self, copy_obj=IntermediateParamsObject(obj_map=self.map))
 
     def __str__(self):
         return "IntermediateParamsObject(%s)" % ", ".join(self.map._slots.keys())
