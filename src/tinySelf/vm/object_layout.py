@@ -58,7 +58,7 @@ class _BareObject(object):
         if slot_index == -1:
             return False
 
-        self.map._version += 1
+        self.map.inc_version()
 
         self._slot_values[slot_index] = value
         return True
@@ -349,7 +349,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 
         if self.map._slots.has_key(slot_name):
             self.set_slot(slot_name, value)
-            self.map._version += 1
+            self.map.inc_version()
             return
 
         self._clone_map_if_used_by_multiple_objects()
@@ -385,7 +385,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
     def meta_insert_slot(self, slot_index, slot_name, value):  # TODO: wtf?
         if self.map._slots.has_key(slot_name):
             self.set_slot(slot_name, value)
-            self.map._version += 1
+            self.map.inc_version()
             return
 
         self._clone_map_if_used_by_multiple_objects()
@@ -403,7 +403,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
         if self.map._parent_slots.has_key(parent_name):
             index = self.map._parent_slots[parent_name]
             self._parent_slot_values[index] = value
-            self.map._version += 1
+            self.map.inc_version()
             return
 
         self._clone_map_if_used_by_multiple_objects()
@@ -549,14 +549,14 @@ class ObjectMap(object):
         assert isinstance(index, int)
 
         self._slots[slot_name] = index
-        self._version += 1
+        self.inc_version()
 
     def remove_slot(self, slot_name):
         if slot_name not in self._slots:
             return False
 
         del self._slots[slot_name]
-        self._version += 1
+        self.inc_version()
 
         return True
 
@@ -575,19 +575,23 @@ class ObjectMap(object):
             new_slots[key] = self._slots[key]
 
         self._slots = new_slots
-        self._version += 1
+        self.inc_version()
 
     def add_parent(self, parent_name, index):
         assert isinstance(index, int)
 
         self._parent_slots[parent_name] = index
-        self._version += 1
+        self.inc_version()
 
     def remove_parent(self, parent_name):
         if not self._parent_slots.has_key(parent_name):
             return False
 
         del self._parent_slots[parent_name]
-        self._version += 1
+        self.inc_version()
 
         return True
+
+    def inc_version(self):
+        self._version += 1
+    inc_version._always_inline_ = True
