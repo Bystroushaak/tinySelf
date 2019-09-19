@@ -31,7 +31,7 @@ class _BareObject(object):
 
     def __init__(self, obj_map=None):
         self.map = ObjectMap() if obj_map is None else obj_map
-        self._scope_parent = None
+        self.scope_parent = None
 
         self.visited = False
 
@@ -44,15 +44,11 @@ class _BareObject(object):
             _BareObject._id_counter += 1
 
     @property
-    def scope_parent(self):
-        return self._scope_parent
-
-    @scope_parent.setter
-    def scope_parent(self, scope_parent):
-        if self._scope_parent is not scope_parent:
-            self.map.inc_version()
-
-        self._scope_parent = scope_parent
+    def id(self):
+        if not we_are_translated():
+            return self._id
+        else:
+            return id(self)
 
     @property
     def has_code(self):
@@ -181,6 +177,9 @@ class _BareObject(object):
             objects.append(self)
         else:
             visited_objects.append(self)
+
+        if self.scope_parent is not None:
+            objects.append(self.scope_parent)
 
         result = cached_result.result
         while len(objects) > 0:
@@ -467,13 +466,7 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 
 
 class Object(_ObjectWithMetaOperations):
-    # TODO: probably move to some base-class
-    @property
-    def id(self):
-        if not we_are_translated():
-            return self._id
-        else:
-            return id(self)
+    pass
 
 
 class Block(Object):
