@@ -41,6 +41,17 @@ class _BareObject(object):
         _BareObject._id_counter += 1
 
     @property
+    def scope_parent(self):
+        return self._scope_parent
+
+    @scope_parent.setter
+    def scope_parent(self, scope_parent):
+        if self._scope_parent is not scope_parent:
+            self.map.inc_version()
+
+        self._scope_parent = scope_parent
+
+    @property
     def has_code(self):
         return self.map.code_context is not None
 
