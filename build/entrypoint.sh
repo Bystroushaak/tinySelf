@@ -6,7 +6,7 @@ rm -rf /build/*
 rm -rf /release/*
 
 cd /pypy
-hg update 96452
+hg update 97567
 
 cd /src
 # Re-pull the repository
