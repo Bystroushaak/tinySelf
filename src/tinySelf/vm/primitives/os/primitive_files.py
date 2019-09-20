@@ -79,7 +79,7 @@ def seek_to(interpreter, pseudo_self, parameters):
 def is_closed(interpreter, pseudo_self, parameters):
     assert isinstance(pseudo_self, PrimitiveFileObject)
 
-    if pseudo_self.is_closed():
+    if pseudo_self.value.closed:
         return PrimitiveTrueObject()
 
     return PrimitiveFalseObject()
@@ -113,19 +113,8 @@ class PrimitiveFileObject(Object):
         if PrimitiveFileObject._OBJ_CACHE.map is None:
             PrimitiveFileObject._OBJ_CACHE.store(self)
 
-    def is_closed(self):
-        try:
-            self.value._check_closed()
-            return False
-        except ValueError:
-            return True
-
-        # TODO: switch when the https://bitbucket.org/pypy/pypy/pull-requests/649/
-        # is merged..
-        # status = ", closed" if self.value.closed else ""
-
     def __str__(self):
-        status = ", closed" if self.is_closed() else ""
+        status = ", closed" if self.value.closed else ""
         return "FileObject(%s%s)" % (self.path, status)
 
     def __eq__(self, obj):
