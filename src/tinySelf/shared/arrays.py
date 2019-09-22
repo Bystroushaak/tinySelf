@@ -4,7 +4,7 @@ from tinySelf.shared.code_generalization import create_copy_with_different_types
 
 class TwoPointerArray(object):
     def __init__(self, length):
-        self._length = length
+        self._allocated_length = length
         self._array = [None for _ in xrange(length)]
         self._left_pointer = 0
         self._right_pointer = 0
@@ -13,6 +13,9 @@ class TwoPointerArray(object):
         return self._right_pointer - self._left_pointer
 
     def __getitem__(self, index):
+        if index >= self._right_pointer:
+            raise IndexError()
+
         return self._array[self._left_pointer + index]
 
     def __setitem__(self, key, value):
@@ -37,10 +40,10 @@ class TwoPointerArray(object):
         return rval
 
     def append(self, item):
-        if self._right_pointer >= self._length:
+        if self._right_pointer >= self._allocated_length:
             self._array.append(item)
             self._right_pointer += 1
-            self._length += 1
+            self._allocated_length += 1
             return
 
         self._array[self._right_pointer] = item
