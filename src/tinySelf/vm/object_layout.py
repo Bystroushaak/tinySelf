@@ -22,6 +22,10 @@ class VersionedObject(object):
         self.version = obj.map._version
 
     def verify(self):
+        """
+        Returns:
+            bool: True if versioned object is still valid.
+        """
         return self.obj.map._version == self.version
 
 
@@ -87,6 +91,15 @@ class _BareObject(object):
         return True
 
     def get_slot(self, slot_name):
+        """
+        Get slot from this object only. See other methods for parent lookup.
+
+        Args:
+            slot_name (str):
+
+        Returns:
+            Object: Slot's content if found or None if not.
+        """
         if self._slot_values is None:
             return None
 
@@ -105,7 +118,7 @@ class _BareObject(object):
             slot_name (str): Name of the slot to look for.
 
         Returns:
-            obj: Object instance or None if not found.
+            Object: Object instance or None if not found.
 
         Raises:
             KeyError: If multiple slots are found.
@@ -158,6 +171,14 @@ class _BareObject(object):
         return result
 
     def _store_to_parent_cache(self, slot_name, result, visited_as_list):
+        """
+        Save slot and parent tree to the parent cache.
+
+        Args:
+            slot_name (str):
+            result (Object): Object to be cached.
+            visited_as_list (list): List of parents.
+        """
         if self.map._parent_cache is None:
             self.map._parent_cache = LightWeightDictObjects()
 
@@ -167,6 +188,16 @@ class _BareObject(object):
         )
 
     def _cached_lookup(self, slot_name):
+        """
+        Look into cache and if the parent tree is still valid, return cached
+        value.
+
+        Args:
+            slot_name (str):
+
+        Returns:
+            Object: Instance of the object or None.
+        """
         if self.map._parent_cache is None:
             return None
 
