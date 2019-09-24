@@ -67,6 +67,17 @@ class _BareObject(object):
         return False
 
     def clone(self, copy_obj=None):
+        """
+        Create a copy of this object, which will share same map with this one
+        until structured modifications are made.
+
+        Args:
+            copy_obj (Object): Pre-created copy of the object. If supplied, it
+                will be filled with data from this object.
+
+        Returns:
+            Object: Copy of this object.
+        """
         if copy_obj is None:
             copy_obj = Object(obj_map=self.map)
 
@@ -79,7 +90,18 @@ class _BareObject(object):
 
         return copy_obj
 
-    def set_slot(self, slot_name, value):
+    def set_slot(self, slot_name, value):  # TODO: is this really useful?
+        """
+        Set slot. If the slot is not present in the object, this operation
+        fails and False is returned.
+
+        Args:
+            slot_name (str):
+            value (Object):
+
+        Returns:
+            bool: True if successful.
+        """
         slot_index = self.map._slots.get(slot_name, -1)
 
         if slot_index == -1:
