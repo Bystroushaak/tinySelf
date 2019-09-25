@@ -70,7 +70,7 @@ class LightWeightDict(object):
                 self._third_key = None
                 self._third_value = None
 
-                return self.set(key, val)
+                self._dict[key] = val
 
         else:
             self._dict[key] = val
