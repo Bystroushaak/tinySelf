@@ -4,12 +4,12 @@ import pytest
 from tinySelf.shared.lightweight_dict import LightWeightDict
 
 
-def test_lightweight_dict_init():
-    lwd = LightWeightDict()
+@pytest.fixture()
+def lwd():
+    return LightWeightDict()
 
 
-def test_lightweight_dict_one():
-    lwd = LightWeightDict()
+def test_lightweight_dict_one(lwd):
     lwd["xe"] = 1
 
     assert lwd["xe"] == 1
@@ -19,7 +19,6 @@ def test_lightweight_dict_one():
 
     assert lwd.get("a") is None
     assert lwd.get("a", 1) is 1
-
 
     assert lwd.keys() == ["xe"]
     assert lwd.values() == [1]
@@ -45,8 +44,7 @@ def test_lightweight_dict_one():
     assert lwd.values() == [2, 3]
 
 
-def test_lightweight_dict_four():
-    lwd = LightWeightDict()
+def test_lightweight_dict_four(lwd):
     lwd["a"] = 1
     lwd["b"] = 2
     lwd["c"] = 3
@@ -76,8 +74,7 @@ def test_lightweight_dict_four():
     assert lwd.values() == [1, 3, 4]
 
 
-def test_lightweight_dict_more():
-    lwd = LightWeightDict()
+def test_lightweight_dict_more(lwd):
     lwd._max_array_items = 4
     lwd["a"] = 1
     lwd["b"] = 2
@@ -112,3 +109,23 @@ def test_lightweight_dict_more():
 
     assert lwd.keys() == ["a", "c", "d", "e", "f"]
     assert lwd.values() == [1, 3, 4, 5, 6]
+
+
+def test_lightweight_dict_set_multiple_times(lwd):
+    lwd["a"] = 1
+    assert lwd["a"] == 1
+
+    lwd["a"] = 2
+    assert lwd["a"] == 2
+
+
+def test_lightweight_dict_set_multiple_times_two_keys(lwd):
+    lwd["a"] = 1
+    lwd["b"] = 2
+    assert lwd["a"] == 1
+    assert lwd["b"] == 2
+
+    lwd["b"] = 9
+    lwd["a"] = 0
+    assert lwd["a"] == 0
+    assert lwd["b"] == 9
