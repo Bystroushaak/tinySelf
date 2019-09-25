@@ -149,19 +149,45 @@ class _BareObject(object):
         if result is not None:
             return result
 
-        objects = TwoPointerArray(self.map._last_number_of_visited_objects)
-        objects.append(self)
+        parents = TwoPointerArray(self.map._last_number_of_visited_objects)
+        parents.append(self)
 
+        result, visited_objects = self._look_for_slot_name_in_parent_tree(parents, slot_name)
+        self.map._last_number_of_visited_objects = len(visited_objects)
+
+        if result is not None:
+            self._store_to_parent_cache(slot_name, result, visited_objects)
+
+        return result
+
+    def _look_for_slot_name_in_parent_tree(self, parents, slot_name, _already_visited=None):
+        """
+        Breadth-first algorithm to look for the `slot_name` in the parent tree.
+
+        Args:
+            parents (TwoPointerArray): List of objects used for search.
+            slot_name (str):
+            _already_visited (TwoPointerArray): List of objects that were already
+                visited. Used in ._cached_lookup().
+
+        Returns:
+            tuple: (result, visited_objects as list). Result is None if not found.
+        """
         result = None
-        visited_objects = TwoPointerArray(self.map._last_number_of_visited_objects)
-        while len(objects) > 0:
-            obj = objects.pop_first()
+
+        if _already_visited is None:
+            visited_objects = TwoPointerArray(self.map._last_number_of_visited_objects)
+        else:
+            visited_objects = _already_visited
+
+        while len(parents) > 0:
+            obj = parents.pop_first()
 
             if obj.visited:
                 continue
 
-            obj.visited = True
             visited_objects.append(obj)
+            obj.visited = True
 
             slot = obj.get_slot(slot_name)
             if slot is not None:
@@ -172,41 +198,36 @@ class _BareObject(object):
                 continue
 
             if obj.scope_parent is not None and not obj.scope_parent.visited:
-                objects.append(obj.scope_parent)
+                parents.append(obj.scope_parent)
 
-            # objects.extend(obj._parent_slot_values)
-            # this if actually produces faster code
             if obj._parent_slot_values is not None:
                 for parent in obj._parent_slot_values:
                     if not parent.visited:
-                        objects.append(parent)
+                        parents.append(parent)
 
-        visited_as_list = visited_objects.to_list()
-        for obj in visited_as_list:
+        visited_objects_as_list = visited_objects.to_list()
+
+        # unvisit objects
+        for obj in visited_objects_as_list:
             obj.visited = False
 
-        self.map._last_number_of_visited_objects = len(visited_objects)
+        return result, visited_objects_as_list
 
-        if result is not None:
-            self._store_to_parent_cache(slot_name, result, visited_as_list)
-
-        return result
-
-    def _store_to_parent_cache(self, slot_name, result, visited_as_list):
+    def _store_to_parent_cache(self, slot_name, result, visited_objects):
         """
         Save slot and parent tree to the parent cache.
 
         Args:
             slot_name (str):
             result (Object): Object to be cached.
-            visited_as_list (list): List of parents.
+            visited_objects (list): List of parents.
         """
         if self.map._parent_cache is None:
             self.map._parent_cache = LightWeightDictObjects()
 
         self.map._parent_cache.set(
             slot_name,
-            CachedSlot(result, [VersionedObject(x) for x in visited_as_list])
+            CachedSlot(result, [VersionedObject(x) for x in visited_objects])
         )
 
     def _cached_lookup(self, slot_name):
@@ -227,9 +248,9 @@ class _BareObject(object):
         if cached_result is None:
             return None
 
-        prealocate_size = len(cached_result.visited_objects) + 10
-        objects = TwoPointerArray(prealocate_size)
-        visited_objects = TwoPointerArray(prealocate_size)
+        preallocate_size = len(cached_result.visited_objects) + 10
+        objects = TwoPointerArray(preallocate_size)
+        visited_objects = TwoPointerArray(preallocate_size)
 
         for item in cached_result.visited_objects:
             if item.verify():
@@ -247,35 +268,44 @@ class _BareObject(object):
         if self.scope_parent is not None:
             objects.append(self.scope_parent)
 
-        result = cached_result.result
-        while len(objects) > 0:
-            obj = objects.pop_first()
-            visited_objects.append(obj)
+        result, visited_objects_as_list = self._look_for_slot_name_in_parent_tree(
+            objects,
+            slot_name,
+            _already_visited=visited_objects
+        )
 
-            if obj.visited:
-                continue
+        if result is None:
+            return cached_result.result
 
-            obj.visited = True
-
-            if obj.scope_parent is not None and not obj.scope_parent.visited:
-                objects.append(obj.scope_parent)
-
-            # objects_to_visit.extend(obj._parent_slot_values)
-            # this if actually produces faster code
-            if obj._parent_slot_values is not None:
-                for parent in obj._parent_slot_values:
-                    if not parent.visited:
-                        objects.append(parent)
-
-            slot = obj.get_slot(slot_name)
-            if slot is not None:
-                result = slot
-                continue
-
-        for obj in visited_objects.to_list():
-            obj.visited = False
+        # update cache for next call - this is like 5Gi slower, wtf?
+        # unique_visited_objects = self._remove_duplicates(visited_objects_as_list)
+        # self._store_to_parent_cache(slot_name, result, unique_visited_objects)
 
         return result
+
+    def _remove_duplicates(self, objects):
+        """
+        This is same as list(set(objects)), but it works under rpython (rpython
+        doesn't support sets).
+
+        Complexity is O(2*n), which is not that bad.
+
+        Args:
+            objects (list[Objects]): List of Objects.
+
+        Returns:
+            list[Objects]: List with duplicates removed.
+        """
+        unique_visited_objects = []
+        for obj in objects:
+            if not obj.visited:
+                unique_visited_objects.append(obj)
+                obj.visited = True
+
+        for obj in unique_visited_objects:
+            obj.visited = False
+
+        return unique_visited_objects
 
     def slot_lookup(self, slot_name):
         """
