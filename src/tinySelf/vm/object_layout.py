@@ -605,6 +605,12 @@ class ObjectMap(object):
         self.parameters = []
 
     def clone(self):
+        """
+        Create new map with same properties.
+
+        Returns:
+            ObjectMap: Shallow copy of this map.
+        """
         new_map = ObjectMap()
 
         new_map._slots = self._slots.copy()
@@ -626,12 +632,28 @@ class ObjectMap(object):
 
     # meta-modifications
     def add_slot(self, slot_name, index):
+        """
+        Meta operation; add slot.
+
+        Args:
+            slot_name (str):
+            index (int): Index in the Object's ._slot_values list.
+        """
         assert isinstance(index, int)
 
         self._slots[slot_name] = index
         self.inc_version()
 
     def remove_slot(self, slot_name):
+        """
+        Meta operation; remove slot.
+
+        Args:
+            slot_name (str):
+
+        Returns:
+            bool: True if the slot was successfully removed.
+        """
         if slot_name not in self._slots:
             return False
 
@@ -641,6 +663,14 @@ class ObjectMap(object):
         return True
 
     def insert_slot(self, slot_index, slot_name, index):
+        """
+        Meta operation; insert slot to `slot_index`.
+
+        Args:
+            slot_index (int): Where to put it.
+            slot_name (str):
+            index (int): Index in the Object's ._slot_values list.
+        """
         if slot_index < 0:
             slot_index = 0
 
@@ -658,12 +688,23 @@ class ObjectMap(object):
         self.inc_version()
 
     def add_parent(self, parent_name, index):
+        """
+        Meta operation; Add parent.
+        Args:
+            parent_name (str): Name of the parent slot.
+            index (int): Index in the Object's ._parent.slot_values list.
+        """
         assert isinstance(index, int)
 
         self._parent_slots[parent_name] = index
         self.inc_version()
 
     def remove_parent(self, parent_name):
+        """
+        Meta operation; Remove parent.
+        Args:
+            parent_name (str): Name of the parent slot.
+        """
         if not self._parent_slots.has_key(parent_name):
             return False
 
@@ -673,5 +714,8 @@ class ObjectMap(object):
         return True
 
     def inc_version(self):
+        """
+        Increase the `_version` property.
+        """
         self._version += 1
     inc_version._always_inline_ = True
