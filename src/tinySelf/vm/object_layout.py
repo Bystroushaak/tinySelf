@@ -340,6 +340,12 @@ class _BareObject(object):
     def _copy_internals_to_clone(self, clone):
         """
         Used in the Primitive* classes reimplementation of `clone` message.
+
+        Args:
+            clone (Object): Instance of object to fill with data.
+
+        Returns:
+            Object: `clone` filled with data.
         """
         if self._slot_values is not None:
             clone._slot_values = self._slot_values[:]
@@ -569,6 +575,15 @@ class Block(Object):
         return "Block(%s)" % ", ".join(self.map._slots.keys())
 
     def clone(self, copy_obj=None):
+        """
+        Create clone of Block.
+
+        Args:
+            copy_obj: Don't use this, it is kept for backward compatibility.
+
+        Returns:
+            Block: Clone filled with same data.
+        """
         obj = Object.clone(self, copy_obj=Block(obj_map=self.map))
         obj.surrounding_object = self.surrounding_object
 
@@ -582,7 +597,19 @@ class IntermediateParamsObject(Object):
         self.original_scope_parent = None
 
     def clone(self, copy_obj=None):
-        return Object.clone(self, copy_obj=IntermediateParamsObject(obj_map=self.map))
+        """
+        Create clone of IntermediateParamsObject.
+
+        Args:
+            copy_obj: Don't use this, it is kept only for backward compatibility.
+
+        Returns:
+            IntermediateParamsObject: Clone filled with same data.
+        """
+        obj = Object.clone(self, copy_obj=IntermediateParamsObject(obj_map=self.map))
+        obj.original_scope_parent = self.original_scope_parent
+
+        return obj
 
     def __str__(self):
         return "IntermediateParamsObject(%s)" % ", ".join(self.map._slots.keys())
