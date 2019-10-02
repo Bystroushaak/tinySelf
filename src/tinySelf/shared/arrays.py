@@ -2,6 +2,102 @@
 from tinySelf.shared.code_generalization import create_copy_with_different_types
 
 
+class LinkedListBox(object):
+    def __init__(self, value):
+        self.value = value
+
+        self._next = None
+        self._prev = None
+
+
+class LinkedListForObjects(object):
+    def __init__(self):
+        self._first_item = None
+        self._last_item = None
+        self.length = 0
+
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, index):
+        if self._first_item is None:
+            raise IndexError("Invalid index `%s` (empty list)." % index)
+
+        if index + 1 > self.length:
+            raise IndexError("Invalid index `%s`." % index)
+
+        if index < -1:
+            raise IndexError("Negative indexes not yet supported!")
+
+        if index == -1:
+            return self._last_item.value
+        elif index == 0:
+            return self._first_item.value
+
+        boxed_item = self._first_item._next
+        for _ in range(index - 1):
+            boxed_item = boxed_item._next
+
+        return boxed_item.value
+
+    # TODO: refactor this to share parts with __getitem__
+    def __setitem__(self, index, value):
+        if self._first_item is None:
+            raise IndexError("Invalid index `%s` (empty list)." % index)
+
+        if index + 1 > self.length:
+            raise IndexError("Invalid index `%s`." % index)
+
+        if index < -1:
+            raise IndexError("Negative indexes not yet supported!")
+
+        if index == -1:
+            self._last_item.value = value
+            return
+        elif index == 0:
+            self._first_item.value = value
+            return
+
+        boxed_item = self._first_item._next
+        for _ in range(index - 1):
+            boxed_item = boxed_item._next
+
+        boxed_item.value = value
+
+    def pop_first(self):
+        raise NotImplementedError()
+
+    def pop_last(self):
+        raise NotImplementedError()
+
+    def append(self, item):
+        boxed_item = LinkedListBox(item)
+
+        if self._first_item is None:
+            self._first_item = boxed_item
+            self._last_item = boxed_item
+            self.length += 1
+            return
+
+        boxed_item._prev = self._last_item
+        self._last_item._next = boxed_item
+        self._last_item = boxed_item
+
+        self.length += 1
+
+    def to_list(self):
+        if self._first_item is None:
+            return []
+
+        boxed_item = self._first_item
+        items = [boxed_item.value]
+        while boxed_item._next is not None:
+            boxed_item = boxed_item._next
+            items.append(boxed_item.value)
+
+        return items
+
+
 class TwoPointerArray(object):
     def __init__(self, length):
         self._allocated_length = length
