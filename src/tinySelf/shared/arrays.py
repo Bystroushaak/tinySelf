@@ -114,8 +114,8 @@ class TwoPointerArray(object):
 
         return self._array[self._left_pointer + index]
 
-    def __setitem__(self, key, value):
-        self._array[key] = value
+    def __setitem__(self, index, value):
+        self._array[index] = value
 
     def pop_first(self):
         if self._left_pointer == self._right_pointer:
