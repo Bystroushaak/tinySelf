@@ -20,28 +20,14 @@ class LinkedListForObjects(object):
         return self.length
 
     def __getitem__(self, index):
-        if self._first_item is None:
-            raise IndexError("Invalid index `%s` (empty list)." % index)
-
-        if index + 1 > self.length:
-            raise IndexError("Invalid index `%s`." % index)
-
-        if index < -1:
-            raise IndexError("Negative indexes not yet supported!")
-
-        if index == -1:
-            return self._last_item.value
-        elif index == 0:
-            return self._first_item.value
-
-        boxed_item = self._first_item._next
-        for _ in range(index - 1):
-            boxed_item = boxed_item._next
-
+        boxed_item = self._get_boxed_item_on_index(index)
         return boxed_item.value
 
-    # TODO: refactor this to share parts with __getitem__
     def __setitem__(self, index, value):
+        boxed_item = self._get_boxed_item_on_index(index)
+        boxed_item.value = value
+
+    def _get_boxed_item_on_index(self, index):
         if self._first_item is None:
             raise IndexError("Invalid index `%s` (empty list)." % index)
 
@@ -52,17 +38,15 @@ class LinkedListForObjects(object):
             raise IndexError("Negative indexes not yet supported!")
 
         if index == -1:
-            self._last_item.value = value
-            return
+            return self._last_item
         elif index == 0:
-            self._first_item.value = value
-            return
+            return self._first_item
 
         boxed_item = self._first_item._next
         for _ in range(index - 1):
             boxed_item = boxed_item._next
 
-        boxed_item.value = value
+        return boxed_item
 
     def pop_first(self):
         if self.length == 0:
