@@ -65,26 +65,42 @@ class LinkedListForObjects(object):
         boxed_item.value = value
 
     def pop_first(self):
-        raise NotImplementedError()
+        if self.length == 0:
+            raise IndexError("pop from empty list")
+        elif self.length == 1:
+            first_item_box = self._first_item
+
+            self._first_item = None
+            self._last_item = None
+            self.length = 0
+
+            return first_item_box.value
+
+        first_item_box = self._first_item
+        self._first_item = self._first_item._next
+        self._first_item._prev = None
+        self.length -= 1
+
+        return first_item_box.value
 
     def pop_last(self):
         if self.length == 0:
             raise IndexError("pop from empty list")
         elif self.length == 1:
             self.length = 0
-            last_item = self._last_item
+            last_item_box = self._last_item
 
             self._first_item = None
             self._last_item = None
 
-            return last_item.value
+            return last_item_box.value
 
-        last_item = self._last_item
+        last_item_box = self._last_item
         self._last_item = self._last_item._prev
         self._last_item._next = None
         self.length -= 1
 
-        return last_item.value
+        return last_item_box.value
 
     def append(self, item):
         boxed_item = LinkedListBox(item)
