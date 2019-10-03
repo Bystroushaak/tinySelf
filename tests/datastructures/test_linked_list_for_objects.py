@@ -86,13 +86,45 @@ def test_set_two_items(lla):
     assert lla[-1] == 0
 
 
-def test_pop_first(lla):
+def test_pop_first_empty(lla):
     with raises(IndexError):
         lla.pop_first()
 
+
+def test_pop_first_with_one_item(lla):
     lla.append(1)
 
+    assert lla.pop_first() == 1
+    assert lla.length == 0
+    assert lla.to_list() == []
 
-def test_pop_last(lla):
+
+def test_pop_first_with_two_items(lla):
+    lla.append(1)
+    lla.append(2)
+
+    assert lla.pop_first() == 1
+    assert lla.pop_first() == 2
+    assert len(lla) == 0
+
+
+def test_pop_last_with_empty(lla):
     with raises(IndexError):
-        lla.pop_first()
+        lla.pop_last()
+
+
+def test_pop_last_with_one_item(lla):
+    lla.append(1)
+
+    assert lla.pop_last() == 1
+    assert lla.length == 0
+    assert lla.to_list() == []
+
+
+def test_pop_last_with_two_items(lla):
+    lla.append(1)
+    lla.append(2)
+
+    assert lla.pop_last() == 2
+    assert lla.pop_last() == 1
+    assert len(lla) == 0
