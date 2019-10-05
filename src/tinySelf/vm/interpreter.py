@@ -210,11 +210,9 @@ class Interpreter(ProcessCycler):
             for _ in range(len(parameter_names) - len(parameters)):
                 parameters.append(NIL)
 
-        i = 0
         parameter_names_len = len(parameter_names)
-        while i < parameter_names_len:
-            yield parameter_names[i], parameters[i]
-            i += 1
+        return [(parameter_names[i], parameters[i])
+                for i in range(parameter_names_len)]
 
     @jit.unroll_safe
     def _create_intermediate_params_obj(self, scope_parent, method_obj,
