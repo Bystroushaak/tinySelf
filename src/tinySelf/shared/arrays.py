@@ -174,6 +174,9 @@ class TwoPointerArray(object):
     def to_list(self):
         return self._array[self._left_pointer: self._right_pointer]
 
+    def __iter__(self):
+        return iter(self.to_list())
+
 
 class NumericTwoPointerArray(TwoPointerArray):
     """Just placeholder for the IDE."""

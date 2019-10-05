@@ -209,13 +209,11 @@ class _BareObject(object):
                     if not parent.visited:
                         parents.append(parent)
 
-        visited_objects_as_list = visited_objects.to_list()
-
         # unvisit objects
-        for obj in visited_objects_as_list:
+        for obj in visited_objects:
             obj.visited = False
 
-        return result, visited_objects_as_list
+        return result, visited_objects
 
     def _store_to_parent_cache(self, slot_name, result, visited_objects):
         """
@@ -271,7 +269,7 @@ class _BareObject(object):
         if self.scope_parent is not None:
             objects.append(self.scope_parent)
 
-        result, visited_objects_as_list = self._look_for_slot_name_in_parent_tree(
+        result, _ = self._look_for_slot_name_in_parent_tree(
             objects,
             slot_name,
             _already_visited=visited_objects
@@ -286,29 +284,29 @@ class _BareObject(object):
 
         return result
 
-    def _remove_duplicates(self, objects):
-        """
-        This is same as list(set(objects)), but it works under rpython (rpython
-        doesn't support sets).
-
-        Complexity is O(2*n), which is not that bad.
-
-        Args:
-            objects (list[Objects]): List of Objects.
-
-        Returns:
-            list[Objects]: List with duplicates removed.
-        """
-        unique_visited_objects = []
-        for obj in objects:
-            if not obj.visited:
-                unique_visited_objects.append(obj)
-                obj.visited = True
-
-        for obj in unique_visited_objects:
-            obj.visited = False
-
-        return unique_visited_objects
+    # def _remove_duplicates(self, objects):
+    #     """
+    #     This is same as list(set(objects)), but it works under rpython (rpython
+    #     doesn't support sets).
+    #
+    #     Complexity is O(2*n), which is not that bad.
+    #
+    #     Args:
+    #         objects (list[Objects]): List of Objects.
+    #
+    #     Returns:
+    #         list[Objects]: List with duplicates removed.
+    #     """
+    #     unique_visited_objects = []
+    #     for obj in objects:
+    #         if not obj.visited:
+    #             unique_visited_objects.append(obj)
+    #             obj.visited = True
+    #
+    #     for obj in unique_visited_objects:
+    #         obj.visited = False
+    #
+    #     return unique_visited_objects
 
     def slot_lookup(self, slot_name):
         """

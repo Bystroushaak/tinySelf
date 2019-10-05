@@ -108,3 +108,14 @@ def test_reset(tpa):
 
     tpa.append(1)
     assert tpa.to_list() == [1]
+
+
+def test_iter(tpa):
+    tpa.append(1)
+    tpa.append(2)
+
+    out = []
+    for i in tpa:
+        out.append(i)
+
+    assert out == [1, 2]
