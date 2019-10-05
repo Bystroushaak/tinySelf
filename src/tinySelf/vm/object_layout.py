@@ -10,6 +10,12 @@ from tinySelf.shared.lightweight_dict import LightWeightDict
 from tinySelf.shared.lightweight_dict import LightWeightDictObjects
 
 
+# this is by default created in each parent lookup, it can be kinda heavy,
+# so cache this and improve performance (it is 1Gi faster)
+OBJECTS_TPA_CACHE = TwoPointerArray(20)
+VISITED_OBJECTS_TPA_CACHE = TwoPointerArray(20)
+
+
 class CachedSlot(object):
     def __init__(self, result, visited_objects):
         self.result = result
@@ -149,11 +155,10 @@ class _BareObject(object):
         if result is not None:
             return result
 
-        parents = TwoPointerArray(self.map._last_number_of_visited_objects)
+        parents = OBJECTS_TPA_CACHE.reset()
         parents.append(self)
 
         result, visited_objects = self._look_for_slot_name_in_parent_tree(parents, slot_name)
-        self.map._last_number_of_visited_objects = len(visited_objects)
 
         if result is not None:
             self._store_to_parent_cache(slot_name, result, visited_objects)
@@ -176,7 +181,7 @@ class _BareObject(object):
         result = None
 
         if _already_visited is None:
-            visited_objects = TwoPointerArray(self.map._last_number_of_visited_objects)
+            visited_objects = VISITED_OBJECTS_TPA_CACHE.reset()
         else:
             visited_objects = _already_visited
 
@@ -248,9 +253,8 @@ class _BareObject(object):
         if cached_result is None:
             return None
 
-        preallocate_size = len(cached_result.visited_objects) + 10
-        objects = TwoPointerArray(preallocate_size)
-        visited_objects = TwoPointerArray(preallocate_size)
+        objects = OBJECTS_TPA_CACHE.reset()
+        visited_objects = VISITED_OBJECTS_TPA_CACHE.reset()
 
         for item in cached_result.visited_objects:
             if item.verify():
