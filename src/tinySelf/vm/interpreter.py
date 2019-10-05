@@ -199,22 +199,26 @@ class Interpreter(ProcessCycler):
                     raise ValueError("Nothing left on stack!")
 
 
-    def _put_together_parameters(self, parameter_names, parameters):
-        # this is actually probably not needed as it allows calling messages
-        # with parameters they don't have to react to
-        # if len(parameter_names) < len(parameters):
-        #     raise ValueError("Too many parameters!")
-
-        # add padding of unspecified parameter values with `nil`
-        if len(parameter_names) > len(parameters):
-            for _ in range(len(parameter_names) - len(parameters)):
-                parameters.append(NIL)
-
-        parameter_names_len = len(parameter_names)
-        return [(parameter_names[i], parameters[i])
-                for i in range(parameter_names_len)]
-
     @jit.unroll_safe
+    def _insert_parameters_into_intermediate_obj(self, intermediate_obj,
+                                                 parameter_names, parameters):
+        parameters_len = len(parameters)
+        parameter_names_len = len(parameter_names)
+        for i in range(parameter_names_len):
+            name = parameter_names[i]
+
+            # add padding of unspecified parameter values with `nil`
+            if i < parameters_len:
+                value = parameters[i]
+            else:
+                value = NIL
+
+            intermediate_obj.meta_add_slot(name, value)
+            intermediate_obj.meta_add_slot(
+                name + ":",
+                AssignmentPrimitive(intermediate_obj)
+            )
+
     def _create_intermediate_params_obj(self, scope_parent, method_obj,
                                         parameters, prev_scope_parent=None):
 
@@ -256,16 +260,11 @@ class Interpreter(ProcessCycler):
 
             intermediate_obj.meta_add_parent("*", parent)
 
-        parameter_pairs = self._put_together_parameters(
+        self._insert_parameters_into_intermediate_obj(
+            intermediate_obj,
             parameter_names=method_obj.parameters,
             parameters=parameters
         )
-        for name, value in parameter_pairs:
-            intermediate_obj.meta_add_slot(name, value)
-            intermediate_obj.meta_add_slot(
-                name + ":",
-                AssignmentPrimitive(intermediate_obj)
-            )
 
         if method_obj.code_context._params_cache is None:
             method_obj.code_context._params_cache = intermediate_obj
