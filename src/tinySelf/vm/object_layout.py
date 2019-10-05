@@ -25,7 +25,7 @@ class CachedSlot(object):
 class VersionedObject(object):
     def __init__(self, obj):
         self.obj = obj
-        self.version = obj.map._version
+        self.version = obj.version
 
     def verify(self):
         """
@@ -445,6 +445,10 @@ class _ObjectWithMapEncapsulation(_BareObject):
     def _clone_map_if_used_by_multiple_objects(self):
         if self.map._used_in_multiple_objects:
             self.map = self.map.clone()
+
+    @property
+    def version(self):
+        return self.map._version
 
 
 class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
