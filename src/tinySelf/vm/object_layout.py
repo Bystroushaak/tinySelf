@@ -4,7 +4,6 @@ from collections import OrderedDict
 from rply.token import BaseBox
 from rpython.rlib.objectmodel import we_are_translated
 
-from tinySelf.config import OBJ_MAP_LAST_NUMBER_OF_VISITED_OBJS
 from tinySelf.shared.arrays import TwoPointerArray
 from tinySelf.shared.lightweight_dict import LightWeightDict
 from tinySelf.shared.lightweight_dict import LightWeightDictObjects
@@ -631,7 +630,6 @@ class ObjectMap(object):
 
         self._version = 0
         self._parent_cache = None
-        self._last_number_of_visited_objects = OBJ_MAP_LAST_NUMBER_OF_VISITED_OBJS
 
         self.ast = None
         self.code_context = None
