@@ -121,6 +121,16 @@ class TwoPointerArray(object):
         self._left_pointer = 0
         self._right_pointer = 0
 
+    def reset(self):
+        while self._left_pointer <= self._right_pointer:
+            self._array[self._left_pointer] = None
+            self._left_pointer += 1
+
+        self._left_pointer = 0
+        self._right_pointer = 0
+
+        return self
+
     def __len__(self):
         return self._right_pointer - self._left_pointer
 

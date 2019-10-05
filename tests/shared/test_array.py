@@ -91,3 +91,20 @@ def test_get(tpa):
 
     with raises(IndexError):
         tpa[1]
+
+
+def test_reset(tpa):
+    tpa.append(1)
+    tpa.append(1)
+    tpa.append(1)
+
+    tpa.pop_first()
+    tpa.pop_last()
+    tpa.append(1)
+
+    tpa.reset()
+
+    assert tpa.to_list() == []
+
+    tpa.append(1)
+    assert tpa.to_list() == [1]
