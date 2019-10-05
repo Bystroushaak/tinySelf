@@ -202,6 +202,19 @@ class Interpreter(ProcessCycler):
     @jit.unroll_safe
     def _insert_parameters_into_intermediate_obj(self, intermediate_obj,
                                                  parameter_names, parameters):
+        """
+        Put together parameters and values for a method-object call and
+        insert them into the intermediate object, which is used as temporary
+        local namespace.
+
+        Note:
+            Parameters with unspecified values are padded with NIL.
+
+        Args:
+            intermediate_obj (Object): Object where the parameters will be inserted.
+            parameter_names (list[str]): List of parameter names.
+            parameters (list[Object]): List of values to pass as parameters.
+        """
         parameters_len = len(parameters)
         parameter_names_len = len(parameter_names)
         for i in range(parameter_names_len):
