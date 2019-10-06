@@ -2,6 +2,7 @@
 from collections import OrderedDict
 
 from rply.token import BaseBox
+from rpython.rlib import jit
 from rpython.rlib.objectmodel import we_are_translated
 
 from tinySelf.shared.arrays import TwoPointerArray
@@ -164,6 +165,7 @@ class _BareObject(object):
 
         return result
 
+    @jit.unroll_safe
     def _look_for_slot_name_in_parent_tree(self, parents, slot_name, _already_visited=None):
         """
         Breadth-first algorithm to look for the `slot_name` in the parent tree.
@@ -232,6 +234,7 @@ class _BareObject(object):
             CachedSlot(result, [VersionedObject(x) for x in visited_objects])
         )
 
+    @jit.unroll_safe
     def _cached_lookup(self, slot_name):
         """
         Look into cache and if the parent tree is still valid, return cached
@@ -355,6 +358,7 @@ class _BareObject(object):
 
         return clone
 
+    @jit.unroll_safe
     def _copy_with_primitives(self, clone):
         self._copy_internals_to_clone(clone)
 
