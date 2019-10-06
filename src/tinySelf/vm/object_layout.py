@@ -9,8 +9,8 @@ from tinySelf.shared.lightweight_dict import LightWeightDict
 from tinySelf.shared.lightweight_dict import LightWeightDictObjects
 
 
-# this is by default created in each parent lookup, it can be kinda heavy,
-# so cache this and improve performance (it is 1Gi faster)
+# this was by default created in each parent lookup, and it could be kinda heavy,
+# so I decided to cache this and improve performance (it is 1Gi faster)
 OBJECTS_TPA_CACHE = TwoPointerArray(20)
 VISITED_OBJECTS_TPA_CACHE = TwoPointerArray(20)
 
