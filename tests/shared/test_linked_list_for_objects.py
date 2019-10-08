@@ -2,7 +2,7 @@
 from pytest import raises
 from pytest import fixture
 
-from tinySelf.shared.arrays import LinkedListForObjects
+from tinySelf.shared.linked_list_for_objects import LinkedListForObjects
 
 
 @fixture
