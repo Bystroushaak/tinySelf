@@ -2,7 +2,7 @@
 from pytest import raises
 from pytest import fixture
 
-from tinySelf.shared.arrays import TwoPointerArray
+from tinySelf.shared.two_pointer_array import TwoPointerArray
 
 
 @fixture
