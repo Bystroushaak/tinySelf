@@ -14,9 +14,9 @@ from tinySelf.vm.object_layout import Object
 from tinySelf.vm.virtual_machine import run_stdlib
 import os
 
-stdlib = os.path.join(os.path.dirname(__file__), "../objects/stdlib.tself")
+stdlib_path = os.path.join(os.path.dirname(__file__), "../objects/stdlib.tself")
 
-with file(stdlib) as f:
+with file(stdlib_path) as f:
     stdlib_source = f.read()
 
 
@@ -35,7 +35,7 @@ class TestLLtype(LLJitMixin):
         universe.meta_add_slot("primitives", get_primitives())
 
         interpreter = Interpreter(universe)
-        run_stdlib(interpreter, stdlib_source)
+        run_stdlib(interpreter, stdlib_source, stdlib_path)
 
         ast = lex_and_parse_as_root(source)
         if not ast:
