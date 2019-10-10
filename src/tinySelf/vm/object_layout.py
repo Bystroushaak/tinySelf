@@ -3,9 +3,10 @@ from collections import OrderedDict
 
 from rply.token import BaseBox
 from rpython.rlib import jit
+from rpython.rlib.objectmodel import always_inline
 from rpython.rlib.objectmodel import we_are_translated
 
-from tinySelf.shared.arrays import TwoPointerArray
+from tinySelf.shared.two_pointer_array import TwoPointerArray
 from tinySelf.shared.lightweight_dict import LightWeightDict
 from tinySelf.shared.lightweight_dict import LightWeightDictObjects
 
@@ -453,6 +454,7 @@ class _ObjectWithMapEncapsulation(_BareObject):
     def has_parents(self):
         return bool(self._parent_slot_values)
 
+    @always_inline
     def _clone_map_if_used_by_multiple_objects(self):
         if self.map._used_in_multiple_objects:
             self.map = self.map.clone()
@@ -471,8 +473,9 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
 
         value.scope_parent = self
 
-        if self.map._slots.has_key(slot_name):
-            self.set_slot(slot_name, value)
+        slot_index = self.map._slots.get(slot_name, -1)
+        if slot_index > -1:
+            self._slot_values[slot_index] = value
             self.map.inc_version()
             return
 
@@ -481,16 +484,8 @@ class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
         if self._slot_values is None:
             self._slot_values = []
 
-        # if not check_duplicates:
         self.map.add_slot(slot_name, len(self._slot_values))
         self._slot_values.append(value)
-
-        # this doesn't work at all with other meta methods, wtf was I thinking?
-        #if value in self._slot_values:
-        #    self.map.add_slot(slot_name, self._slot_values.index(value))
-        #else:
-        #    self.map.add_slot(slot_name, len(self._slot_values))
-        #    self._slot_values.append(value)
 
     def meta_remove_slot(self, slot_name):
         if not self.map._slots.has_key(slot_name):

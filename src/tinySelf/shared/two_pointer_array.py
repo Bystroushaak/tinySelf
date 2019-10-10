@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from rpython.rlib import jit
+
 from tinySelf.shared.code_generalization import create_copy_with_different_types
 
 
@@ -9,6 +11,7 @@ class TwoPointerArray(object):
         self._left_pointer = 0
         self._right_pointer = 0
 
+    @jit.unroll_safe
     def reset(self):
         while self._left_pointer <= self._right_pointer:
             self._array[self._left_pointer] = None
