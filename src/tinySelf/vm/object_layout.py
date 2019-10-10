@@ -467,7 +467,15 @@ class _ObjectWithMapEncapsulation(_BareObject):
 class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
     def meta_add_slot(self, slot_name, value):
         """
-        check_duplicates: make sure that one value is stored only once
+        Add or replace `value` in the `slot_name`.
+
+        Warning:
+            This is meta-operation, that is it also affects the ObjectMap and
+            structure.
+
+        Args:
+            slot_name (str):
+            value (Object):
         """
         assert isinstance(value, Object)
 
