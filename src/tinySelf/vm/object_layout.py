@@ -360,6 +360,16 @@ class _BareObject(object):
 
     @jit.unroll_safe
     def _copy_with_primitives(self, clone):
+        """
+        Copy values in this Object into the `clone`. Handle primitive functions
+        so that they have set correct `scope_parent`.
+
+        Args:
+            clone (Object): Object into which are the slots cloned.
+
+        Returns:
+            Object: `clone` is returned back.
+        """
         self._copy_internals_to_clone(clone)
 
         if self._slot_values is not None:
@@ -453,7 +463,7 @@ class _ObjectWithMapEncapsulation(_BareObject):
 
 
 class _ObjectWithMetaOperations(_ObjectWithMapEncapsulation):
-    def meta_add_slot(self, slot_name, value, check_duplicates=False):
+    def meta_add_slot(self, slot_name, value):
         """
         check_duplicates: make sure that one value is stored only once
         """
