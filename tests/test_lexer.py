@@ -29,6 +29,10 @@ def test_float_numbers():
         Token('NUMBER', "1.1"),
     ]
 
+    assert list(lexer.lex("2.3572719819")) == [
+        Token('NUMBER', "2.3572719819"),
+    ]
+
     assert list(lexer.lex("-0.3")) == [
         Token('NUMBER', "-0.3"),
     ]
