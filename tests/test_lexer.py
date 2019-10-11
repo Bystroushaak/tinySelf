@@ -4,6 +4,36 @@ from rply import Token
 from tinySelf.parser.lexer import lexer
 
 
+def test_int_numbers():
+    assert list(lexer.lex("2")) == [
+        Token('NUMBER', "2"),
+    ]
+
+    assert list(lexer.lex("0")) == [
+        Token('NUMBER', "0"),
+    ]
+
+    assert list(lexer.lex("-1")) == [
+        Token('NUMBER', "-1"),
+    ]
+
+
+def test_int_hexa_numbers():
+    assert list(lexer.lex("0x25")) == [
+        Token('NUMBER', "0x25"),
+    ]
+
+
+def test_float_numbers():
+    assert list(lexer.lex("1.1")) == [
+        Token('NUMBER', "1.1"),
+    ]
+
+    assert list(lexer.lex("-0.3")) == [
+        Token('NUMBER', "-0.3"),
+    ]
+
+
 def test_single_q_string():
     assert list(lexer.lex("'hello'")) == [
         Token('SINGLE_Q_STRING', "'hello'"),
