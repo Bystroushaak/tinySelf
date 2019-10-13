@@ -80,6 +80,15 @@
         nil.
     ).
 
+    init_float = (| float_mirror |
+        float_mirror: primitives mirrorOn: traits float.
+
+        float_mirror toSlot: 'print' Add: (||
+            self asString print.
+            self asString.
+        ).
+    ).
+
     init_asserts = (| universe_mirror |
         universe_mirror: primitives mirrorOn: universe.
         universe_mirror toSlot: 'assert:' Add: (| :what |
@@ -195,6 +204,7 @@
         init_false.
         init_nil.
         init_int.
+        init_float.
         init_asserts.
         init_blocks.
         init_dicts.

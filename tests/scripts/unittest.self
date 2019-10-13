@@ -199,6 +199,16 @@
         print_green_ok.
     ).
 
+    test_primitive_float = (| a. |
+        "test_primitive_float .. " print.
+
+        assert: [(2.35 print) == '2.35'].
+
+        assert: [ 1.1 > 0.5 ].
+
+        print_green_ok.
+    ).
+
     test_primitive_str = (||
         "test_primitive_str .. " print.
 
@@ -413,6 +423,7 @@
         test_eval.
         test_do_not_understand.
         test_primitive_int.
+        test_primitive_float.
         test_primitive_str.
         test_primitive_list.
         test_primitive_dict.
