@@ -4,7 +4,6 @@ from tinySelf.config import USE_LINKED_LIST_METHOD_STACK
 from tinySelf.vm.primitives import PrimitiveNilObject
 from tinySelf.vm.code_context import CodeContext
 from tinySelf.vm.object_layout import Object
-from tinySelf.vm.object_layout import IntermediateParamsObject
 
 
 NIL = PrimitiveNilObject()
