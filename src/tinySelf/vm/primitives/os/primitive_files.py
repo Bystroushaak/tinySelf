@@ -97,8 +97,8 @@ class PrimitiveFileObject(Object):
         self.value = value
         self.path = path
 
-        if PrimitiveFileObject._OBJ_CACHE.map is not None:
-            self._slot_values = PrimitiveFileObject._OBJ_CACHE.slots
+        if PrimitiveFileObject._OBJ_CACHE.is_set:
+            PrimitiveFileObject._OBJ_CACHE.restore(self)
             return
 
         add_primitive_fn(self, "close", close_file, [])
@@ -110,8 +110,7 @@ class PrimitiveFileObject(Object):
         add_primitive_fn(self, "seek:", seek_to, ["pos"])
         add_primitive_fn(self, "closed?", is_closed, [])
 
-        if PrimitiveFileObject._OBJ_CACHE.map is None:
-            PrimitiveFileObject._OBJ_CACHE.store(self)
+        PrimitiveFileObject._OBJ_CACHE.store(self)
 
     def __str__(self):
         status = ", closed" if self.value.closed else ""

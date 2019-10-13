@@ -50,16 +50,15 @@ class PrimitiveSocketObject(Object):
         assert isinstance(value, RSocket)
         self.value = value
 
-        if PrimitiveSocketObject._OBJ_CACHE.map is not None:
-            self._slot_values = PrimitiveSocketObject._OBJ_CACHE.slots
+        if PrimitiveSocketObject._OBJ_CACHE.is_set:
+            PrimitiveSocketObject._OBJ_CACHE.restore(self)
             return
 
         add_primitive_fn(self, "recv:", socket_recv, ["size"])
         add_primitive_fn(self, "sendAll:", socket_sendall, ["data"])
         add_primitive_fn(self, "close", socket_close, [])
 
-        if PrimitiveSocketObject._OBJ_CACHE.map is None:
-            PrimitiveSocketObject._OBJ_CACHE.store(self)
+        PrimitiveSocketObject._OBJ_CACHE.store(self)
 
     def __str__(self):
         return "PrimitiveSocket()"

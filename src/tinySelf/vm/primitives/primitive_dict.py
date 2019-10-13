@@ -140,8 +140,8 @@ class PrimitiveDictObject(Object):
 
         self.value = value
 
-        if PrimitiveDictObject._OBJ_CACHE.map is not None:
-            self._slot_values = PrimitiveDictObject._OBJ_CACHE.slots
+        if PrimitiveDictObject._OBJ_CACHE.is_set:
+            PrimitiveDictObject._OBJ_CACHE.restore(self)
             return
 
         add_primitive_fn(self, "at:", dict_at, ["index"])
@@ -149,8 +149,7 @@ class PrimitiveDictObject(Object):
         add_primitive_fn(self, "length", dict_length, [])
         add_primitive_fn(self, "at:Put:", dict_at_key_put_obj, ["key", "obj"])
 
-        if PrimitiveDictObject._OBJ_CACHE.map is None:
-            PrimitiveDictObject._OBJ_CACHE.store(self)
+        PrimitiveDictObject._OBJ_CACHE.store(self)
 
     def __str__(self):
         return "dict()"

@@ -84,8 +84,8 @@ class PrimitiveListObject(Object):
         assert isinstance(value, list)
         self.value = value
 
-        if PrimitiveListObject._OBJ_CACHE.map is not None:
-            self._slot_values = PrimitiveListObject._OBJ_CACHE.slots
+        if PrimitiveListObject._OBJ_CACHE.is_set:
+            PrimitiveListObject._OBJ_CACHE.restore(self)
             return
 
         add_primitive_fn(self, "at:", list_at, ["index"])
