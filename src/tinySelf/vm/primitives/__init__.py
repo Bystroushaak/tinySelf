@@ -9,6 +9,7 @@ from tinySelf.vm.primitives.primitive_int import PrimitiveIntObject
 from tinySelf.vm.primitives.primitive_float import FLOAT_TRAIT
 from tinySelf.vm.primitives.primitive_float import PrimitiveFloatObject
 
+from tinySelf.vm.primitives.primitive_str import STR_TRAIT
 from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
 
 from tinySelf.vm.primitives.primitive_nil import PrimitiveNilObject
@@ -78,6 +79,7 @@ def get_primitives():
     primitives.meta_add_slot("traits", traits)
     traits.meta_add_slot("int", INT_TRAIT)
     traits.meta_add_slot("float", FLOAT_TRAIT)
+    traits.meta_add_slot("str", STR_TRAIT)
     traits.meta_add_slot("block", _USER_EDITABLE_BLOCK_TRAIT)
 
     primitives.meta_add_slot("os", get_primitive_os())

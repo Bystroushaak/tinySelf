@@ -95,6 +95,13 @@ def as_string(interpreter, self, parameters):
     return self
 
 
+class _StrTraitObject(Object):
+    pass
+
+
+STR_TRAIT = _StrTraitObject()
+
+
 class PrimitiveStrObject(Object):
     _OBJ_CACHE = ObjCache()
     _immutable_fields_ = ["value"]
@@ -104,8 +111,8 @@ class PrimitiveStrObject(Object):
         assert isinstance(value, str)
         self.value = value
 
-        if PrimitiveStrObject._OBJ_CACHE.map is not None:
-            self._slot_values = PrimitiveStrObject._OBJ_CACHE.slots
+        if PrimitiveStrObject._OBJ_CACHE.is_set:
+            PrimitiveStrObject._OBJ_CACHE.restore(self)
             return
 
         add_primitive_fn(self, "+", add_strings, ["obj"])
@@ -117,8 +124,9 @@ class PrimitiveStrObject(Object):
         add_primitive_fn(self, "asString", as_string, [])
         add_primitive_fn(self, "==", compare_strings, ["obj"])
 
-        if PrimitiveStrObject._OBJ_CACHE.map is None:
-            PrimitiveStrObject._OBJ_CACHE.store(self)
+        self.meta_add_parent("trait", STR_TRAIT)
+
+        PrimitiveStrObject._OBJ_CACHE.store(self)
 
     def __str__(self):
         return "'" + escape(self.value) + "'"

@@ -88,6 +88,10 @@
         ).
     ).
 
+    init_str = (| str_mirror |
+        str_mirror: primitives mirrorOn: traits str.
+    ).
+
     init_asserts = (| universe_mirror |
         universe_mirror: primitives mirrorOn: universe.
         universe_mirror toSlot: 'assert:' Add: (| :what |
@@ -204,6 +208,7 @@
         init_nil.
         init_int.
         init_float.
+        init_str.
         init_asserts.
         init_blocks.
         init_dicts.
