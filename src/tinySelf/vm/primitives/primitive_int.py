@@ -149,7 +149,7 @@ class PrimitiveIntObject(_NumberObject):
 
         self.value = int(value)
 
-        if PrimitiveIntObject._OBJ_CACHE.map is not None:
+        if PrimitiveIntObject._OBJ_CACHE.is_set:
             PrimitiveIntObject._OBJ_CACHE.restore(self)
             return
 
