@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from tinySelf.r_io import write
 
+from tinySelf.vm import Object
 from tinySelf.vm.primitives.cache import ObjCache
 from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
 from tinySelf.vm.primitives.primitive_true import PrimitiveTrueObject
@@ -133,6 +134,13 @@ def print_int(interpreter, self, parameters):
     return PrimitiveStrObject(as_str)
 
 
+class _IntTraitObject(Object):
+    pass
+
+
+INT_TRAIT = _IntTraitObject()
+
+
 class PrimitiveIntObject(_NumberObject):
     _OBJ_CACHE = ObjCache()
     _immutable_fields_ = ["value"]
@@ -142,7 +150,7 @@ class PrimitiveIntObject(_NumberObject):
         self.value = int(value)
 
         if PrimitiveIntObject._OBJ_CACHE.map is not None:
-            self._slot_values = PrimitiveIntObject._OBJ_CACHE.slots
+            PrimitiveIntObject._OBJ_CACHE.restore(self)
             return
 
         add_primitive_fn(self, "+", add, ["obj"])
@@ -159,8 +167,7 @@ class PrimitiveIntObject(_NumberObject):
         add_primitive_fn(self, "asFloat", as_float, [])
         add_primitive_fn(self, "print", print_int, [])
 
-        if PrimitiveIntObject._OBJ_CACHE.map is None:
-            PrimitiveIntObject._OBJ_CACHE.store(self)
+        PrimitiveIntObject._OBJ_CACHE.store(self)
 
     @property
     def float_value(self):

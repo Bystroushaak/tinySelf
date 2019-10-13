@@ -76,8 +76,7 @@
     ).
 
     init_int = (| int_mirror |
-        #universe_mirror: primitives mirrorOn: int.
-        nil.
+        int_mirror: primitives mirrorOn: traits int.
     ).
 
     init_float = (| float_mirror |
