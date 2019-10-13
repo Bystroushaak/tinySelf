@@ -5,6 +5,8 @@ from tinySelf.vm.primitives.mirror import Mirror
 
 from tinySelf.vm.primitives.primitive_int import PrimitiveIntObject
 from tinySelf.vm.primitives.primitive_str import PrimitiveStrObject
+
+from tinySelf.vm.primitives.primitive_float import FLOAT_TRAIT
 from tinySelf.vm.primitives.primitive_float import PrimitiveFloatObject
 
 from tinySelf.vm.primitives.primitive_nil import PrimitiveNilObject
@@ -73,6 +75,7 @@ def get_primitives():
     traits = Object()
     primitives.meta_add_slot("traits", traits)
     traits.meta_add_slot("block", _USER_EDITABLE_BLOCK_TRAIT)
+    traits.meta_add_slot("float", FLOAT_TRAIT)
 
     primitives.meta_add_slot("os", get_primitive_os())
     primitives.meta_add_slot("time", get_primitive_time_object())

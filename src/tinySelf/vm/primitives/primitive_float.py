@@ -135,6 +135,13 @@ def as_int(interpreter, self, parameters):
     return PrimitiveIntObject(int(self.value))
 
 
+class _FloatTraitObject(Object):
+    pass
+
+
+FLOAT_TRAIT = _FloatTraitObject()
+
+
 class PrimitiveFloatObject(_NumberObject):
 
     _OBJ_CACHE = ObjCache()
@@ -144,8 +151,8 @@ class PrimitiveFloatObject(_NumberObject):
 
         self.value = value
 
-        if PrimitiveFloatObject._OBJ_CACHE.map is not None:
-            self._slot_values = PrimitiveFloatObject._OBJ_CACHE.slots
+        if PrimitiveFloatObject._OBJ_CACHE.is_set:
+            PrimitiveFloatObject._OBJ_CACHE.restore(self)
             return
 
         add_primitive_fn(self, "+", add, ["obj"])
@@ -160,8 +167,9 @@ class PrimitiveFloatObject(_NumberObject):
         add_primitive_fn(self, "asString", as_string, [])
         add_primitive_fn(self, "asInt", as_int, [])
 
-        if PrimitiveFloatObject._OBJ_CACHE.map is None:
-            PrimitiveFloatObject._OBJ_CACHE.store(self)
+        self.meta_add_parent("trait", FLOAT_TRAIT)
+
+        PrimitiveFloatObject._OBJ_CACHE.store(self)
 
     @property
     def float_value(self):
