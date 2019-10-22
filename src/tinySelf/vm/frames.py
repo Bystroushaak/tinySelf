@@ -265,6 +265,11 @@ class ProcessCycler:
             self.cycler = 0
 
     def stash_push(self):
+        """
+        Stash all processes and context and run just current code.
+
+        Used for eval() implementation, that is for immediate evaluation.
+        """
         copy = ProcessCycler()
         copy.cycler = self.cycler
         copy.process = self.process
@@ -279,6 +284,11 @@ class ProcessCycler:
         self.processes = []
 
     def stash_pop(self):
+        """
+        Unstash processes and whole context.
+
+        Used for eval() implementation, that is for immediate evaluation.
+        """
         copy = self.stash.pop()
 
         self.cycler = copy.cycler
