@@ -2,6 +2,7 @@
     init_true = (| true_mirror |
         true_mirror: primitives mirrorOn: true.
 
+        true_mirror toSlot: 'not' Add: (|| false).
         true_mirror toSlot: 'ifTrue:' Add: (| :blck | blck value).
         true_mirror toSlot: 'ifFalse:' Add: (| :blck | nil.).
         true_mirror toSlot: 'ifTrue:False:' Add: (| :true_blck. :false_blck |
@@ -30,6 +31,7 @@
     init_false = (| false_mirror |
         false_mirror: primitives mirrorOn: false.
 
+        false_mirror toSlot: 'not' Add: (| | true).
         false_mirror toSlot: 'ifTrue:' Add: (| :blck | nil).
         false_mirror toSlot: 'ifFalse:' Add: (| :blck | blck value.).
         false_mirror toSlot: 'ifTrue:False:' Add: (| :true_blck. :false_blck |
