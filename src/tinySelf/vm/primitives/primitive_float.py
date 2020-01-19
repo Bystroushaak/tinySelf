@@ -143,7 +143,6 @@ FLOAT_TRAIT = _FloatTraitObject()
 
 
 class PrimitiveFloatObject(_NumberObject):
-
     _OBJ_CACHE = ObjCache()
     _immutable_fields_ = ["value"]
     def __init__(self, value, obj_map=None):
