@@ -342,7 +342,7 @@ class Interpreter(ProcessCycler):
 
         if not we_are_translated():
             process_stack_to_plantuml(self.process)
-            obj_map_to_plantuml(obj, prefix="obj_parent_map")
+            obj_map_to_plantuml(obj, recursive=True, prefix="obj_parent_map")
 
         primitive_fn_raise_error(self, None, [PrimitiveStrObject(debug_msg)])
         return THREE_BYTECODES_LONG
