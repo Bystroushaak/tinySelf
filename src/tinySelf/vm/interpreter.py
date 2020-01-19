@@ -30,6 +30,7 @@ from tinySelf.vm.primitives import AssignmentPrimitive
 from tinySelf.vm.primitives import gen_interpreter_primitives
 from tinySelf.vm.primitives.interpreter_primitives import ErrorObject
 from tinySelf.vm.primitives.interpreter_primitives import primitive_fn_raise_error
+from tinySelf.vm.primitives.add_primitive_fn import PrimitiveCodeMethodObject
 
 from tinySelf.vm.code_context import IntBox
 from tinySelf.vm.code_context import StrBox
@@ -409,13 +410,14 @@ class Interpreter(ProcessCycler):
             # primitives need "self" to be actually the object they are expecting,
             # for example for dicts it have to be dict, not some descendant
             # in the parent chain
+            primitive_self = obj
             if not slot_found_directly_in_obj:
-                obj = slot.scope_parent
+                primitive_self = self._find_primitives_self(primitive_self, slot)
 
             return_value = slot.primitive_code(
-                self,
-                obj,
-                parameters
+                self,            # mapped to `interpreter`
+                primitive_self,  # mapped to `self`
+                parameters       # mapped to `params`
             )
 
             if return_value is not None and self.process is not None:
@@ -438,6 +440,34 @@ class Interpreter(ProcessCycler):
             self.process.frame.push(slot)  # slot is a return value
 
         return THREE_BYTECODES_LONG
+
+    def _find_primitives_self(self, primitive_self, slot):
+        """
+        In case of primitives that were resolved from traits, it is more
+        complicated to find `self` parameter for the primitive function.
+
+        See tinySelf.vm.primitives.add_primitive_fn.add_primitive_fn() and
+        #132 for details.
+
+        Args:
+            primitive_self (Object): Candidate for the primitive's self.
+            slot (Object): Method slot with primitive code.
+
+        Returns:
+            Object: Correct primitive self.
+        """
+        # for slots resolved from the primitive classes (list, float, ..)
+        if not isinstance(slot, PrimitiveCodeMethodObject):
+            return slot.scope_parent
+
+        # for slots resolved from traits go up the parent scope chain until you
+        # find instance of the class from which this was resolved
+        while not isinstance(primitive_self, slot.scope_parent.__class__):
+            primitive_self = primitive_self.scope_parent
+            if primitive_self is None or primitive_self is self.universe:
+                return None
+
+        return primitive_self
 
     # def _do_selfSend(self, bc_index, code_obj, frame):
     #     pass
