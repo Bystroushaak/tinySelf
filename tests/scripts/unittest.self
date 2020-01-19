@@ -199,12 +199,22 @@
         print_green_ok.
     ).
 
-    test_primitive_float = (| a. |
+    test_primitive_float = (| a. b. |
         "test_primitive_float .. " print.
 
         assert: [(2.35 print) == '2.35'].
+        assert: [(2.35 printLine) == '2.35\n'].
 
         assert: [ 1.1 > 0.5 ].
+        assert: [ 0.5 < 0.6 ].
+
+        'here' printLine.
+        a: 0.0.
+        b: 2.45.
+        #bleh.
+        0.0 asBool printLine.
+        assertNot: [ 0.0 asBool ].
+        assert: [ 0.1 asBool ].
 
         print_green_ok.
     ).
