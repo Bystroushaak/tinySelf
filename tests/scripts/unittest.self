@@ -202,7 +202,7 @@
     test_primitive_float = (| a. b. |
         "test_primitive_float .. " print.
 
-        assert: [(2.0 print) == '2.0'].
+        assert: [(2.45 print) == '2.45'].
         assert: [(0.0 print) == '0.0'].
 
         assert: [(2.35 printLine) == '2.35\n'].

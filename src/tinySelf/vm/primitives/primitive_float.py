@@ -125,7 +125,15 @@ def compare(interpreter, self, parameters):
 
 def as_string(interpreter, self, parameters):
     assert isinstance(self, PrimitiveFloatObject)
-    return PrimitiveStrObject(str(self.value))
+
+    # fix rpython's bug where str() on float object results in multiple zeros
+    # at the end, which breaks unittests (2.450000 instead of 2.45)
+    result = str(self.value)
+    result = result.rstrip("0")
+    if result.endswith("."):
+        result += "0"
+
+    return PrimitiveStrObject(result)
 
 
 def as_int(interpreter, self, parameters):
