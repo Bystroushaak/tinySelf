@@ -3,8 +3,13 @@ from tinySelf.parser import lex_and_parse
 from tinySelf.vm.object_layout import Object
 
 
+class PrimitiveCodeMethodObject(Object):
+    def __str__(self):
+        return "PrimitiveCodeMethodObject(%s)" % ", ".join(self.map._slots.keys())
+
+
 def build_primitive_code_obj(primitive_fn, arguments):
-    code_obj = Object()
+    code_obj = PrimitiveCodeMethodObject()
 
     code_obj.map.parameters = arguments
     code_obj.map.primitive_code = primitive_fn
