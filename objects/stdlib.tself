@@ -88,6 +88,19 @@
             self asString print.
             self asString.
         ).
+        float_mirror toSlot: 'printLine' Add: (||
+            (self asString + '\n') print.
+            (self asString + '\n')
+        ).
+        float_mirror toSlot: 'asBool' Add: (||
+            "eq (self print -> " print.
+            self print.
+            ") self == 0.0: " print.
+            (self == 0.0) printLine.
+            #bleh.
+            (self == 0.0) ifTrue: [^false] False: [^true].
+            nil.
+        ).
     ).
 
     init_str = (| str_mirror |
