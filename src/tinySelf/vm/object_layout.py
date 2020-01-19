@@ -639,8 +639,8 @@ class IntermediateParamsObject(Object):
 
 class ObjectMap(object):
     def __init__(self):
-        self._slots = LightWeightDict()
-        self._parent_slots = LightWeightDict()
+        self._slots = LightWeightDict()  # TODO: optimize to None by default
+        self._parent_slots = LightWeightDict()  # TODO: optimize to None by default
         self._used_in_multiple_objects = False
 
         self._version = 0
