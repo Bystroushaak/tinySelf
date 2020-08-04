@@ -1,0 +1,2 @@
+language = "python"
+run = "src/target.py"
